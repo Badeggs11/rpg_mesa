@@ -7,8 +7,12 @@ app.use(express.json());
 
 const personagensRoutes = require("./routes/personagensRoutes");
 const mesasRoutes = require("./routes/mesasRoutes");
+const mesaPersonagensRoutes = require("./routes/mesaPersonagensRoutes");
+
 app.use("/personagens", personagensRoutes);
 app.use("/mesas", mesasRoutes);
+app.use("/mesa-personagens", mesaPersonagensRoutes);
+
 app.get("/", (req, res) => {
     res.json({ mensagem: "Servidor RPG funcionando!"});
 

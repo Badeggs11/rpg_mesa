@@ -31,6 +31,18 @@ db.serialize(() => {
             status TEXT DEFAULT 'aberta',
             criado_em TEXT DEFAULT CURRENT_TIMESTAMP)
     `);
+    db.run(`
+        CREATE TABLE IF NOT EXISTS mesa_personagens (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            mesa_id INTEGER,
+            personagem_id INTEGER,
+            papel TEXT DEFAULT 'jogador',
+            entrando_em TEXT DEFAULT CURRENT_TIMESTAMP,
+            
+            FOREIGN KEY (mesa_id) REFERENCES mesas(id),
+            FOREIGN KEY (personagem_id) REFERENCES personagens(id)
+            )
+    `);
 });
 
 module.exports = db;
