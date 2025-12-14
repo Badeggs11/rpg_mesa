@@ -131,59 +131,71 @@ function esquivar(personagem, ataqueInimigo) {
   };
 }
 function ataqueFisico(atacante, defensor, ataque, defesaEscolhida) {
-  const { precisao = 1, testes = 1, dado = 20 } = ataque;
+  const {
+    precisao = 1,
+    velocidade = 1,
+    forca = 1,
+    bonusDificuldade = 0,
+  } = ataque;
+
+  // parâmetros do “sistema” (padrões do ataque físico)
+  const testes = 1;
+  const dado = 20;
 
   const bonusDefesa = (defensor.forca || 0) + (defensor.sorte || 0);
 
   const defesaValor = bonusDefesa + (defesaEscolhida?.valor || 0);
 
-  const dificuldadeBase = 10 + defesaValor;
+  // dificuldade base de acertar
+  const dificuldadeBase = 10 + defesaValor + velocidade + bonusDificuldade;
 
   const predisposicaoAtacante =
-    (atacante.forca || 0) + (atacante.sorte || 0) + precisao;
+    (atacante.forca || 0) + (atacante.sorte || 0) + precisao + forca;
 
-  // 👉 saldo ofensivo (pode ser negativo)
+  // saldo ofensivo (pode ser negativo)
   const dificuldade = predisposicaoAtacante - dificuldadeBase;
 
   return {
     nome: "Ataque Físico",
     tipo: "ataque",
     subtipo: "fisico",
-
     testes,
     dado,
-    dificuldade, // pode ser negativo
-
+    dificuldade,
     atributos: ["forca", "sorte"],
     descricao: "O atacante desfere um golpe físico contra o inimigo",
   };
 }
 function ataqueMagico(atacante, defensor, magia, defesaEscolhida) {
-  const { controle = 1, testes = 1, dado = 20 } = magia;
+  const {
+    precisao = 1,
+    velocidade = 1,
+    qtdPoder = 1,
+    bonusDificuldade = 0,
+  } = magia;
 
-  // defesa mágica do defensor
+  // padrões do sistema
+  const testes = 1;
+  const dado = 20;
+
   const bonusDefesa = (defensor.inteligencia || 0) + (defensor.poder || 0);
 
   const defesaValor = bonusDefesa + (defesaEscolhida?.valor || 0);
 
-  const dificuldadeBase = 10 + defesaValor;
+  const dificuldadeBase = 10 + defesaValor + velocidade + bonusDificuldade;
 
-  // predisposição mágica do atacante
   const predisposicaoAtacante =
-    (atacante.inteligencia || 0) + (atacante.poder || 0) + controle;
+    (atacante.inteligencia || 0) + (atacante.poder || 0) + precisao + qtdPoder;
 
-  // 👉 saldo ofensivo mágico (pode ser negativo)
   const dificuldade = predisposicaoAtacante - dificuldadeBase;
 
   return {
     nome: "Ataque Mágico",
     tipo: "ataque",
     subtipo: "magico",
-
     testes,
     dado,
-    dificuldade, // pode ser negativo
-
+    dificuldade,
     atributos: ["inteligencia", "poder"],
     descricao: "O atacante conjura uma magia contra o inimigo",
   };
