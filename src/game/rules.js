@@ -1,3 +1,5 @@
+const { jogarDado } = require("./dice");
+
 function limitar(valor, min = 3, max = 20) {
   return Math.min(max, Math.max(min, valor));
 }
@@ -71,133 +73,130 @@ function escalarMuro(personagem, muro) {
     descricao: "O personagem tenta escalar um muro",
   };
 }
-function resistirVeneno(personagem, veneno) {
-  const { toxicidade = 1, persistente = false } = veneno;
-  let dificuldadeBase = 3 + toxicidade;
-  if (persistente) dificuldadeBase += 3;
+function defesaFisica(personagem) {
+  const rolagem = jogarDado(20);
 
-  const predisposicaoPersonagem =
-    (personagem.resistencia || 0) + (personagem.vigor || 0);
-
-  let valorSolicitado = dificuldadeBase - predisposicaoPersonagem;
-
-  valorSolicitado = limitar(valorSolicitado, 3, 20);
+  const valorDefesa =
+    rolagem + (personagem.forca || 0) + (personagem.resistencia || 0);
 
   return {
-    nome: "Resistir Veneno",
-    testes: 2,
-    dado: 20,
-    dificuldade: valorSolicitado,
-    atributos: ["resistencia", "vigor"],
-    descricao: "O corpo do personagem tenta neutralizar o veneno",
+    tipo: "defesaFisica",
+    rolagem,
+    valorDefesa,
+    descricao: "O personagem tenta bloquear ou absorver o ataque.",
   };
 }
-function resistirMagia(personagem, magia) {
-  const { intensidade = 1, tipo = "sombria", persistente = false } = magia;
-  let dificuldadeBase = 2 * intensidade;
-  if (persistente) dificuldadeBase += 2;
+function esquivar(personagem) {
+  const rolagem = jogarDado(20);
 
-  const predisposicaoPersonagem =
-    (personagem.inteligencia || 0) + (personagem.poder || 0);
+  const valorDefesa =
+    rolagem + (personagem.agilidade || 0) + (personagem.sorte || 0);
 
-  let valorSolicitado = dificuldadeBase - predisposicaoPersonagem;
-  valorSolicitado = limitar(valorSolicitado, 3, 20);
   return {
-    nome: "Resistir Magia",
-    testes: 2,
-    dado: 20,
-    dificuldade: valorSolicitado,
-    atributos: ["inteligencia", "poder"],
-    descricao: `O personagem tenta resistir a uma magia ${tipo} que afeta a mente ou o corpo`,
+    tipo: "esquiva",
+    rolagem,
+    valorDefesa,
+    descricao: "O personagem tenta desviar do ataque.",
   };
 }
+function resistirMagia(personagem) {
+  const rolagem = jogarDado(20);
 
-function esquivar(personagem, ataqueInimigo) {
-  const { precisao = 1, velocidade = 1, bonusDificuldade = 0 } = ataqueInimigo;
-  const penalidadeFerimento = personagem.ferido ? 2 : 0;
-  let dificuldadeBase =
-    1 + precisao + velocidade + bonusDificuldade + penalidadeFerimento;
-  const predisposicaoPersonagem =
-    (personagem.agilidade || 0) + (personagem.sorte || 0);
-  let valorSolicitado = dificuldadeBase - predisposicaoPersonagem;
-  valorSolicitado = limitar(valorSolicitado, 2, 20);
+  const valorDefesa =
+    rolagem + (personagem.inteligencia || 0) + (personagem.poder || 0);
+
   return {
-    nome: "Esquivar",
-    testes: 1,
-    dado: 20,
-    dificuldade: valorSolicitado,
-    atributos: ["agilidade", "sorte"],
-    descricao: "O personagem tenta desviar de um ataque iminente",
+    tipo: "resistirMagia",
+    rolagem,
+    valorDefesa,
+    descricao: "O personagem tenta resistir ao efeito mágico.",
   };
 }
-function ataqueFisico(atacante, defensor, ataque, defesaEscolhida) {
-  const {
-    precisao = 1,
-    velocidade = 1,
-    forca = 1,
-    bonusDificuldade = 0,
-  } = ataque;
+function resistirVeneno(personagem) {
+  const rolagem = jogarDado(20);
 
-  // parâmetros do “sistema” (padrões do ataque físico)
-  const testes = 1;
-  const dado = 20;
-
-  const bonusDefesa = (defensor.forca || 0) + (defensor.sorte || 0);
-
-  const defesaValor = bonusDefesa + (defesaEscolhida?.valor || 0);
-
-  // dificuldade base de acertar
-  const dificuldadeBase = 10 + defesaValor + velocidade + bonusDificuldade;
-
-  const predisposicaoAtacante =
-    (atacante.forca || 0) + (atacante.sorte || 0) + precisao + forca;
-
-  // saldo ofensivo (pode ser negativo)
-  const dificuldade = predisposicaoAtacante - dificuldadeBase;
+  const valorDefesa =
+    rolagem + (personagem.resistencia || 0) + (personagem.vigor || 0);
 
   return {
-    nome: "Ataque Físico",
-    tipo: "ataque",
-    subtipo: "fisico",
-    testes,
-    dado,
-    dificuldade,
-    atributos: ["forca", "sorte"],
-    descricao: "O atacante desfere um golpe físico contra o inimigo",
+    tipo: "resistirVeneno",
+    rolagem,
+    valorDefesa,
+    descricao: "O corpo tenta neutralizar o veneno.",
   };
 }
-function ataqueMagico(atacante, defensor, magia, defesaEscolhida) {
-  const {
-    precisao = 1,
-    velocidade = 1,
-    qtdPoder = 1,
-    bonusDificuldade = 0,
-  } = magia;
+function defesaFugir(personagem) {
+  const rolagem = jogarDado(20);
 
-  // padrões do sistema
-  const testes = 1;
-  const dado = 20;
-
-  const bonusDefesa = (defensor.inteligencia || 0) + (defensor.poder || 0);
-
-  const defesaValor = bonusDefesa + (defesaEscolhida?.valor || 0);
-
-  const dificuldadeBase = 10 + defesaValor + velocidade + bonusDificuldade;
-
-  const predisposicaoAtacante =
-    (atacante.inteligencia || 0) + (atacante.poder || 0) + precisao + qtdPoder;
-
-  const dificuldade = predisposicaoAtacante - dificuldadeBase;
+  const valorDefesa =
+    rolagem + (personagem.agilidade || 0) + (personagem.sorte || 0);
 
   return {
-    nome: "Ataque Mágico",
-    tipo: "ataque",
-    subtipo: "magico",
-    testes,
-    dado,
-    dificuldade,
-    atributos: ["inteligencia", "poder"],
-    descricao: "O atacante conjura uma magia contra o inimigo",
+    tipo: "fuga",
+    rolagem,
+    valorDefesa,
+    sucesso: valorDefesa >= 15,
+    descricao: "O personagem tenta fugir do combate.",
+  };
+}
+function ataqueFisico(atacante, ataque, defesaFn, defensor) {
+  const { precisao = 1, forca = 1 } = ataque;
+
+  const rolagemAtaque = jogarDado(20);
+
+  const bonusAtributos = (atacante.forca || 0) + (atacante.sorte || 0);
+
+  const valorAtaque = rolagemAtaque + bonusAtributos + precisao + forca;
+
+  const defesa = defesaFn(defensor);
+  const diferenca = valorAtaque - defesa.valorDefesa;
+
+  const danoCausado = Math.max(0, valorAtaque - defesa.valorDefesa);
+
+  return {
+    tipo: "ataqueFisico",
+
+    ataque: {
+      rolagem: rolagemAtaque,
+      bonusAtributos,
+      precisao,
+      forca,
+      valorAtaque,
+    },
+
+    defesa,
+
+    resultado: {
+      diferenca,
+      danoCausado,
+    },
+
+    descricao: "O atacante desfere um golpe físico contra o inimigo.",
+  };
+}
+function ataqueMagico(atacante, magia, defesaFn, defensor) {
+  const { precisao = 1, qtdPoder = 1 } = magia;
+
+  const rolagemAtaque = jogarDado(20);
+
+  const valorAtaque =
+    rolagemAtaque +
+    (atacante.inteligencia || 0) +
+    (atacante.poder || 0) +
+    precisao +
+    qtdPoder;
+
+  const defesa = defesaFn(defensor);
+
+  const danoCausado = Math.max(0, valorAtaque - defesa.valorDefesa);
+
+  return {
+    tipo: "ataqueMagico",
+    rolagemAtaque,
+    valorAtaque,
+    defesa,
+    danoCausado,
+    descricao: "O atacante conjura uma magia contra o inimigo.",
   };
 }
 
@@ -205,9 +204,11 @@ const regras = {
   atravessarRio,
   abrirPortaAntiga,
   escalarMuro,
-  resistirVeneno,
-  resistirMagia,
+  defesaFisica,
   esquivar,
+  resistirMagia,
+  resistirVeneno,
+  defesaFugir,
   ataqueFisico,
   ataqueMagico,
 };
