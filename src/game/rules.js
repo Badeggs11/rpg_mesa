@@ -192,15 +192,23 @@ function ataqueMagico(atacante, magia, defesaFn, defensor) {
 
   return {
     tipo: "ataqueMagico",
-    rolagemAtaque,
-    valorAtaque,
+
+    ataque: {
+      rolagem: rolagemAtaque,
+      precisao,
+      qtdPoder,
+      valorAtaque,
+    },
     defesa,
-    danoCausado,
+
+    resultado: {
+      danoCausado,
+    },
     descricao: "O atacante conjura uma magia contra o inimigo.",
   };
 }
 
-const regras = {
+module.exports = {
   atravessarRio,
   abrirPortaAntiga,
   escalarMuro,
@@ -211,16 +219,4 @@ const regras = {
   defesaFugir,
   ataqueFisico,
   ataqueMagico,
-};
-function getRegra(nome) {
-  const regra = regras[nome];
-  if (!regra) {
-    throw new Error(`Regra '${nome}' não encontrada.`);
-  }
-  return regra;
-}
-
-module.exports = {
-  regras,
-  getRegra,
 };

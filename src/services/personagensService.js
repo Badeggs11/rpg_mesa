@@ -1,6 +1,20 @@
 const db = require("../database/db");
 
 module.exports = {
+  buscarPorId(id) {
+    return new Promise((resolve, reject) => {
+      const query = `
+        SELECT *
+        FROM personagens
+        WHERE id = ?
+        `;
+      db.get(query, [id], (err, row) => {
+        if (err) return reject(err);
+        if (!row) return reject(new Error("Personagem não encontrado"));
+        resolve(row);
+      });
+    });
+  },
   listar() {
     return new Promise((resolve, reject) => {
       db.all("SELECT * FROM personagens", (err, rows) => {
@@ -9,7 +23,14 @@ module.exports = {
       });
     });
   },
-  criar({ nome, forca, inteligencia, agilidade }) {
+  criar({
+    nome,
+    pontosDeVida = 100,
+    forca = 10,
+    resistencia = 10,
+    agilidade = 10,
+    inteligencia = 10,
+  }) {
     return new Promise((resolve, reject) => {
       const query = `
             INSERT INTO personagens (nome, pontosDeVida, forca, resistencia, agilidade, inteligencia)
@@ -17,25 +38,18 @@ module.exports = {
             `;
       db.run(
         query,
-        [
-          nome,
-          pontosDeVida || 100,
-          forca || 0,
-          resistencia || 0,
-          agilidade || 0,
-          inteligencia || 0,
-        ],
+        [nome, pontosDeVida, forca, resistencia, agilidade, inteligencia],
         function (err) {
           if (err) return reject(err);
 
           resolve({
             id: this.lastID,
             nome,
-            pontosDeVida: pontosDeVida || 100,
-            forca: forca || 0,
-            resistencia: resistencia || 0,
-            agilidade: agilidade || 0,
-            inteligencia: inteligencia || 0,
+            pontosDeVida: pontosDeVida,
+            forca: forca,
+            resistencia: resistencia,
+            agilidade: agilidade,
+            inteligencia: inteligencia,
           });
         }
       );
@@ -60,7 +74,9 @@ module.exports = {
           resolve({
             id,
             nome,
+            pontosDeVida,
             forca,
+            resistencia,
             agilidade,
             inteligencia,
           });
@@ -68,6 +84,21 @@ module.exports = {
       );
     });
   },
+  atualizarVida(id, pontosDeVida) {
+    return new Promise((resolve, reject) => {
+      const query = `
+      UPDATE personagens
+      SET pontosDeVida = ?
+      WHERE id = ?
+    `;
+
+      db.run(query, [pontosDeVida, id], function (err) {
+        if (err) return reject(err);
+        resolve({ sucesso: true });
+      });
+    });
+  },
+
   remover(id) {
     return new Promise((resolve, reject) => {
       const query = `DELETE FROM personagens WHERE id = ?`;

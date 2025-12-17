@@ -5,25 +5,27 @@ const path = require("path");
 const dbPath = path.join(__dirname, "..", "rpg.db");
 
 const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error("Erro ao conectar ao banco:", err);
-    } else {
-        console.log("Banco SQLite conectado com sucesso em:", dbPath);
-    }
+  if (err) {
+    console.error("Erro ao conectar ao banco:", err);
+  } else {
+    console.log("Banco SQLite conectado com sucesso em:", dbPath);
+  }
 });
 
 db.serialize(() => {
-    db.run(`
+  db.run(`
         CREATE TABLE IF NOT EXISTS personagens (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nome TEXT,
+            pontosDeVida INTEGER,
             forca INTEGER,
+            resistencia INTEGER,
             agilidade INTEGER,
             inteligencia INTEGER
         )
         
     `);
-    db.run(`CREATE TABLE IF NOT EXISTS mesas (
+  db.run(`CREATE TABLE IF NOT EXISTS mesas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nome TEXT,
             descricao TEXT,
@@ -31,7 +33,7 @@ db.serialize(() => {
             status TEXT DEFAULT 'aberta',
             criado_em TEXT DEFAULT CURRENT_TIMESTAMP)
     `);
-    db.run(`
+  db.run(`
         CREATE TABLE IF NOT EXISTS mesa_personagens (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             mesa_id INTEGER,
