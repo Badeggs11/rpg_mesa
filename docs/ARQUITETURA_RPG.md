@@ -1,320 +1,379 @@
-Visão Geral
+# ARQUITETURA — RPG de Mesa (Engine)
 
-Este projeto implementa um sistema de RPG de mesa baseado em engine, com foco em:
+## Visão Geral
 
-clareza e transparência das regras
+Este projeto implementa um **sistema de RPG de mesa baseado em engine**, com foco em:
 
-separação rigorosa de responsabilidades
-
-facilidade de balanceamento e ajuste fino
-
-persistência de estado via banco de dados
-
-possibilidade futura de integração com IA narradora
+- clareza e transparência das regras
+- separação rigorosa de responsabilidades
+- facilidade de balanceamento e ajuste fino
+- persistência de estado via banco de dados
+- possibilidade futura de integração com IA narradora
 
 O sistema separa explicitamente:
 
-rolagem de dados
+- rolagem de dados
+- ataque
+- defesa
+- cálculo de dano
+- estado do personagem
+- persistência em banco
 
-ataque
+Essa separação permite **testes isolados**, **simulações controladas** e **evolução incremental** do sistema.
 
-defesa
+---
 
-cálculo de dano
+## Filosofia do Sistema
 
-estado do personagem
+### Princípios Fundamentais
 
-persistência em banco
+- Ataque e defesa são entidades distintas
+- Defesa depende exclusivamente do defensor
+- Ataque resolve o confronto completo (incluindo dano)
+- O dano nunca é negativo
+- Toda aleatoriedade vem de um único módulo
+- Regras de jogo não conhecem o banco de dados
+- O banco existe apenas para persistir estado
+- O jogo acontece em memória
 
-Essa separação permite testes isolados, simulações e evolução gradual do sistema.
+Esses princípios orientam toda a arquitetura e evitam acoplamentos indevidos.
 
-Filosofia do Sistema
-Princípios Fundamentais
+---
 
-Ataque e defesa são entidades distintas
+## Camadas do Sistema
 
-Defesa depende exclusivamente do defensor
-
-Ataque resolve o confronto completo (incluindo dano)
-
-O dano nunca é negativo
-
-Toda aleatoriedade vem de um único módulo
-
-Regras de jogo não conhecem o banco de dados
-
-O banco existe apenas para persistir estado
-
-O jogo acontece em memória
-
-Camadas do Sistema
+```
 Banco de Dados (SQLite)
-↓
-Services (personagensService, mesaPersonagensService)
-↓
-Game Engine (combat, rules, dice)
-↓
+        ↓
+Services (personagensService, mesasService, mesaPersonagensService)
+        ↓
+Game (dice, rules, engine)
+        ↓
 Resultado do Turno / Combate
-↓
+        ↓
 Persistência de Estado
+```
 
-Módulo de Dados (dice.js)
+### Observações
 
-Responsável por toda a aleatoriedade do sistema.
+- Services fazem a ponte entre API, banco e engine
+- A engine não conhece SQL nem controllers
+- O estado é carregado do banco para memória antes da execução
+
+---
+
+## Organização de Pastas
+
+```
+rpg_mesa/
+└─ src/
+   ├─ controllers/
+   │  ├─ mesaControllers.js
+   │  ├─ mesaPersonagensControllers.js
+   │  └─ personagensControllers.js
+   │
+   ├─ database/
+   │  └─ db.js
+   │
+   ├─ game/
+   │  ├─ dice.js
+   │  ├─ rules.js
+   │  ├─ engine/
+   │  │  ├─ executarAcao.js
+   │  │  ├─ resolverAtaque.js
+   │  │  ├─ resolverDefesa.js
+   │  │  └─ resolverDesafio.js
+   │  │
+   │  └─ tests/
+   │     └─ testeCombate.js
+   │
+   ├─ routes/
+   │  ├─ mesaPersonagensRoutes.js
+   │  ├─ mesaRoutes.js
+   │  └─ personagensRoutes.js
+   │
+   ├─ services/
+   │  ├─ mesaPersonagensService.js
+   │  ├─ mesasService.js
+   │  └─ personagensService.js
+   │
+   ├─ rpg.db
+   └─ server.js
+```
+
+---
+
+## Módulo de Dados — `dice.js`
+
+Responsável por **toda a aleatoriedade do sistema**.
 
 Nenhuma outra parte do projeto gera números aleatórios diretamente.
 
-Funções
+### Funções
 
-jogarDado(lados)
+- `jogarDado(lados)`
+- `jogarVariosDados(qtd, lados)`
+- `jogarDadoComBonus(lados, bonus)`
+- `checarDificuldade(testes, lados, dificuldade, bonus)`
 
-jogarVariosDados(qtd, lados)
+### Garantias do Módulo
 
-jogarDadoComBonus(lados, bonus)
+- previsibilidade para testes
+- facilidade de balanceamento
+- possibilidade futura de seed ou replay de combates
 
-checarDificuldade(testes, lados, dificuldade, bonus)
+---
 
-Esse módulo garante:
+## Regras do Jogo — `rules.js`
 
-previsibilidade para testes
+O módulo `rules.js` **descreve ações**, mas **não executa resultados aleatórios**.
 
-facilidade de balanceamento
+Ele pode:
 
-possibilidade futura de “seed” ou replay de combates
+- usar atributos do personagem
+- calcular valores base determinísticos
+- definir dificuldades
 
-Modelo de Defesa
-Conceito
+Ele nunca:
+
+- rola dados
+- decide sucesso final
+- aplica dano
+- acessa banco de dados
+
+---
+
+## Modelo de Defesa
+
+### Conceito
+
+Defesas são ações reativas e dependem **exclusivamente do defensor**.
 
 Funções defensivas:
 
-recebem apenas o personagem defensor
+- recebem apenas o personagem defensor
+- calculam um valor base determinístico
+- declaram o dado utilizado
 
-realizam a rolagem de dado
+A defesa **não conhece o atacante**.
 
-somam atributos defensivos
+### Interface Conceitual
 
-retornam um valorDefesa
-
-A defesa não conhece o atacante.
-
-Interface conceitual
+```
 defesa(personagem) => {
-tipo,
-rolagem,
-valorDefesa,
-descricao
+  tipo,
+  estilo,
+  dado,
+  base,
+  descricao,
+  limiarSucesso?
 }
+```
 
-Defesas implementadas
+### Defesas Implementadas
 
-defesaFisica
+- `defesaFisica`
+- `esquivar`
+- `resistirMagia`
+- `resistirVeneno`
+- `fugir`
 
-esquivar
+A defesa de fuga pode encerrar o combate sem causar dano.
 
-resistirMagia
+---
 
-resistirVeneno
+## Modelo de Ataque
 
-defesaFugir
+### Conceito
 
-A defesa de fuga pode encerrar o combate sem dano.
+O ataque descreve **como um confronto ofensivo funciona**, mas não executa a resolução final.
 
-Modelo de Ataque
-Conceito
+Ele recebe:
 
-O ataque é responsável por resolver todo o confronto, recebendo:
+- o personagem atacante
+- o objeto de ataque (arma ou magia)
 
-o atacante
+O ataque define:
 
-o objeto de ataque (arma ou magia)
+- dado de ataque
+- valor base ofensivo
+- defesas permitidas
+- dado de dano
 
-a função de defesa escolhida pelo defensor
+### Interface Conceitual
 
-o defensor
-
-O ataque:
-
-executa a rolagem
-
-calcula o valor ofensivo
-
-chama a defesa
-
-calcula o dano final
-
-Interface conceitual
-ataque(atacante, ataque, defesaFn, defensor) => {
-ataque: { ... },
-defesa: { ... },
-resultado: {
-diferenca,
-danoCausado
+```
+ataque(personagem, objeto) => {
+  tipo,
+  estilo,
+  ataque: { dado, base },
+  dano: { dado },
+  defesaAlvo,
+  descricao
 }
-}
+```
 
-Dano
+---
+
+## Dano
+
+O dano é sempre calculado pela engine.
+
+Regra fundamental:
+
+```
 dano = max(0, valorAtaque - valorDefesa)
+```
 
-O sistema não possui dano negativo.
+O sistema não permite dano negativo.
 
-Ações de Desafio (Não Combate)
+---
 
-Algumas regras representam ações ambientais, não ataques diretos:
+## Ações de Desafio (Não Combate)
 
-atravessarRio
+Algumas regras representam desafios ambientais:
 
-escalarMuro
-
-abrirPortaAntiga
+- `atravessarRio`
+- `escalarMuro`
+- `abrirPortaAntiga`
 
 Essas ações:
 
-calculam uma dificuldade
+- calculam uma dificuldade
+- usam o módulo de dados para rolagem
+- retornam sucesso ou falha
+- não causam dano direto
 
-utilizam checarDificuldade
+---
 
-retornam sucesso ou falha
+## Engine de Jogo — `game/engine`
 
-não causam dano direto
+A engine executa as ações descritas em `rules.js`.
 
-Engine de Combate (combatDb.js)
+Ela é composta por resolvers especializados:
 
-O módulo combatDb.js é o orquestrador do combate.
+- `resolverDesafio.js`
+- `resolverDefesa.js`
+- `resolverAtaque.js`
+- `executarAcao.js`
 
-Responsabilidades:
+### Responsabilidades da Engine
 
-buscar personagens no banco
+- rolar dados
+- comparar ataque e defesa
+- calcular dano
+- produzir resultados
 
-mapear estado persistente → estado de jogo
+A engine:
 
-executar turnos de combate
+- não contém regras
+- não acessa banco
+- não decide atributos
 
-aplicar dano em memória
+Ela apenas **coordena a execução**.
 
-persistir estado final no banco
+---
 
-O engine:
+## Persistência e Banco de Dados
 
-não contém regras
+### Princípios
 
-não acessa SQL diretamente
+- O banco armazena estado
+- O jogo opera em memória
+- O estado é salvo após eventos relevantes
 
-não decide atributos
+### Exemplo de Fluxo
 
-Ele apenas coordena.
+1. `personagensService.buscarPorId`
+2. combate ocorre em memória
+3. `personagensService.atualizarVida`
 
-Persistência e Banco de Dados
-Princípios
+O banco nunca interfere nas regras ou na engine.
 
-O banco armazena estado
+---
 
-O jogo opera em memória
+## Modelo de Personagem
 
-O estado é salvo após eventos relevantes
+### Banco de Dados (`personagens`)
 
-Exemplo de fluxo
+- id
+- nome
+- pontosDeVida
+- forca
+- resistencia
+- agilidade
+- inteligencia
+- (expansível: sorte, vigor, poder, etc.)
 
-personagensService.buscarPorId
+### Jogo (Memória)
 
-combate ocorre em memória
-
-personagensService.atualizarVida
-
-O banco nunca interfere nas regras.
-
-Modelo de Personagem
-Banco (personagens)
-
-id
-
-nome
-
-pontosDeVida
-
-forca
-
-resistencia
-
-agilidade
-
-inteligencia
-
-(expansível: sorte, vigor, poder, etc.)
-
-Jogo (memória)
+```
 {
-...personagem,
-vida: pontosDeVida
+  ...personagem,
+  vida: pontosDeVida
 }
+```
 
 Essa separação evita acoplamento entre engine e persistência.
 
-Playground e Testes
+---
 
-A pasta playground é usada para:
+## Playground e Testes
 
-testes manuais
+A pasta `game/tests` é usada para:
 
-simulações
-
-seed de banco
-
-validação de arquitetura
+- testes manuais
+- simulações
+- validação da arquitetura
 
 Código de playground:
 
-pode criar personagens
+- pode criar personagens
+- pode rodar combates
+- não é código de produção
 
-pode rodar combates
+---
 
-não é código de produção
-
-Integração com API
+## Integração com API
 
 Endpoints REST (Express):
 
-usam services
-
-chamam a engine (combat)
-
-retornam resultados
+- usam services
+- chamam a engine
+- retornam resultados
 
 Exemplo futuro:
 
+```
 POST /mesas/:id/combate
+```
 
-Próximos Passos Planejados
+---
 
-Combate baseado em mesa_personagens
+## Próximos Passos Planejados
 
-Ordem de iniciativa
+- Combate baseado em `mesa_personagens`
+- Ordem de iniciativa
+- Estados: inconsciente, ferido grave, morto
+- Balanceamento de atributos
+- Testes automatizados
+- IA narrativa
 
-Estados: inconsciente, ferido grave, morto
+---
 
-Balanceamento de atributos
-
-Testes automatizados
-
-IA narrativa
-
-Conclusão
+## Conclusão
 
 Este projeto prioriza:
 
-arquitetura limpa
+- arquitetura limpa
+- clareza conceitual
+- separação de responsabilidades
+- evolução incremental
 
-clareza conceitual
+A base atual já permite:
 
-separação de responsabilidades
+- simulações reais
+- persistência de campanha
+- testes de balanceamento
 
-evolução incremental
-
-O sistema já permite:
-
-simulações reais
-
-persistência de campanha
-
-testes de balanceamento
-
-A base está sólida para expansão futura.
+O sistema está sólido e preparado para expansão futura.
