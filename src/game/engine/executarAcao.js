@@ -1,3 +1,4 @@
+// game/engine/executarAcao.js
 const { resolverDesafio } = require("./resolverDesafio");
 const { resolverAtaque } = require("./resolverAtaque");
 
@@ -7,10 +8,7 @@ function executarAcao(acao, contexto = {}) {
       return resolverDesafio(acao);
 
     case "ataque":
-      if (!contexto.defesa) {
-        throw new Error("Ataque requer uma defesa escolhida");
-      }
-      return resolverAtaque(acao, contexto.defesa);
+      return resolverAtaque(acao, contexto);
 
     default:
       throw new Error(`Tipo de ação desconhecido: ${acao.tipo}`);

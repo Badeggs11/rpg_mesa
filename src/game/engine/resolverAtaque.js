@@ -1,45 +1,60 @@
+// game/engine/resolverAtaque.js
 const { jogarDado } = require("../dice");
 const { resolverDefesa } = require("./resolverDefesa");
+const regras = require("../rules");
 
-function resolverAtaque(ataque, defesaEscolhida) {
-  // valida se a defesa é permitida
-  if (!ataque.defesaAlvo.includes(defesaEscolhida.estilo)) {
+function resolverAtaque(acao, contexto) {
+  const { defensor, defesaEscolhida } = contexto;
+
+  if (!defesaEscolhida) {
+    throw new Error("Ataque requer uma defesa escolhida");
+  }
+
+  // cria defesa a partir das rules
+  const defesaFn = regras[defesaEscolhida];
+  if (!defesaFn) {
+    throw new Error(`Defesa '${defesaEscolhida}' não existe`);
+  }
+
+  const defesa = defesaFn(defensor);
+
+  // valida se defesa é permitida
+  if (!acao.defesaAlvo.includes(defesa.estilo)) {
     throw new Error(
-      `Defesa '${defesaEscolhida.estilo}' não permitida contra este ataque`
+      `Defesa '${defesa.estilo}' não permitida contra este ataque`
     );
   }
 
   // rolagem de ataque
-  const rolagemAtaque = jogarDado(ataque.ataque.dado);
-  const valorAtaque = rolagemAtaque + ataque.ataque.base;
+  const rolagemAtaque = jogarDado(acao.ataque.dado);
+  const valorAtaque = rolagemAtaque + acao.ataque.base;
 
-  // resolver defesa
-  const resultadoDefesa = resolverDefesa(defesaEscolhida);
+  // rolagem de defesa
+  const resultadoDefesa = resolverDefesa(defesa);
 
-  // comparar
   const diferenca = valorAtaque - resultadoDefesa.valorDefesa;
+  const acertou = diferenca > 0;
 
   let dano = 0;
-  let acertou = diferenca > 0;
-
   if (acertou) {
-    const rolagemDano = jogarDado(ataque.dano.dado);
-    dano = Math.max(0, rolagemDano);
+    const rolagemDano = jogarDado(acao.dano.dado);
+    dano = Math.max(0, rolagemDano + diferenca);
+    defensor.vida -= dano;
   }
 
   return {
     tipo: "resultadoAtaque",
-    estilo: ataque.estilo,
+    estilo: acao.estilo,
     ataque: {
       rolagem: rolagemAtaque,
-      base: ataque.ataque.base,
+      base: acao.ataque.base,
       valorAtaque,
     },
     defesa: resultadoDefesa,
     acertou,
     diferenca,
     dano,
-    descricao: ataque.descricao,
+    descricao: acao.descricao,
   };
 }
 

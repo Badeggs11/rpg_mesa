@@ -3,16 +3,9 @@ function limitar(valor, min = 3, max = 20) {
 }
 
 function atravessarRio(personagem, rio) {
-  const {
-    correnteza = 1,
-    largura = 1,
-    obstaculos = 0,
-    predadores = 0,
-    chuva = false,
-  } = rio;
+  const dificuldadeBase =
+    rio.correnteza + rio.largura + rio.obstaculos + rio.predadores;
 
-  let dificuldadeBase = correnteza + largura + obstaculos + predadores;
-  if (chuva) dificuldadeBase += 2;
   const predisposicaoPersonagem =
     (personagem.forca || 0) +
     (personagem.agilidade || 0) +
@@ -53,9 +46,8 @@ function abrirPortaAntiga(personagem, porta) {
   };
 }
 function escalarMuro(personagem, muro) {
-  const { altura = 2, superficieEscorregadia = false } = muro;
-  let dificuldadeBase = 2 + altura;
-  if (superficieEscorregadia) dificuldadeBase += 3;
+  const dificuldadeBase = muro.altura + muro.irregularidades;
+  if (muro.superficieEscorregadia) dificuldadeBase += 2;
   const predisposicaoPersonagem =
     (personagem.forca || 0) + (personagem.agilidade || 0);
 
@@ -138,13 +130,13 @@ function ataqueFisico(personagem, arma) {
       parametros: {
         precisao: arma.precisao,
         poder: arma.poder,
-        velocidade: arma.velocidade,
+        peso: arma.peso,
       },
     },
     dano: {
       dado: arma.dadoDano,
     },
-    defesaAlvo: ["fisica", "esquiva"],
+    defesaAlvo: ["fisica", "esquiva", "fuga"],
     descricao: `O personagem ataca com ${arma.nome}.`,
   };
 }

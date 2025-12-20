@@ -8,16 +8,17 @@ app.use(express.json());
 const personagensRoutes = require("./routes/personagensRoutes");
 const mesasRoutes = require("./routes/mesasRoutes");
 const mesaPersonagensRoutes = require("./routes/mesaPersonagensRoutes");
+const combatRoutes = require("./routes/combatRoutes");
 
 app.use("/personagens", personagensRoutes);
 app.use("/mesas", mesasRoutes);
 app.use("/mesa-personagens", mesaPersonagensRoutes);
+app.use("/api", combatRoutes);
 
 app.get("/", (req, res) => {
-    res.json({ mensagem: "Servidor RPG funcionando!"});
-
+  res.json({ mensagem: "Servidor RPG funcionando!" });
 });
 const PORT = 3000;
-app.listen(PORT, () => {
-    console.log(`Servidor rodando em http://localhost:${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Servidor rodando em http://localhost:${PORT}`);
 });

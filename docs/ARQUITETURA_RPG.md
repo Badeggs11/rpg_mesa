@@ -1,379 +1,324 @@
-# ARQUITETURA — RPG de Mesa (Engine)
+📘 ARQUITETURA — RPG de Mesa (Engine + API + Frontend)
 
-## Visão Geral
+Este documento descreve a arquitetura atual do projeto rpg_mesa, incluindo engine de jogo, backend (API + banco) e frontend (React), bem como o fluxo de dados entre essas camadas.
 
-Este projeto implementa um **sistema de RPG de mesa baseado em engine**, com foco em:
+Visão Geral
 
-- clareza e transparência das regras
-- separação rigorosa de responsabilidades
-- facilidade de balanceamento e ajuste fino
-- persistência de estado via banco de dados
-- possibilidade futura de integração com IA narradora
+Este projeto implementa um sistema de RPG de mesa baseado em engine, com backend e frontend integrados, com foco em:
+
+clareza e transparência das regras
+
+separação rigorosa de responsabilidades
+
+facilidade de balanceamento e ajuste fino
+
+persistência de estado via banco de dados
+
+visualização e interação via frontend
+
+possibilidade futura de integração com IA narradora
 
 O sistema separa explicitamente:
 
-- rolagem de dados
-- ataque
-- defesa
-- cálculo de dano
-- estado do personagem
-- persistência em banco
+rolagem de dados
 
-Essa separação permite **testes isolados**, **simulações controladas** e **evolução incremental** do sistema.
+ataque
 
----
+defesa
 
-## Filosofia do Sistema
+cálculo de dano
 
-### Princípios Fundamentais
+estado do personagem
 
-- Ataque e defesa são entidades distintas
-- Defesa depende exclusivamente do defensor
-- Ataque resolve o confronto completo (incluindo dano)
-- O dano nunca é negativo
-- Toda aleatoriedade vem de um único módulo
-- Regras de jogo não conhecem o banco de dados
-- O banco existe apenas para persistir estado
-- O jogo acontece em memória
+persistência em banco
 
-Esses princípios orientam toda a arquitetura e evitam acoplamentos indevidos.
+exposição via API
 
----
+consumo via frontend
 
-## Camadas do Sistema
+Essa separação permite testes isolados, simulações controladas, integração incremental e evolução segura do sistema.
 
-```
-Banco de Dados (SQLite)
-        ↓
-Services (personagensService, mesasService, mesaPersonagensService)
-        ↓
-Game (dice, rules, engine)
-        ↓
-Resultado do Turno / Combate
-        ↓
-Persistência de Estado
-```
+Filosofia do Sistema
+Princípios Fundamentais
 
-### Observações
+Ataque e defesa são entidades distintas
 
-- Services fazem a ponte entre API, banco e engine
-- A engine não conhece SQL nem controllers
-- O estado é carregado do banco para memória antes da execução
+Defesa depende exclusivamente do defensor
 
----
+Ataque resolve o confronto completo (incluindo dano)
 
-## Organização de Pastas
+O dano nunca é negativo
 
-```
+Toda aleatoriedade vem de um único módulo (dice.js)
+
+Regras de jogo não conhecem banco de dados nem HTTP
+
+Engine não conhece SQL, Express ou frontend
+
+O banco existe apenas para persistir estado
+
+O jogo acontece em memória
+
+Frontend nunca acessa o banco diretamente
+
+Esses princípios evitam acoplamento indevido e facilitam manutenção e expansão.
+
+Camadas do Sistema (Atual)
+Frontend (React + Vite)
+↓ HTTP (JSON)
+Backend API (Express)
+↓
+Controllers
+↓
+Services
+↓
+Game Engine (rules, engine, dice)
+↓
+Estado em Memória
+↓
+Persistência (SQLite)
+
+Observações Importantes
+
+Controllers lidam exclusivamente com req e res
+
+Services orquestram banco + engine
+
+Engine é pura (sem HTTP, sem banco)
+
+Frontend consome a API via fetch
+
+Proxy do Vite é usado para integração frontend/backend
+
+Organização de Pastas (Atualizada)
 rpg_mesa/
 └─ src/
-   ├─ controllers/
-   │  ├─ mesaControllers.js
-   │  ├─ mesaPersonagensControllers.js
-   │  └─ personagensControllers.js
-   │
-   ├─ database/
-   │  └─ db.js
-   │
-   ├─ game/
-   │  ├─ dice.js
-   │  ├─ rules.js
-   │  ├─ engine/
-   │  │  ├─ executarAcao.js
-   │  │  ├─ resolverAtaque.js
-   │  │  ├─ resolverDefesa.js
-   │  │  └─ resolverDesafio.js
-   │  │
-   │  └─ tests/
-   │     └─ testeCombate.js
-   │
-   ├─ routes/
-   │  ├─ mesaPersonagensRoutes.js
-   │  ├─ mesaRoutes.js
-   │  └─ personagensRoutes.js
-   │
-   ├─ services/
-   │  ├─ mesaPersonagensService.js
-   │  ├─ mesasService.js
-   │  └─ personagensService.js
-   │
-   ├─ rpg.db
-   └─ server.js
-```
+├─ controllers/
+│ ├─ personagensController.js
+│ ├─ mesasController.js
+│ ├─ mesaPersonagensController.js
+│ └─ combatController.js
+│
+├─ routes/
+│ ├─ personagensRoutes.js
+│ ├─ mesasRoutes.js
+│ ├─ mesaPersonagensRoutes.js
+│ └─ combatRoutes.js
+│
+├─ services/
+│ ├─ personagensService.js
+│ ├─ mesasService.js
+│ ├─ mesaPersonagensService.js
+│ └─ combatService.js
+│
+├─ database/
+│ └─ db.js
+│
+├─ game/
+│ ├─ dice.js
+│ ├─ rules.js
+│ ├─ engine/
+│ │ ├─ executarAcao.js
+│ │ ├─ resolverAtaque.js
+│ │ ├─ resolverDefesa.js
+│ │ ├─ resolverDesafio.js
+│ │ └─ iniciativa.js
+│ │
+│ ├─ world/
+│ │ ├─ ambientes/
+│ │ │ ├─ rios.js
+│ │ │ └─ muros.js
+│ │ ├─ armas/
+│ │ │ └─ espadas.js
+│ │ ├─ poderes/
+│ │ │ ├─ fogo.js
+│ │ └─ index.js
+│ │
+│ └─ tests/
+│ ├─ testeCombate.js
+│ └─ testeEngineAtaque.js
+│
+├─ rpg.db
+└─ server.js
 
----
+Frontend (React + Vite)
 
-## Módulo de Dados — `dice.js`
+O frontend é responsável por visualizar e interagir com o sistema.
 
-Responsável por **toda a aleatoriedade do sistema**.
+Estrutura do Frontend
+frontend/
+└─ src/
+├─ api/
+│ ├─ personagens.js
+│ └─ combate.js
+│
+├─ pages/
+│ ├─ ListaPersonagens.jsx
+│ ├─ CriarPersonagem.jsx (planejado)
+│ └─ ArenaCombate.jsx
+│
+├─ App.jsx
+└─ main.jsx
+
+Integração Frontend ↔ Backend
+
+O frontend não usa URLs públicas diretamente
+
+O Vite proxy redireciona chamadas para o backend
+
+Exemplo:
+
+fetch("/personagens")
+
+É redirecionado internamente para:
+
+http://localhost:3000/personagens
+
+Isso evita problemas de CORS e HTTPS em ambiente remoto (Codespaces).
+
+Módulo de Dados — dice.js
+
+Responsável por toda a aleatoriedade do sistema.
 
 Nenhuma outra parte do projeto gera números aleatórios diretamente.
 
-### Funções
+Funções
 
-- `jogarDado(lados)`
-- `jogarVariosDados(qtd, lados)`
-- `jogarDadoComBonus(lados, bonus)`
-- `checarDificuldade(testes, lados, dificuldade, bonus)`
+jogarDado(lados)
 
-### Garantias do Módulo
+jogarVariosDados(qtd, lados)
 
-- previsibilidade para testes
-- facilidade de balanceamento
-- possibilidade futura de seed ou replay de combates
+jogarDadoComBonus(lados, bonus)
 
----
+checarDificuldade(testes, lados, dificuldade, bonus)
 
-## Regras do Jogo — `rules.js`
+Garantias
 
-O módulo `rules.js` **descreve ações**, mas **não executa resultados aleatórios**.
+previsibilidade para testes
+
+balanceamento centralizado
+
+possibilidade futura de seed / replay
+
+Regras do Jogo — rules.js
+
+O módulo rules.js descreve ações, mas não executa.
 
 Ele pode:
 
-- usar atributos do personagem
-- calcular valores base determinísticos
-- definir dificuldades
+calcular valores base
+
+usar atributos do personagem
+
+definir defesas permitidas
 
 Ele nunca:
 
-- rola dados
-- decide sucesso final
-- aplica dano
-- acessa banco de dados
+rola dados
 
----
+acessa banco
 
-## Modelo de Defesa
+aplica dano
 
-### Conceito
+conhece HTTP
 
-Defesas são ações reativas e dependem **exclusivamente do defensor**.
+Engine de Jogo — game/engine
 
-Funções defensivas:
+A engine executa as regras descritas.
 
-- recebem apenas o personagem defensor
-- calculam um valor base determinístico
-- declaram o dado utilizado
+Componentes
 
-A defesa **não conhece o atacante**.
+resolverAtaque.js
 
-### Interface Conceitual
+resolverDefesa.js
 
-```
-defesa(personagem) => {
-  tipo,
-  estilo,
-  dado,
-  base,
-  descricao,
-  limiarSucesso?
-}
-```
+resolverDesafio.js
 
-### Defesas Implementadas
+executarAcao.js
 
-- `defesaFisica`
-- `esquivar`
-- `resistirMagia`
-- `resistirVeneno`
-- `fugir`
+Responsabilidades
 
-A defesa de fuga pode encerrar o combate sem causar dano.
+rolar dados
 
----
+comparar ataque × defesa
 
-## Modelo de Ataque
+calcular dano
 
-### Conceito
+gerar resultado estruturado
 
-O ataque descreve **como um confronto ofensivo funciona**, mas não executa a resolução final.
+A engine é totalmente desacoplada de banco e API.
 
-Ele recebe:
+Persistência e Banco de Dados
+Princípios
 
-- o personagem atacante
-- o objeto de ataque (arma ou magia)
+SQLite armazena estado persistente
 
-O ataque define:
+Combates acontecem em memória
 
-- dado de ataque
-- valor base ofensivo
-- defesas permitidas
-- dado de dano
+Apenas o resultado final é salvo
 
-### Interface Conceitual
+Exemplo de Fluxo Real
 
-```
-ataque(personagem, objeto) => {
-  tipo,
-  estilo,
-  ataque: { dado, base },
-  dano: { dado },
-  defesaAlvo,
-  descricao
-}
-```
+Frontend chama GET /personagens
 
----
+Backend busca no SQLite
 
-## Dano
+Frontend exibe os personagens
 
-O dano é sempre calculado pela engine.
+Frontend inicia combate (POST /api/combate)
 
-Regra fundamental:
+Service cria estado em memória
 
-```
-dano = max(0, valorAtaque - valorDefesa)
-```
+Engine resolve combate
 
-O sistema não permite dano negativo.
+Vida final é persistida no banco
 
----
+Frontend exibe resultado
 
-## Ações de Desafio (Não Combate)
+Estado Atual do Projeto
 
-Algumas regras representam desafios ambientais:
+Atualmente o sistema já permite:
 
-- `atravessarRio`
-- `escalarMuro`
-- `abrirPortaAntiga`
+✔️ criar personagens no banco (via API)
 
-Essas ações:
+✔️ listar personagens no frontend
 
-- calculam uma dificuldade
-- usam o módulo de dados para rolagem
-- retornam sucesso ou falha
-- não causam dano direto
+✔️ executar combate real com engine
 
----
+✔️ persistir vida após combate
 
-## Engine de Jogo — `game/engine`
+✔️ visualizar dados no frontend
 
-A engine executa as ações descritas em `rules.js`.
+✔️ integração completa frontend ↔ backend
 
-Ela é composta por resolvers especializados:
+Próximos Passos Planejados
 
-- `resolverDesafio.js`
-- `resolverDefesa.js`
-- `resolverAtaque.js`
-- `executarAcao.js`
+Tela de criação de personagem no frontend
 
-### Responsabilidades da Engine
+Seleção de atacante e defensor
 
-- rolar dados
-- comparar ataque e defesa
-- calcular dano
-- produzir resultados
+Combate por turnos
 
-A engine:
+Visualização de rolagens de dados
 
-- não contém regras
-- não acessa banco
-- não decide atributos
+Estados de personagem (ferido, inconsciente, morto)
 
-Ela apenas **coordena a execução**.
+Balanceamento fino
 
----
+Testes automatizados
 
-## Persistência e Banco de Dados
+IA narrativa
 
-### Princípios
-
-- O banco armazena estado
-- O jogo opera em memória
-- O estado é salvo após eventos relevantes
-
-### Exemplo de Fluxo
-
-1. `personagensService.buscarPorId`
-2. combate ocorre em memória
-3. `personagensService.atualizarVida`
-
-O banco nunca interfere nas regras ou na engine.
-
----
-
-## Modelo de Personagem
-
-### Banco de Dados (`personagens`)
-
-- id
-- nome
-- pontosDeVida
-- forca
-- resistencia
-- agilidade
-- inteligencia
-- (expansível: sorte, vigor, poder, etc.)
-
-### Jogo (Memória)
-
-```
-{
-  ...personagem,
-  vida: pontosDeVida
-}
-```
-
-Essa separação evita acoplamento entre engine e persistência.
-
----
-
-## Playground e Testes
-
-A pasta `game/tests` é usada para:
-
-- testes manuais
-- simulações
-- validação da arquitetura
-
-Código de playground:
-
-- pode criar personagens
-- pode rodar combates
-- não é código de produção
-
----
-
-## Integração com API
-
-Endpoints REST (Express):
-
-- usam services
-- chamam a engine
-- retornam resultados
-
-Exemplo futuro:
-
-```
-POST /mesas/:id/combate
-```
-
----
-
-## Próximos Passos Planejados
-
-- Combate baseado em `mesa_personagens`
-- Ordem de iniciativa
-- Estados: inconsciente, ferido grave, morto
-- Balanceamento de atributos
-- Testes automatizados
-- IA narrativa
-
----
-
-## Conclusão
+Conclusão
 
 Este projeto prioriza:
 
-- arquitetura limpa
-- clareza conceitual
-- separação de responsabilidades
-- evolução incremental
+arquitetura limpa
 
-A base atual já permite:
+separação de responsabilidades
 
-- simulações reais
-- persistência de campanha
-- testes de balanceamento
+aprendizado real (não só código copiado)
 
-O sistema está sólido e preparado para expansão futura.
+evolução incremental
+
+O sistema já funciona de ponta a ponta e está preparado para crescer sem refatorações traumáticas.
