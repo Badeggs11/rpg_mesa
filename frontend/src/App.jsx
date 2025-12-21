@@ -1,8 +1,14 @@
-import CombatArena from "./CombatArena";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ListarPersonagens from "./pages/ListarPersonagens";
+import CriarPersonagem from "./pages/CriarPersonagem";
 
-function App() {
-  return <ListarPersonagens />;
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<ListarPersonagens />} />
+        <Route path="/criar-personagem" element={<CriarPersonagem />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
-
-export default App;

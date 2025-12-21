@@ -90,7 +90,7 @@ Frontend consome a API via fetch
 
 Proxy do Vite é usado para integração frontend/backend
 
-Organização de Pastas (Atualizada)
+Organização de Pastas (Backend)
 rpg_mesa/
 └─ src/
 ├─ controllers/
@@ -131,7 +131,7 @@ rpg_mesa/
 │ │ ├─ armas/
 │ │ │ └─ espadas.js
 │ │ ├─ poderes/
-│ │ │ ├─ fogo.js
+│ │ │ └─ fogo.js
 │ │ └─ index.js
 │ │
 │ └─ tests/
@@ -143,9 +143,9 @@ rpg_mesa/
 
 Frontend (React + Vite)
 
-O frontend é responsável por visualizar e interagir com o sistema.
+O frontend é responsável por visualizar, criar e interagir com os elementos do sistema.
 
-Estrutura do Frontend
+Estrutura do Frontend (Atual)
 frontend/
 └─ src/
 ├─ api/
@@ -154,27 +154,40 @@ frontend/
 │
 ├─ pages/
 │ ├─ ListaPersonagens.jsx
-│ ├─ CriarPersonagem.jsx (planejado)
+│ ├─ CriarPersonagem.jsx
 │ └─ ArenaCombate.jsx
 │
 ├─ App.jsx
 └─ main.jsx
 
+Funcionalidades do Frontend
+
+✔️ Criação de personagens via formulário controlado
+
+✔️ Validação de campos e feedback visual
+
+✔️ Integração direta com API (POST /personagens)
+
+✔️ Listagem de personagens persistidos
+
+✔️ Início de combate via API
+
+✔️ Exibição de resultados de combate
+
 Integração Frontend ↔ Backend
 
 O frontend não usa URLs públicas diretamente
 
-O Vite proxy redireciona chamadas para o backend
+O Vite Proxy redireciona chamadas para o backend
 
-Exemplo:
-
+Exemplo
 fetch("/personagens")
 
 É redirecionado internamente para:
 
 http://localhost:3000/personagens
 
-Isso evita problemas de CORS e HTTPS em ambiente remoto (Codespaces).
+Isso evita problemas de CORS e HTTPS em ambientes locais e remotos (Codespaces).
 
 Módulo de Dados — dice.js
 
@@ -258,48 +271,43 @@ Combates acontecem em memória
 Apenas o resultado final é salvo
 
 Exemplo de Fluxo Real
+Frontend cria personagem
+↓
+POST /personagens
+↓
+SQLite persiste dados
+↓
+Frontend lista personagens
 
-Frontend chama GET /personagens
-
-Backend busca no SQLite
-
-Frontend exibe os personagens
-
-Frontend inicia combate (POST /api/combate)
-
-Service cria estado em memória
-
-Engine resolve combate
-
-Vida final é persistida no banco
-
+Frontend inicia combate
+↓
+POST /api/combate
+↓
+Engine resolve combate em memória
+↓
+Vida final é persistida
+↓
 Frontend exibe resultado
 
 Estado Atual do Projeto
 
 Atualmente o sistema já permite:
 
-✔️ criar personagens no banco (via API)
-
+✔️ criar personagens no banco via frontend
+✔️ visualizar personagens criados
 ✔️ listar personagens no frontend
-
 ✔️ executar combate real com engine
-
 ✔️ persistir vida após combate
-
-✔️ visualizar dados no frontend
-
+✔️ visualizar resultados no frontend
 ✔️ integração completa frontend ↔ backend
 
 Próximos Passos Planejados
-
-Tela de criação de personagem no frontend
 
 Seleção de atacante e defensor
 
 Combate por turnos
 
-Visualização de rolagens de dados
+Visualização detalhada de rolagens de dados
 
 Estados de personagem (ferido, inconsciente, morto)
 
@@ -317,8 +325,8 @@ arquitetura limpa
 
 separação de responsabilidades
 
-aprendizado real (não só código copiado)
+aprendizado real (não apenas código copiado)
 
 evolução incremental
 
-O sistema já funciona de ponta a ponta e está preparado para crescer sem refatorações traumáticas.
+O sistema já funciona de ponta a ponta, incluindo criação de personagens via frontend, e está preparado para crescer sem refatorações traumáticas.
