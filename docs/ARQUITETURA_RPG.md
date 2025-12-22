@@ -1,4 +1,4 @@
-📘 ARQUITETURA — RPG de Mesa (Engine + API + Frontend)
+ARQUITETURA — RPG de Mesa (Engine + API + Frontend)
 
 Este documento descreve a arquitetura atual do projeto rpg_mesa, incluindo engine de jogo, backend (API + banco) e frontend (React), bem como o fluxo de dados entre essas camadas.
 
@@ -21,6 +21,8 @@ possibilidade futura de integração com IA narradora
 O sistema separa explicitamente:
 
 rolagem de dados
+
+iniciativa
 
 ataque
 
@@ -122,7 +124,8 @@ rpg_mesa/
 │ │ ├─ resolverAtaque.js
 │ │ ├─ resolverDefesa.js
 │ │ ├─ resolverDesafio.js
-│ │ └─ iniciativa.js
+│ │ ├─ iniciativa.js
+│ │ └─ combateTurnos.js
 │ │
 │ ├─ world/
 │ │ ├─ ambientes/
@@ -135,6 +138,7 @@ rpg_mesa/
 │ │ └─ index.js
 │ │
 │ └─ tests/
+│ ├─ testeCombateTurnos.js
 │ ├─ testeCombate.js
 │ └─ testeEngineAtaque.js
 │
@@ -163,16 +167,13 @@ frontend/
 Funcionalidades do Frontend
 
 ✔️ Criação de personagens via formulário controlado
-
 ✔️ Validação de campos e feedback visual
-
 ✔️ Integração direta com API (POST /personagens)
-
 ✔️ Listagem de personagens persistidos
-
 ✔️ Início de combate via API
-
 ✔️ Exibição de resultados de combate
+
+🔮 Planejado: execução do combate turno a turno, onde cada rolagem de dado será disparada por ações do usuário (botões).
 
 Integração Frontend ↔ Backend
 
@@ -237,9 +238,11 @@ conhece HTTP
 
 Engine de Jogo — game/engine
 
-A engine executa as regras descritas.
+A engine executa as regras descritas e controla o fluxo do combate.
 
 Componentes
+
+iniciativa.js
 
 resolverAtaque.js
 
@@ -247,19 +250,23 @@ resolverDefesa.js
 
 resolverDesafio.js
 
-executarAcao.js
+combateTurnos.js
 
 Responsabilidades
 
-rolar dados
+rolar iniciativa com bônus apenas no dado
 
-comparar ataque × defesa
+alternar turnos de ataque e defesa
+
+resolver ataques e defesas
 
 calcular dano
 
-gerar resultado estruturado
+permitir fuga como condição de encerramento
 
-A engine é totalmente desacoplada de banco e API.
+gerar log estruturado de cada turno
+
+A engine é totalmente desacoplada de banco, API e frontend.
 
 Persistência e Banco de Dados
 Princípios
@@ -283,7 +290,7 @@ Frontend inicia combate
 ↓
 POST /api/combate
 ↓
-Engine resolve combate em memória
+Engine resolve combate por turnos em memória
 ↓
 Vida final é persistida
 ↓
@@ -297,15 +304,17 @@ Atualmente o sistema já permite:
 ✔️ visualizar personagens criados
 ✔️ listar personagens no frontend
 ✔️ executar combate real com engine
+✔️ combate por turnos com iniciativa
+✔️ permitir fuga ou morte como desfecho
 ✔️ persistir vida após combate
 ✔️ visualizar resultados no frontend
-✔️ integração completa frontend ↔ backend
+✔️ testar a engine de forma isolada
 
 Próximos Passos Planejados
 
-Seleção de atacante e defensor
+Seleção de atacante e defensor no frontend
 
-Combate por turnos
+Combate turno a turno com interação do usuário
 
 Visualização detalhada de rolagens de dados
 
@@ -323,10 +332,10 @@ Este projeto prioriza:
 
 arquitetura limpa
 
-separação de responsabilidades
+separação rigorosa de responsabilidades
 
 aprendizado real (não apenas código copiado)
 
 evolução incremental
 
-O sistema já funciona de ponta a ponta, incluindo criação de personagens via frontend, e está preparado para crescer sem refatorações traumáticas.
+O sistema já funciona de ponta a ponta, possui engine de combate por turnos validada por testes, e está preparado para crescer sem refatorações traumáticas.
