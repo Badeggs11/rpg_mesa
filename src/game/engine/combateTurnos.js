@@ -1,78 +1,113 @@
-const { rolarIniciativa } = require("./iniciativa");
-const { resolverAtaque } = require("./resolverAtaque");
-const regras = require("../rules");
+const { rolarIniciativa } = require('./iniciativa');
+const { resolverAtaque } = require('./resolverAtaque');
+const { resolverDefesa } = require('./resolverDefesa');
 
-function combateTurnos({
-  personagemA,
-  personagemB,
-  escolherAcao,
-  escolherDefesa,
-  maxTurnos = 20,
-}) {
-  const estado = {
-    turno: 0,
-    log: [],
+function criarEstadoInicial(p1, p2) {
+  const iniciativa = rolarIniciativa(p1, p2);
+
+  const primeiro = iniciativa.primeiro;
+  const segundo = primeiro.nome === p1.nome ? p2 : p1;
+
+  return {
+    turno: 1,
+    atacanteAtual: primeiro.nome,
+    defensorAtual: segundo.nome,
+    personagens: {
+      [p1.nome]: { ...p1 },
+      [p2.nome]: { ...p2 },
+    },
+    fase: 'aguardandoAtaque',
+    ataquePendente: null,
+
+    log: [
+      {
+        tipo: 'iniciativa',
+        iniciativa,
+        primeiro: primeiro.nome,
+      },
+    ],
     finalizado: false,
-    vencedor: null,
-    motivo: null,
   };
-  const iniciativa = rolarIniciativa(personagemA, personagemB);
+}
 
-  let atacante =
-    iniciativa.iniciativaA > iniciativa.iniciativaB ? personagemA : personagemB;
-  let defensor = atacante === personagemA ? personagemB : personagemA;
+function executarTurno(estado, payload) {
+  if (estado.finalizado) {
+    throw new Error('Combate ja finalizado');
+  }
+  switch (estado.fase) {
+    case 'aguardandoAtaque':
+      return executarFaseAtaque(estado, payload);
+    case 'aguardandoDefesa':
+      return executarFaseDefesa(estado, payload);
+    default:
+      throw new Error(`Fase invalida: ${estado.fase}`);
+  }
+}
+function executarFaseAtaque(estado, payload) {
+  const { acao } = payload;
+
+  if (acao !== 'ataqueFisico' && acao !== 'ataqueMagico') {
+    throw new Error('acao de ataque invalida');
+  }
+  const atacante = estado.personagens[estado.atacanteAtual];
+
+  const resultadoAtaque = resolverAtaque(atacante, acao);
+
+  estado.ataquePendente = resultadoAtaque;
 
   estado.log.push({
-    tipo: "iniciativa",
-    iniciativa,
-    primeiro: atacante.nome,
+    tipo: 'ataque',
+    atacante: atacante.nome,
+    acao,
+    ataque: resultadoAtaque,
   });
+  estado.fase = 'aguardandoDefesa';
+}
+function executarFaseDefesa(estado, payload) {
+  const { defesaEscolhida } = payload;
 
-  while (!estado.finalizado && estado.turno < maxTurnos) {
-    estado.turno++;
+  if (!defesaEscolhida) {
+    throw new Error('Defesa não informada');
+  }
+  const defensor = estado.personagens[estado.defensorAtual];
 
-    const acao = escolherAcao(atacante, defensor, estado.turno);
-    if (!acao || !acao.tipo) {
-      throw new Error("Acao invalida retornada pelo atacante");
-    }
+  const resultadoDefesa = resolverDefesa(defensor, defesaEscolhida);
 
-    const defesaEscolhida = escolherDefesa(defensor, acao, estado.turno);
+  const ataque = estado.ataquePendente;
 
-    const resultado = resolverAtaque(acao, {
-      defensor,
-      defesaEscolhida,
-    });
+  const dano = Math.max(0, ataque.valorAtaque - resultadoDefesa.valorDefesa);
+
+  defensor.pontosDeVida -= dano;
+
+  estado.log.push({
+    tipo: 'defesa',
+    defensor: defensor.nome,
+    defesa: resultadoDefesa,
+    dano,
+    vidaRestante: defensor.pontosDeVida,
+  });
+  estado.ataquePendente = null;
+
+  if (defensor.pontosDeVida <= 0) {
+    estado.finalizado = true;
+    estado.fase = 'finalizado';
 
     estado.log.push({
-      tipo: "turno",
-      turno: estado.turno,
-      atacante: atacante.nome,
-      defensor: defensor.nome,
-      resultado,
-      vidaDefensor: defensor.vida,
+      tipo: 'fimCombate',
+      vencedor: estado.atacanteAtual,
+      derrotado: estado.defensorAtual,
     });
-
-    if (defesaEscolhida === "fugir" && resultado.defesa.sucesso === true) {
-      estado.finalizado = true;
-      estado.vencedor = atacante.nome;
-      estado.motivo = "fuga";
-      break;
-    }
-    if (defensor.vida <= 0) {
-      estado.finalizado = true;
-      estado.vencedor = atacante.nome;
-      estado.motivo = "morte";
-      break;
-    }
-
-    [atacante, defensor] = [defensor, atacante];
+    return;
   }
-
-  if (!estado.finalizado) {
-    estado.finalizado = true;
-    estado.motivo = "limite_turnos";
-  }
-
-  return estado;
+  [estado.atacanteAtual, estado.defensorAtual] = [
+    estado.defensorAtual,
+    estado.atacanteAtual,
+  ];
+  estado.turno += 1;
+  estado.fase = 'aguardandoAtaque';
 }
-module.exports = { combateTurnos };
+
+module.exports = {
+  criarEstadoInicial,
+  executarTurno,
+};

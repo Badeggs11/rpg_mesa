@@ -1,7 +1,8 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const { executarCombate } = require("../controllers/combatController");
+const combatController = require('../controllers/combatController');
 
-router.post("/combate", executarCombate);
+router.post('/combate/iniciar', combatController.iniciarCombate);
+router.post('/combate/acao', combatController.executarAcao);
 
 module.exports = router;
