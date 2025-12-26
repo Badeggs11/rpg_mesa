@@ -56,7 +56,8 @@ function executarFaseIniciativa(estado) {
 
   estado.log.push({
     tipo: 'iniciativa',
-    iniciativa,
+    iniciativaA: iniciativa.iniciativaA,
+    iniciativaBprimeiro: iniciativa.iniciativaB,
     primeiro: iniciativa.primeiro.nome,
   });
 }
@@ -86,8 +87,8 @@ function executarFaseAtaque(estado, payload) {
     tipo: 'ataque',
     atacante: atacante.nome,
     acao,
-    regra: regraAtaque,
-    ataque: resultadoAtaque,
+    valorAtaque: resultadoAtaque.valorAtaque,
+    rolagem: resultadoAtaque.rolagem,
   });
   estado.fase = 'aguardandoDefesa';
 }
@@ -137,7 +138,9 @@ function executarFaseDefesa(estado, payload) {
   estado.log.push({
     tipo: 'defesa',
     defensor: defensor.nome,
-    defesa: resultadoDefesa,
+    defesa: resultadoDefesa.valorDefesa,
+    rolagem: resultadoDefesa,
+    rolagem,
     dano,
     vidaRestante: defensor.pontosDeVida,
   });
