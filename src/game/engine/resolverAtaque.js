@@ -1,61 +1,50 @@
 // game/engine/resolverAtaque.js
-const { jogarDado } = require("../dice");
-const { resolverDefesa } = require("./resolverDefesa");
-const regras = require("../rules");
+const { jogarDado } = require('../dice');
 
-function resolverAtaque(acao, contexto) {
-  const { defensor, defesaEscolhida } = contexto;
-
-  if (!defesaEscolhida) {
-    throw new Error("Ataque requer uma defesa escolhida");
+function resolverAtaque(regraAtaque) {
+  if (!regraAtaque || regraAtaque.tipo !== 'ataque') {
+    throw new Error('Regra de ataque invalida');
   }
+  const { ataque, dano, estilo, descricao } = regraAtaque;
+  const rolagem = jogarDado(ataque.dado);
+  const bonusBase = ataque.base || 0;
+  const bonusParametros = Object.values(ataque.parametros || {}).reduce(
+    (soma, valor) => soma + (valor || 0),
+    0
+  );
 
-  // cria defesa a partir das rules
-  const defesaFn = regras[defesaEscolhida];
-  if (!defesaFn) {
-    throw new Error(`Defesa '${defesaEscolhida}' não existe`);
-  }
+  const bonusEfetivoBase = aplicarBonusPercentual(bonusBase);
+  const bonusEfetivoParametros = aplicarBonusPercentual(bonusParametros);
+  const bonusEfetivoTotal = bonusEfetivoBase + bonusEfetivoParametros;
 
-  const defesa = defesaFn(defensor);
-
-  // valida se defesa é permitida
-  if (!acao.defesaAlvo.includes(defesa.estilo)) {
-    throw new Error(
-      `Defesa '${defesa.estilo}' não permitida contra este ataque`
-    );
-  }
-
-  // rolagem de ataque
-  const rolagemAtaque = jogarDado(acao.ataque.dado);
-  const valorAtaque = rolagemAtaque + acao.ataque.base;
-
-  // rolagem de defesa
-  const resultadoDefesa = resolverDefesa(defesa);
-
-  const diferenca = valorAtaque - resultadoDefesa.valorDefesa;
-  const acertou = diferenca > 0;
-
-  let dano = 0;
-  if (acertou) {
-    const rolagemDano = jogarDado(acao.dano.dado);
-    dano = Math.max(0, rolagemDano + diferenca);
-    defensor.vida -= dano;
-  }
+  const valorAtaque = rolagem + bonusEfetivoTotal;
 
   return {
-    tipo: "resultadoAtaque",
-    estilo: acao.estilo,
-    ataque: {
-      rolagem: rolagemAtaque,
-      base: acao.ataque.base,
-      valorAtaque,
+    tipo: 'resultadoAtaque',
+    estilo,
+    descricao,
+
+    dado: ataque.dado,
+    rolagem,
+
+    bonus: {
+      base: bonusBase,
+      parametros: bonusParametros,
+      efetivoBase: bonusEfetivoBase,
+      efetivoParametros: bonusEfetivoParametros,
+      efetivoTotal: bonusEfetivoTotal,
     },
-    defesa: resultadoDefesa,
-    acertou,
-    diferenca,
-    dano,
-    descricao: acao.descricao,
+
+    valorAtaque,
+
+    dano: {
+      dado: dano.dado,
+    },
   };
 }
-
-module.exports = { resolverAtaque };
+function aplicarBonusPercentual(valor, percentual = 0.1) {
+  return Math.floor(valor * percentual);
+}
+module.exports = {
+  resolverAtaque,
+};

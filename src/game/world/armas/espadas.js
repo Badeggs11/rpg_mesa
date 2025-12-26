@@ -1,22 +1,28 @@
 const espadas = {
   curta: {
-    nome: "Espada Curta",
-    dadoAtaque: 20,
+    nome: 'Espada Curta Comum',
+    tipo: 'espadaCurta',
     dadoDano: 6,
-    bonusAtaque: 1,
-    estilo: "corpo-a-corpo",
+    alcance: 1,
+    equilibrio: 1,
+    tipoLamina: 2,
+    poder: 0,
+    peso: 2,
+    estilo: 'corpo-a-corpo',
+    categoria: 'arma',
   },
 
   longa: {
-    nome: "Espada Longa",
-    dadoAtaque: 20,
+    nome: 'Espada Longa Comum',
+    tipo: 'espadaLonga',
     dadoDano: 8,
-    bonusAtaque: 2,
-    estilo: "corpo-a-corpo",
-    precisao: 2,
+    alcance: 2,
+    equilibrio: 2,
+    tipoLamina: 2,
     poder: 0,
     peso: 2,
-    tipo: "arma",
+    estilo: 'corpo-a-corpo',
+    categoria: 'arma',
   },
 };
 

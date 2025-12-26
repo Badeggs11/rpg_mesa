@@ -1,23 +1,26 @@
-const { jogarDado } = require("../dice");
+const { jogarDado } = require('../dice');
 
-function resolverDefesa(defesa) {
-  const rolagem = jogarDado(defesa.dado);
-  const valorDefesa = rolagem + defesa.base;
+function resolverDefesa(defensor, defesaEscolhida) {
+  let bonus = 0;
 
-  let sucesso = true;
-
-  if (defesa.limiarSucesso !== undefined) {
-    sucesso = valorDefesa >= defesa.limiarSucesso;
+  if (defesaEscolhida === 'defesaFisica') {
+    bonus = (defensor.resistencia || 0) + (defensor.forca || 0);
   }
+  if (defesaEscolhida === 'defesaMagica') {
+    bonus = (defensor.inteligencia || 0) + (defensor.resistencia || 0);
+  }
+  if (defesaEscolhida === 'esquiva') {
+    bonus = (defensor.agilidade || 0) + (defensor.inteligencia || 0);
+  }
+  const rolagem = jogarDado(20);
+  const valorDefesa = rolagem + bonus;
 
   return {
-    tipo: "resultadoDefesa",
-    estilo: defesa.estilo,
+    tipo: 'resultadoDefesa',
+    estilo: defesaEscolhida,
     rolagem,
-    base: defesa.base,
+    bonus,
     valorDefesa,
-    sucesso,
-    descricao: defesa.descricao,
   };
 }
 

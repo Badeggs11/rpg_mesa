@@ -4,7 +4,7 @@ Este documento descreve a arquitetura atual do projeto rpg_mesa, incluindo engin
 
 Visão Geral
 
-Este projeto implementa um sistema de RPG de mesa baseado em engine, com backend e frontend integrados, com foco em:
+Este projeto implementa um sistema de RPG de mesa baseado em engine própria, com backend e frontend integrados, com foco em:
 
 clareza e transparência das regras
 
@@ -63,7 +63,7 @@ O jogo acontece em memória
 
 Frontend nunca acessa o banco diretamente
 
-Esses princípios evitam acoplamento indevido e facilitam manutenção e expansão.
+Esses princípios evitam acoplamento indevido e facilitam manutenção, testes e expansão.
 
 Camadas do Sistema (Atual)
 Frontend (React + Vite)
@@ -90,27 +90,18 @@ Engine é pura (sem HTTP, sem banco)
 
 Frontend consome a API via fetch
 
-Proxy do Vite é usado para integração frontend/backend
+Proxy do Vite integra frontend/backend sem CORS
 
 Organização de Pastas (Backend)
 rpg_mesa/
 └─ src/
 ├─ controllers/
-│ ├─ personagensController.js
-│ ├─ mesasController.js
-│ ├─ mesaPersonagensController.js
 │ └─ combatController.js
 │
 ├─ routes/
-│ ├─ personagensRoutes.js
-│ ├─ mesasRoutes.js
-│ ├─ mesaPersonagensRoutes.js
 │ └─ combatRoutes.js
 │
 ├─ services/
-│ ├─ personagensService.js
-│ ├─ mesasService.js
-│ ├─ mesaPersonagensService.js
 │ └─ combatService.js
 │
 ├─ database/
@@ -120,17 +111,13 @@ rpg_mesa/
 │ ├─ dice.js
 │ ├─ rules.js
 │ ├─ engine/
-│ │ ├─ executarAcao.js
+│ │ ├─ iniciativa.js
 │ │ ├─ resolverAtaque.js
 │ │ ├─ resolverDefesa.js
 │ │ ├─ resolverDesafio.js
-│ │ ├─ iniciativa.js
 │ │ └─ combateTurnos.js
 │ │
 │ ├─ world/
-│ │ ├─ ambientes/
-│ │ │ ├─ rios.js
-│ │ │ └─ muros.js
 │ │ ├─ armas/
 │ │ │ └─ espadas.js
 │ │ ├─ poderes/
@@ -139,7 +126,6 @@ rpg_mesa/
 │ │
 │ └─ tests/
 │ ├─ testeCombateTurnos.js
-│ ├─ testeCombate.js
 │ └─ testeEngineAtaque.js
 │
 ├─ rpg.db
@@ -147,48 +133,56 @@ rpg_mesa/
 
 Frontend (React + Vite)
 
-O frontend é responsável por visualizar, criar e interagir com os elementos do sistema.
+O frontend é responsável por visualizar, criar e interagir com os elementos do sistema, conduzindo explicitamente as ações do combate.
 
-Estrutura do Frontend (Atual)
+Estrutura Atual
 frontend/
 └─ src/
 ├─ api/
-│ ├─ personagens.js
 │ └─ combate.js
 │
 ├─ pages/
-│ ├─ ListaPersonagens.jsx
-│ ├─ CriarPersonagem.jsx
 │ └─ ArenaCombate.jsx
 │
 ├─ App.jsx
 └─ main.jsx
 
-Funcionalidades do Frontend
+Funcionalidades Atuais
 
-✔️ Criação de personagens via formulário controlado
-✔️ Validação de campos e feedback visual
-✔️ Integração direta com API (POST /personagens)
-✔️ Listagem de personagens persistidos
 ✔️ Início de combate via API
-✔️ Exibição de resultados de combate
+✔️ Execução do combate fase a fase
+✔️ Escolha explícita de ataque e defesa
+✔️ Rolagem de dados acionada pelo usuário (botão 🎲)
+✔️ Visualização de turnos, fases e participantes
+✔️ Log detalhado e estruturado de cada evento
 
-🔮 Planejado: execução do combate turno a turno, onde cada rolagem de dado será disparada por ações do usuário (botões).
+🔮 Planejado:
+
+seleção dinâmica de personagens
+
+escolha de armas e golpes
+
+visualização gráfica de rolagens
 
 Integração Frontend ↔ Backend
 
-O frontend não usa URLs públicas diretamente
+O frontend não utiliza URLs públicas diretamente.
 
-O Vite Proxy redireciona chamadas para o backend
+O Vite Proxy redireciona chamadas automaticamente:
 
-Exemplo
-fetch("/personagens")
+fetch('/api/combate/iniciar')
 
-É redirecionado internamente para:
+⬇️
 
-http://localhost:3000/personagens
+http://localhost:3000/api/combate/iniciar
 
-Isso evita problemas de CORS e HTTPS em ambientes locais e remotos (Codespaces).
+Isso evita problemas de:
+
+CORS
+
+HTTPS
+
+ambientes locais e Codespaces
 
 Módulo de Dados — dice.js
 
@@ -218,11 +212,13 @@ Regras do Jogo — rules.js
 
 O módulo rules.js descreve ações, mas não executa.
 
-Ele pode:
+Ele é responsável por:
 
 calcular valores base
 
-usar atributos do personagem
+combinar atributos do personagem
+
+combinar parâmetros de armas ou poderes
 
 definir defesas permitidas
 
@@ -235,6 +231,8 @@ acessa banco
 aplica dano
 
 conhece HTTP
+
+Cada função retorna um objeto de regra declarativa, que será executado pela engine.
 
 Engine de Jogo — game/engine
 
@@ -254,17 +252,19 @@ combateTurnos.js
 
 Responsabilidades
 
-rolar iniciativa com bônus apenas no dado
+rolar iniciativa
 
-alternar turnos de ataque e defesa
+controlar fases do combate
 
-resolver ataques e defesas
+executar ataques e defesas
+
+aplicar bônus percentuais (dado como protagonista)
 
 calcular dano
 
-permitir fuga como condição de encerramento
+permitir fuga como encerramento
 
-gerar log estruturado de cada turno
+gerar log estruturado e transparente
 
 A engine é totalmente desacoplada de banco, API e frontend.
 
@@ -277,20 +277,12 @@ Combates acontecem em memória
 
 Apenas o resultado final é salvo
 
-Exemplo de Fluxo Real
-Frontend cria personagem
-↓
-POST /personagens
-↓
-SQLite persiste dados
-↓
-Frontend lista personagens
-
+Fluxo Real
 Frontend inicia combate
 ↓
 POST /api/combate
 ↓
-Engine resolve combate por turnos em memória
+Engine resolve turnos em memória
 ↓
 Vida final é persistida
 ↓
@@ -300,23 +292,20 @@ Estado Atual do Projeto
 
 Atualmente o sistema já permite:
 
-✔️ criar personagens no banco via frontend
-✔️ visualizar personagens criados
-✔️ listar personagens no frontend
-✔️ executar combate real com engine
 ✔️ combate por turnos com iniciativa
-✔️ permitir fuga ou morte como desfecho
-✔️ persistir vida após combate
-✔️ visualizar resultados no frontend
-✔️ testar a engine de forma isolada
+✔️ execução faseada (iniciativa → ataque → defesa)
+✔️ rolagem de dados controlada pelo usuário
+✔️ integração rules → engine → frontend
+✔️ logs ricos e explicáveis
+✔️ engine testável de forma isolada
 
 Próximos Passos Planejados
 
-Seleção de atacante e defensor no frontend
+Biblioteca de golpes (personagem + arma + intenção)
 
-Combate turno a turno com interação do usuário
+Seleção de arma no frontend
 
-Visualização detalhada de rolagens de dados
+Visualização detalhada de cálculos
 
 Estados de personagem (ferido, inconsciente, morto)
 
@@ -338,4 +327,4 @@ aprendizado real (não apenas código copiado)
 
 evolução incremental
 
-O sistema já funciona de ponta a ponta, possui engine de combate por turnos validada por testes, e está preparado para crescer sem refatorações traumáticas.
+O sistema já funciona de ponta a ponta, possui engine de combate por turnos interativa, com rolagem explícita de dados, e está preparado para crescer sem refatorações traumáticas.

@@ -16,13 +16,13 @@ function atravessarRio(personagem, rio) {
   valorSolicitado = limitar(valorSolicitado, 3, 20);
 
   return {
-    tipo: "desafio",
-    nome: "Atravessar Rio",
+    tipo: 'desafio',
+    nome: 'Atravessar Rio',
     testes: 1,
     dado: 20,
     dificuldade: valorSolicitado,
     descricao:
-      "O personagem tenta atravessar um rio perigoso enfrentando correnteza, largura, obstáculos e predadores naturais.",
+      'O personagem tenta atravessar um rio perigoso enfrentando correnteza, largura, obstáculos e predadores naturais.',
   };
 }
 function abrirPortaAntiga(personagem, porta) {
@@ -37,12 +37,12 @@ function abrirPortaAntiga(personagem, porta) {
   valorSolicitado = limitar(valorSolicitado, 2, 20);
 
   return {
-    tipo: "desafio",
-    nome: "Abrir Porta Antiga",
+    tipo: 'desafio',
+    nome: 'Abrir Porta Antiga',
     testes: 1,
     dado: 20,
     dificuldade: valorSolicitado,
-    descricao: "Uma porta de madeira antiga reforçada com metal enferrujado",
+    descricao: 'Uma porta de madeira antiga reforçada com metal enferrujado',
   };
 }
 function escalarMuro(personagem, muro) {
@@ -55,64 +55,64 @@ function escalarMuro(personagem, muro) {
 
   valorSolicitado = limitar(valorSolicitado, 3, 20);
   return {
-    tipo: "desafio",
-    nome: "Escalar Muro",
-    testes: altura > 3 ? 3 : 2,
+    tipo: 'desafio',
+    nome: 'Escalar Muro',
+    testes: muro.altura > 3 ? 3 : 2,
     dado: 20,
     dificuldade: valorSolicitado,
-    descricao: "O personagem tenta escalar um muro",
+    descricao: 'O personagem tenta escalar um muro',
   };
 }
 function defesaFisica(personagem) {
   const base = (personagem.forca || 0) + (personagem.resistencia || 0);
   return {
-    tipo: "defesa",
-    estilo: "fisica",
+    tipo: 'defesa',
+    estilo: 'fisica',
     dado: 20,
     base,
-    descricao: "O personagem tenta bloquear ou absorver o ataque.",
+    descricao: 'O personagem tenta bloquear ou absorver o ataque.',
   };
 }
-function esquivar(personagem) {
+function esquiva(personagem) {
   const base = (personagem.agilidade || 0) + (personagem.sorte || 0);
   return {
-    tipo: "defesa",
-    estilo: "esquiva",
+    tipo: 'defesa',
+    estilo: 'esquiva',
     dado: 20,
     base,
-    descricao: "O personagem tenta desviar do ataque.",
+    descricao: 'O personagem tenta desviar do ataque.',
   };
 }
 
-function resistirMagia(personagem) {
-  const base = (personagem.resistencia || 0) + (personagem.forca || 0);
+function defesaMagica(personagem) {
+  const base = (personagem.resistencia || 0) + (personagem.inteligencia || 0);
   return {
-    tipo: "defesa",
-    estilo: "resisteMagia",
+    tipo: 'defesa',
+    estilo: 'magica',
     dado: 20,
     base,
-    descricao: "O personagem tenta resistir ao efeito mágico.",
+    descricao: 'O personagem tenta resistir ao efeito mágico.',
   };
 }
 function resistirVeneno(personagem) {
   const base = (personagem.resistencia || 0) + (personagem.forca || 0);
   return {
-    tipo: "defesa",
-    estilo: "resisteVeneno",
+    tipo: 'defesa',
+    estilo: 'resisteVeneno',
     dado: 20,
     base,
-    descricao: "O corpo tenta neutralizar o veneno.",
+    descricao: 'O corpo tenta neutralizar o veneno.',
   };
 }
 function fugir(personagem) {
   const base = (personagem.agilidade || 0) + (personagem.sorte || 0);
   return {
-    tipo: "defesa",
-    estilo: "fuga",
+    tipo: 'defesa',
+    estilo: 'fuga',
     dado: 20,
     base,
     limiarSucesso: 15,
-    descricao: "O personagem tenta fugir do combate.",
+    descricao: 'O personagem tenta fugir do combate.',
   };
 }
 
@@ -122,13 +122,14 @@ function ataqueFisico(personagem, arma) {
     (personagem.inteligencia || 0) +
     (personagem.agilidade || 0);
   return {
-    tipo: "ataque",
-    estilo: "fisico",
+    tipo: 'ataque',
+    estilo: 'fisico',
     ataque: {
       base,
       dado: 20,
       parametros: {
-        precisao: arma.precisao,
+        equilibrio: arma.equilibrio,
+        tipoLamina: arma.tipoLamina,
         poder: arma.poder,
         peso: arma.peso,
       },
@@ -136,15 +137,15 @@ function ataqueFisico(personagem, arma) {
     dano: {
       dado: arma.dadoDano,
     },
-    defesaAlvo: ["fisica", "esquiva", "fuga"],
+    defesaAlvo: ['fisica', 'esquiva', 'fuga'],
     descricao: `O personagem ataca com ${arma.nome}.`,
   };
 }
 function ataqueMagico(personagem, magia) {
   const base = (personagem.poder || 0) + (personagem.inteligencia || 0);
   return {
-    tipo: "ataque",
-    estilo: "magico",
+    tipo: 'ataque',
+    estilo: 'magico',
     ataque: {
       base,
       dado: 20,
@@ -157,7 +158,7 @@ function ataqueMagico(personagem, magia) {
     dano: {
       dado: magia.dadoDano,
     },
-    defesaAlvo: ["resisteMagia", "esquiva", "fuga"],
+    defesaAlvo: ['magica', 'esquiva', 'fuga'],
     descricao: `O personagem ataca com ${magia.nome}.`,
   };
 }
@@ -167,8 +168,8 @@ module.exports = {
   abrirPortaAntiga,
   escalarMuro,
   defesaFisica,
-  esquivar,
-  resistirMagia,
+  esquiva,
+  defesaMagica,
   resistirVeneno,
   fugir,
   ataqueFisico,

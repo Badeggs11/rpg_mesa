@@ -2,7 +2,7 @@ const combatService = require('../services/combatService');
 
 async function iniciarCombate(req, res) {
   try {
-    const combate = await combateService.iniciarCombate(req.body);
+    const combate = await combatService.iniciarCombate(req.body);
     res.json(combate);
   } catch (e) {
     res.status(400).json({ erro: e.message });
