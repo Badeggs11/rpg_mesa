@@ -1,26 +1,36 @@
 const { jogarDado } = require('../dice');
 
-function resolverDefesa(defensor, defesaEscolhida) {
-  let bonus = 0;
+function resolverDefesa(regraDefesa, regraAtaque, rolagemDefesa) {
+  // 1️⃣ rolagem principal da defesa
 
-  if (defesaEscolhida === 'defesaFisica') {
-    bonus = (defensor.resistencia || 0) + (defensor.forca || 0);
-  }
-  if (defesaEscolhida === 'defesaMagica') {
-    bonus = (defensor.inteligencia || 0) + (defensor.resistencia || 0);
-  }
-  if (defesaEscolhida === 'esquiva') {
-    bonus = (defensor.agilidade || 0) + (defensor.inteligencia || 0);
-  }
-  const rolagem = jogarDado(20);
-  const valorDefesa = rolagem + bonus;
+  // 2️⃣ valor bruto de defesa
+  const valorDefesa = rolagemDefesa + regraDefesa.intensidade;
+
+  // 3️⃣ checar se reagiu a tempo (velocidade)
+  const reagiu = regraDefesa.velocidade >= regraAtaque.velocidade;
+
+  // 4️⃣ checar direção
+  const direcaoCorreta = regraDefesa.direcao === regraAtaque.direcao;
+
+  // 5️⃣ esquiva pura (velocidade + direção)
+  const evadiu = reagiu && direcaoCorreta;
+
+  // 6️⃣ bloqueio parcial ou total
+  const neutralizouGolpe = !evadiu && valorDefesa >= regraAtaque.intensidade;
 
   return {
     tipo: 'resultadoDefesa',
-    estilo: defesaEscolhida,
-    rolagem,
-    bonus,
+    estilo: regraDefesa.estilo,
+
+    rolagem: rolagemDefesa,
     valorDefesa,
+
+    reagiu,
+    direcao: regraDefesa.direcao,
+    direcaoCorreta,
+
+    evadiu,
+    neutralizouGolpe,
   };
 }
 

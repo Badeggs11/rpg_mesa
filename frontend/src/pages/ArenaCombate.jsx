@@ -1,14 +1,33 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import './ArenaCombate.css';
+import Log from '../components/log/Log';
+
+import Rolagem from '../components/Rolagem';
+import EscolhaGolpe from '../components/EscolhaGolpe';
+import EscolhaDirecao from '../components/EscolhaDirecao';
 
 export default function ArenaCombate() {
   const [combate, setCombate] = useState(null);
   const [erro, setErro] = useState(null);
   const [carregando, setCarregando] = useState(false);
-  const [acaoSelecionada, setAcaoSelecionada] = useState(null);
+
+  const [golpe, setGolpe] = useState(null);
+  const [altura, setAltura] = useState(null);
+  const [lado, setLado] = useState(null);
 
   const atacanteId = 1;
   const defensorId = 3;
+
+  useEffect(() => {
+    if (combate?.fase === 'aguardandoIniciativa') {
+      enviarAcao({});
+    }
+  }, [combate?.fase]);
+
+  function direcaoCompleta() {
+    if (!altura || !lado) return null;
+    return `${altura}-${lado}`;
+  }
 
   async function iniciarCombate() {
     setErro(null);
@@ -60,62 +79,130 @@ export default function ArenaCombate() {
   function renderAcoes() {
     if (!combate || combate.finalizado) return null;
 
-    if (combate.fase === 'aguardandoIniciativa') {
-      return (
-        <div className="acoes">
-          <button className="rolar" onClick={() => enviarAcao({})}>
-            🎲 Rolar Iniciativa
-          </button>
-        </div>
-      );
-    }
+    switch (combate.fase) {
+      case 'aguardandoRolagemIniciativa':
+        return (
+          <Rolagem
+            texto="Rolar Iniciativa"
+            onRolar={() => enviarAcao({})}
+            disabled={carregando}
+          />
+        );
 
-    if (combate.fase === 'aguardandoAtaque') {
-      return (
-        <div className="acoes">
-          <button onClick={() => setAcaoSelecionada({ acao: 'ataqueFisico' })}>
-            ⚔️ Escolher Ataque Fisico
-          </button>
-          <button onClick={() => setAcaoSelecionada({ acao: 'ataqueMagico' })}>
-            🔮 Escolher Ataque Mágico
-          </button>
-        </div>
-      );
+      case 'aguardandoIniciativa':
+        // essa fase resolve a iniciativa automaticamente no backend
+        return (
+          <div className="acoes">
+            <p>Resolvendo iniciativa...</p>
+          </div>
+        );
+
+      case 'aguardandoRolagemAtaque':
+        return (
+          <Rolagem
+            texto="Rolar Ataque"
+            onRolar={() => enviarAcao({})}
+            disabled={carregando}
+          />
+        );
+
+      case 'aguardandoAtaque':
+        return (
+          <>
+            <EscolhaGolpe
+              titulo="Golpe de Ataque"
+              golpes={[
+                { id: 'socoSimples', label: '👊 Soco' },
+                { id: 'chuteSimples', label: '🦵 Chute' },
+              ]}
+              selecionado={golpe}
+              onSelecionar={setGolpe}
+            />
+
+            <EscolhaDirecao
+              altura={altura}
+              lado={lado}
+              setAltura={setAltura}
+              setLado={setLado}
+            />
+
+            <button
+              className="confirmar"
+              disabled={!golpe || !direcaoCompleta()}
+              onClick={() => {
+                enviarAcao({
+                  golpe,
+                  direcao: direcaoCompleta(),
+                });
+                setGolpe(null);
+                setAltura(null);
+                setLado(null);
+              }}
+            >
+              Confirmar Ataque
+            </button>
+          </>
+        );
+
+      case 'aguardandoRolagemDefesa':
+        return (
+          <Rolagem
+            texto="Rolar Defesa"
+            onRolar={() => enviarAcao({})}
+            disabled={carregando}
+          />
+        );
+
+      case 'aguardandoDefesa':
+        return (
+          <>
+            <EscolhaGolpe
+              titulo="Golpe de Defesa"
+              golpes={[
+                { id: 'bloqueioSimples', label: '🛡 Bloqueio' },
+                { id: 'esquivaSimples', label: '🤸 Esquiva' },
+              ]}
+              selecionado={golpe}
+              onSelecionar={setGolpe}
+            />
+
+            <EscolhaDirecao
+              altura={altura}
+              lado={lado}
+              setAltura={setAltura}
+              setLado={setLado}
+            />
+
+            <button
+              className="confirmar"
+              disabled={!golpe || !direcaoCompleta()}
+              onClick={() => {
+                enviarAcao({
+                  golpe,
+                  direcao: direcaoCompleta(),
+                });
+                setGolpe(null);
+                setAltura(null);
+                setLado(null);
+              }}
+            >
+              Confirmar Defesa
+            </button>
+          </>
+        );
+
+      default:
+        return null;
     }
-    if (combate.fase === 'aguardandoDefesa') {
-      return (
-        <div className="acoes">
-          <button
-            onClick={() =>
-              setAcaoSelecionada({ defesaEscolhida: 'defesaFisica' })
-            }
-          >
-            🛡 Defesa Fisica
-          </button>
-          <button
-            onClick={() =>
-              setAcaoSelecionada({ defesaEscolhida: 'defesaMagica' })
-            }
-          >
-            ✨ Defesa Mágica
-          </button>
-          <button
-            onClick={() => setAcaoSelecionada({ defesaEscolhida: 'esquiva' })}
-          >
-            🤸🏼‍♀️ Esquiva
-          </button>
-        </div>
-      );
-    }
-    return null;
   }
+
   return (
     <div className="arena">
       <h1>⚔️ Arena de Combate</h1>
 
       {!combate && (
         <button onClick={iniciarCombate} disabled={carregando}>
-          ⚡️Iniciar Combate
+          ⚡ Iniciar Combate
         </button>
       )}
 
@@ -129,36 +216,12 @@ export default function ArenaCombate() {
             <p>Atacante: {combate.atacanteAtual}</p>
             <p>Defensor: {combate.defensorAtual}</p>
           </div>
-          <div className="vidas">
-            {Object.values(combate.personagens).map(p => (
-              <div key={p.nome} className="personagem">
-                <strong>{p.nome}</strong>
-                <span>❤️ {p.pontosDeVida}</span>
-              </div>
-            ))}
-          </div>
+
           {renderAcoes()}
 
-          {/* 🎲 ROLAR DADO */}
-          {acaoSelecionada && !combate.finalizado && (
-            <div className="acoes">
-              <button
-                className="rolar"
-                disabled={carregando}
-                onClick={() => {
-                  enviarAcao(acaoSelecionada);
-                  setAcaoSelecionada(null);
-                }}
-              >
-                🎲 Rolar Dado
-              </button>
-            </div>
-          )}
-          <div className="log">
+          <div className="log-wrapper">
             <h3>📜 Log do Combate</h3>
-            {combate.log.map((evento, i) => (
-              <pre key={i}>{JSON.stringify(evento, null, 2)}</pre>
-            ))}
+            <Log eventos={combate.log} />
           </div>
 
           {combate.finalizado && <h2 className="fim">🏆 Combate Finalizado</h2>}

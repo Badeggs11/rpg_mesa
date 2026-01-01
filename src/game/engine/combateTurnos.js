@@ -2,8 +2,13 @@ const { rolarIniciativa } = require('./iniciativa');
 const { resolverAtaque } = require('./resolverAtaque');
 const { resolverDefesa } = require('./resolverDefesa');
 const rules = require('../rules');
-const espadas = require('../world/armas/espadas');
+const golpesAtaque = require('../world/golpesAtaque');
+const golpesDefesa = require('../world/golpesDefesa');
+const { jogarDado } = require('../dice');
 
+/* =========================
+   ESTADO INICIAL
+========================= */
 function criarEstadoInicial(p1, p2) {
   return {
     turno: 0,
@@ -15,137 +20,275 @@ function criarEstadoInicial(p1, p2) {
       [p2.nome]: { ...p2 },
     },
 
-    fase: 'aguardandoIniciativa',
+    fase: 'aguardandoRolagemIniciativa',
 
-    ataquePendente: null,
+    rolagemIniciativaA: null,
+    rolagemIniciativaB: null,
 
     log: [],
-
     finalizado: false,
   };
 }
+function executarRolagemIniciativa(estado) {
+  const [nomeA, nomeB] = Object.keys(estado.personagens);
 
-function executarTurno(estado, payload) {
+  estado.rolagemIniciativaA = jogarDado(20);
+  estado.rolagemIniciativaB = jogarDado(20);
+
+  estado.log.push({
+    tipo: 'rolagemIniciativa',
+    personagemA: nomeA,
+    personagemB: nomeB,
+    rolagemA: estado.rolagemIniciativaA,
+    rolagemB: estado.rolagemIniciativaB,
+  });
+
+  estado.fase = 'aguardandoIniciativa';
+}
+
+/* =========================
+   DISPATCHER PRINCIPAL
+========================= */
+function executarTurno(estado, payload = {}) {
   if (estado.finalizado) {
-    throw new Error('Combate ja finalizado');
+    throw new Error('Combate já finalizado');
   }
+
   switch (estado.fase) {
+    case 'aguardandoRolagemIniciativa':
+      executarRolagemIniciativa(estado);
+      break;
     case 'aguardandoIniciativa':
-      return executarFaseIniciativa(estado, payload);
+      executarFaseIniciativa(estado);
+      break;
+
+    case 'aguardandoRolagemAtaque':
+      executarRolagemAtaque(estado);
+      break;
+
     case 'aguardandoAtaque':
-      return executarFaseAtaque(estado, payload);
+      executarFaseAtaque(estado, payload);
+      break;
+
+    case 'aguardandoRolagemDefesa':
+      executarRolagemDefesa(estado);
+      break;
+
     case 'aguardandoDefesa':
-      return executarFaseDefesa(estado, payload);
+      executarFaseDefesa(estado, payload);
+      break;
+
     default:
-      throw new Error(`Fase invalida: ${estado.fase}`);
+      throw new Error(`Fase inválida: ${estado.fase}`);
   }
 }
-function executarFaseIniciativa(estado) {
-  const nomes = Object.keys(estado.personagens);
-  const p1 = estado.personagens[nomes[0]];
-  const p2 = estado.personagens[nomes[1]];
 
-  const iniciativa = rolarIniciativa(p1, p2);
+/* =========================
+   FASES
+========================= */
+
+function executarFaseIniciativa(estado) {
+  const [p1, p2] = Object.values(estado.personagens);
+
+  const iniciativa = rolarIniciativa({
+    personagemA: p1,
+    personagemB: p2,
+    rolagemA: estado.rolagemIniciativaA,
+    rolagemB: estado.rolagemIniciativaB,
+  });
+
+  if (iniciativa.empate) {
+    estado.log.push({
+      tipo: 'empateIniciativa',
+      iniciativaA: iniciativa.iniciativaA,
+      iniciativaB: iniciativa.iniciativaB,
+    });
+
+    // limpa e pede nova rolagem
+    estado.rolagemIniciativaA = null;
+    estado.rolagemIniciativaB = null;
+    estado.fase = 'aguardandoRolagemIniciativa';
+    return;
+  }
 
   estado.atacanteAtual = iniciativa.primeiro.nome;
   estado.defensorAtual =
     iniciativa.primeiro.nome === p1.nome ? p2.nome : p1.nome;
 
   estado.turno = 1;
-  estado.fase = 'aguardandoAtaque';
+  estado.fase = 'aguardandoRolagemAtaque';
 
   estado.log.push({
     tipo: 'iniciativa',
     iniciativaA: iniciativa.iniciativaA,
-    iniciativaBprimeiro: iniciativa.iniciativaB,
+    iniciativaB: iniciativa.iniciativaB,
+    rolagemA: iniciativa.rolagemA,
+    rolagemB: iniciativa.rolagemB,
+    bonusA: iniciativa.bonusA,
+    bonusB: iniciativa.bonusB,
     primeiro: iniciativa.primeiro.nome,
   });
+
+  // limpa após uso
+  estado.rolagemIniciativaA = null;
+  estado.rolagemIniciativaB = null;
 }
 
+/* ---------- ROLAGEM ATAQUE ---------- */
+
+function executarRolagemAtaque(estado) {
+  const rolagem = jogarDado(20);
+  estado.rolagemAtaque = rolagem;
+
+  estado.log.push({
+    tipo: 'rolagemAtaque',
+    valor: rolagem,
+  });
+
+  estado.fase = 'aguardandoAtaque';
+}
+
+/* ---------- ATAQUE ---------- */
+
 function executarFaseAtaque(estado, payload) {
-  const { acao } = payload;
-
-  if (acao !== 'ataqueFisico' && acao !== 'ataqueMagico') {
-    throw new Error('acao de ataque invalida');
+  const { golpe, direcao } = payload;
+  if (!golpe || !direcao) {
+    throw new Error('Golpe ou direção não informados');
   }
+
   const atacante = estado.personagens[estado.atacanteAtual];
-  let regraAtaque;
-
-  if (acao === 'ataqueFisico') {
-    const arma = espadas.curta;
-    regraAtaque = rules.ataqueFisico(atacante, arma);
-  }
-  if (acao === 'ataqueMagico') {
-    throw new Error('Ataque mágico ainda nao implementado');
+  const golpeAtaque = golpesAtaque[golpe];
+  if (!golpeAtaque) {
+    throw new Error('Golpe de ataque inválido');
   }
 
-  const resultadoAtaque = resolverAtaque(regraAtaque);
+  const regraAtaque = rules.ataqueFisico({
+    atacante,
+    golpe: golpeAtaque,
+    direcao,
+  });
 
-  estado.ataquePendente = resultadoAtaque;
+  estado.ataquePendente = regraAtaque;
 
   estado.log.push({
     tipo: 'ataque',
     atacante: atacante.nome,
-    acao,
-    valorAtaque: resultadoAtaque.valorAtaque,
-    rolagem: resultadoAtaque.rolagem,
+    golpe: golpeAtaque.nome,
+    direcao,
+    intensidade: regraAtaque.intensidade,
+    velocidade: regraAtaque.velocidade,
   });
+
+  estado.fase = 'aguardandoRolagemDefesa';
+}
+
+/* ---------- ROLAGEM DEFESA ---------- */
+
+function executarRolagemDefesa(estado) {
+  const rolagem = jogarDado(20);
+  estado.rolagemDefesa = rolagem;
+
+  estado.log.push({
+    tipo: 'rolagemDefesa',
+    valor: rolagem,
+  });
+
   estado.fase = 'aguardandoDefesa';
 }
+
+/* ---------- DEFESA ---------- */
+
 function executarFaseDefesa(estado, payload) {
-  const { defesaEscolhida } = payload;
+  const { golpe, direcao } = payload;
 
-  if (!defesaEscolhida) {
-    throw new Error('Defesa não informada');
+  if (estado.rolagemDefesa == null) {
+    throw new Error('Rolagem de defesa não realizada');
   }
-
+  if (!golpe || !direcao) {
+    throw new Error('Golpe ou direção não informados');
+  }
   if (!estado.ataquePendente) {
-    throw new Error('Nenhum ataque pendente para defender');
+    throw new Error('Nenhum ataque pendente');
   }
+
   const defensor = estado.personagens[estado.defensorAtual];
-
-  let regraDefesa;
-
-  switch (defesaEscolhida) {
-    case 'defesaFisica':
-      regraDefesa = rules.defesaFisica(defensor);
-      break;
-
-    case 'defesaMagica':
-      regraDefesa = rules.defesaMagica(defensor);
-      break;
-
-    case 'esquiva':
-      regraDefesa = rules.esquiva(defensor);
-      break;
-
-    case 'fuga':
-      regraDefesa = rules.fugir(defensor);
-      break;
-
-    default:
-      throw new Error('Defesa invalida');
+  const golpeDefesa = golpesDefesa[golpe];
+  if (!golpeDefesa) {
+    throw new Error('Golpe de defesa inválido');
   }
 
-  const resultadoDefesa = resolverDefesa(regraDefesa);
+  /* 1️⃣ Resolver defesa */
+  const resultadoDefesa = resolverDefesa(
+    rules.defesaFisica({ defensor, golpe: golpeDefesa, direcao }),
+    estado.ataquePendente,
+    estado.rolagemDefesa
+  );
 
-  const ataque = estado.ataquePendente;
+  /* 2️⃣ Resolver ataque final */
+  const resultadoAtaqueFinal = resolverAtaque(
+    estado.ataquePendente,
+    resultadoDefesa,
+    estado.rolagemAtaque
+  );
+  const direcaoCorreta = resultadoDefesa.direcaoCorreta;
 
-  const dano = Math.max(0, ataque.valorAtaque - resultadoDefesa.valorDefesa);
+  // componentes sem dado
+  const ataqueBase =
+    estado.ataquePendente.intensidade + estado.ataquePendente.velocidade;
 
+  const defesaBase = resultadoDefesa.valorDefesa - estado.rolagemDefesa;
+
+  // 🧠 REGRA DE DIREÇÃO
+  let dano;
+
+  if (direcaoCorreta) {
+    // defesa leu corretamente → dano reduzido
+    dano = Math.max(0, ataqueBase - defesaBase);
+  } else {
+    // defesa errou direção → dano total
+    dano = resultadoAtaqueFinal.valorAtaque;
+  }
+
+  /* 4️⃣ Aplicar dano */
   defensor.pontosDeVida -= dano;
 
   estado.log.push({
-    tipo: 'defesa',
+    tipo: 'narrativaDefesa',
     defensor: defensor.nome,
-    defesa: resultadoDefesa.valorDefesa,
-    rolagem: resultadoDefesa,
-    rolagem,
+    golpe: golpeDefesa.nome,
+    direcao,
+    direcaoCorreta: resultadoDefesa.direcaoCorreta,
+  });
+
+  /* 5️⃣ Logs (ordem segura) */
+  estado.log.push({
+    tipo: 'resolucaoTurno',
+
+    atacante: estado.atacanteAtual,
+    defensor: defensor.nome,
+
+    golpeAtaque: estado.ataquePendente.estilo,
+    direcao,
+
+    rolagemAtaque: resultadoAtaqueFinal.rolagem,
+    valorAtaque: resultadoAtaqueFinal.valorAtaque,
+
+    rolagemDefesa: resultadoDefesa.rolagem,
+    valorDefesa: resultadoDefesa.valorDefesa,
+
+    evadiu: resultadoDefesa.evadiu,
+    neutralizouGolpe: resultadoDefesa.neutralizouGolpe,
+
     dano,
     vidaRestante: defensor.pontosDeVida,
   });
+
+  /* 6️⃣ Limpar estado temporário */
+  estado.rolagemAtaque = null;
+  estado.rolagemDefesa = null;
   estado.ataquePendente = null;
 
+  /* 7️⃣ Fim ou próximo turno */
   if (defensor.pontosDeVida <= 0) {
     estado.finalizado = true;
     estado.fase = 'finalizado';
@@ -157,13 +300,17 @@ function executarFaseDefesa(estado, payload) {
     });
     return;
   }
+
   [estado.atacanteAtual, estado.defensorAtual] = [
     estado.defensorAtual,
     estado.atacanteAtual,
   ];
+
   estado.turno += 1;
-  estado.fase = 'aguardandoAtaque';
+  estado.fase = 'aguardandoRolagemAtaque';
 }
+
+/* ========================= */
 
 module.exports = {
   criarEstadoInicial,

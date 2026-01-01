@@ -63,16 +63,29 @@ function escalarMuro(personagem, muro) {
     descricao: 'O personagem tenta escalar um muro',
   };
 }
-function defesaFisica(personagem) {
-  const base = (personagem.forca || 0) + (personagem.resistencia || 0);
+
+function defesaFisica({ defensor, golpe, direcao }) {
+  const intensidade =
+    golpe.intensidadeBase *
+      defensor.resistencia *
+      golpe.intensidadeBase *
+      defensor.forca +
+    golpe.bonusIntensidade;
+
+  const velocidade =
+    golpe.velocidadeBase * (defensor.agilidade + defensor.percepcao) +
+    golpe.bonusVelocidade;
+
   return {
-    tipo: 'defesa',
-    estilo: 'fisica',
-    dado: 20,
-    base,
-    descricao: 'O personagem tenta bloquear ou absorver o ataque.',
+    tipo: 'defesaFisica',
+    estilo: golpe.nome,
+    direcao,
+
+    intensidade,
+    velocidade,
   };
 }
+
 function esquiva(personagem) {
   const base = (personagem.agilidade || 0) + (personagem.sorte || 0);
   return {
@@ -116,31 +129,26 @@ function fugir(personagem) {
   };
 }
 
-function ataqueFisico(personagem, arma) {
-  const base =
-    (personagem.forca || 0) +
-    (personagem.inteligencia || 0) +
-    (personagem.agilidade || 0);
+function ataqueFisico({ atacante, golpe, direcao }) {
+  const intensidade =
+    golpe.intensidadeBase * atacante.forca +
+    golpe.intensidadeBase * atacante.agilidade +
+    golpe.bonusIntensidade;
+
+  const velocidade =
+    golpe.velocidadeBase * (atacante.agilidade + atacante.percepcao) +
+    golpe.bonusVelocidade;
+
   return {
-    tipo: 'ataque',
-    estilo: 'fisico',
-    ataque: {
-      base,
-      dado: 20,
-      parametros: {
-        equilibrio: arma.equilibrio,
-        tipoLamina: arma.tipoLamina,
-        poder: arma.poder,
-        peso: arma.peso,
-      },
-    },
-    dano: {
-      dado: arma.dadoDano,
-    },
-    defesaAlvo: ['fisica', 'esquiva', 'fuga'],
-    descricao: `O personagem ataca com ${arma.nome}.`,
+    tipo: 'ataqueFisico',
+    estilo: golpe.nome,
+    direcao,
+
+    intensidade,
+    velocidade,
   };
 }
+
 function ataqueMagico(personagem, magia) {
   const base = (personagem.poder || 0) + (personagem.inteligencia || 0);
   return {
