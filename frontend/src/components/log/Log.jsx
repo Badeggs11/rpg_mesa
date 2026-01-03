@@ -32,15 +32,20 @@ export default function Log({ eventos }) {
             return (
               <div key={i} className="card card-iniciativa">
                 <div className="card-title">🏁 Iniciativa</div>
+
                 <p>
-                  A: {e.rolagemA} + {e.bonusA} ={' '}
-                  <strong>{e.iniciativaA}</strong>
+                  🎲 Dado A: <strong>{e.rolagemA}</strong>
                 </p>
+
                 <p>
-                  B: {e.rolagemB} + {e.bonusB} ={' '}
-                  <strong>{e.iniciativaB}</strong>
+                  🎲 Dado B: <strong>{e.rolagemB}</strong>
                 </p>
-                <p>
+
+                {e.bonusA > 0 && <p>✨ Bônus A: +{e.bonusA}</p>}
+
+                {e.bonusB > 0 && <p>✨ Bônus B: +{e.bonusB}</p>}
+
+                <p className="destaque">
                   🔥 Primeiro: <strong>{e.primeiro}</strong>
                 </p>
               </div>

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ListarPersonagens from './pages/ListarPersonagens';
 import CriarPersonagem from './pages/CriarPersonagem';
+import EditarPersonagem from './pages/EditarPersonagem';
 import ArenaCombate from './pages/ArenaCombate';
 
 export default function App() {
@@ -9,6 +10,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<ListarPersonagens />} />
         <Route path="/criar-personagem" element={<CriarPersonagem />} />
+        <Route path="/editar-personagem" element={<EditarPersonagem />} />
         <Route path="/arena" element={<ArenaCombate />} />
       </Routes>
     </BrowserRouter>

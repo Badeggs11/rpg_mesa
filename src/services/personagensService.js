@@ -1,4 +1,4 @@
-const db = require("../database/db");
+const db = require('../database/db');
 
 module.exports = {
   buscarPorId(id) {
@@ -10,14 +10,14 @@ module.exports = {
         `;
       db.get(query, [id], (err, row) => {
         if (err) return reject(err);
-        if (!row) return reject(new Error("Personagem não encontrado"));
+        if (!row) return reject(new Error('Personagem não encontrado'));
         resolve(row);
       });
     });
   },
   listar() {
     return new Promise((resolve, reject) => {
-      db.all("SELECT * FROM personagens", (err, rows) => {
+      db.all('SELECT * FROM personagens', (err, rows) => {
         if (err) return reject(err);
         resolve(rows);
       });
@@ -25,7 +25,7 @@ module.exports = {
   },
   criar({
     nome,
-    pontosDeVida = 100,
+    vida = 100,
     forca = 10,
     resistencia = 10,
     agilidade = 10,
@@ -38,14 +38,14 @@ module.exports = {
             `;
       db.run(
         query,
-        [nome, pontosDeVida, forca, resistencia, agilidade, inteligencia],
+        [nome, vida, forca, resistencia, agilidade, inteligencia],
         function (err) {
           if (err) return reject(err);
 
           resolve({
             id: this.lastID,
             nome,
-            pontosDeVida: pontosDeVida,
+            vida: vida,
             forca: forca,
             resistencia: resistencia,
             agilidade: agilidade,
@@ -55,10 +55,7 @@ module.exports = {
       );
     });
   },
-  atualizar(
-    id,
-    { nome, pontosDeVida, forca, resistencia, agilidade, inteligencia }
-  ) {
+  atualizar(id, { nome, vida, forca, resistencia, agilidade, inteligencia }) {
     return new Promise((resolve, reject) => {
       const query = `
                 UPDATE personagens
@@ -67,14 +64,14 @@ module.exports = {
                 `;
       db.run(
         query,
-        [nome, pontosDeVida, forca, resistencia, agilidade, inteligencia, id],
+        [nome, vida, forca, resistencia, agilidade, inteligencia, id],
         function (err) {
           if (err) return reject(err);
 
           resolve({
             id,
             nome,
-            pontosDeVida,
+            vida,
             forca,
             resistencia,
             agilidade,
@@ -84,15 +81,15 @@ module.exports = {
       );
     });
   },
-  atualizarVida(id, pontosDeVida) {
+  atualizarVida(id, vida) {
     return new Promise((resolve, reject) => {
       const query = `
       UPDATE personagens
-      SET pontosDeVida = ?
+      SET vida = ?
       WHERE id = ?
     `;
 
-      db.run(query, [pontosDeVida, id], function (err) {
+      db.run(query, [vida, id], function (err) {
         if (err) return reject(err);
         resolve({ sucesso: true });
       });

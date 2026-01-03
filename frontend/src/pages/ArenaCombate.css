@@ -82,3 +82,39 @@ button.rolar {
 .log-wrapper {
   margin-top: 32px;
 }
+.painel-combate {
+  background: rgba(20, 20, 20, 0.85);
+  border: 2px solid #c9a227;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  color: #f5f5f5;
+  font-family: 'Cinzel', serif;
+}
+
+.linha-turno {
+  font-size: 1.4rem;
+  font-weight: bold;
+  margin-bottom: 6px;
+  color: #f1c40f;
+}
+
+.linha-turno span {
+  margin-left: 6px;
+}
+
+.linha-fase {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-bottom: 12px;
+}
+
+.linha-personagens {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1rem;
+}
+
+.linha-personagens strong {
+  color: #f1c40f;
+}

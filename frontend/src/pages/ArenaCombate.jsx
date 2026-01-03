@@ -210,12 +210,24 @@ export default function ArenaCombate() {
 
       {combate && (
         <>
-          <div className="status">
-            <p>Turno: {combate.turno}</p>
-            <p>Fase: {combate.fase}</p>
-            <p>Atacante: {combate.atacanteAtual}</p>
-            <p>Defensor: {combate.defensorAtual}</p>
-          </div>
+          <section className="painel-combate">
+            <div className="linha-turno">
+              ⚔️ Turno <span>{combate.turno}</span>
+            </div>
+
+            <div className="linha-fase">
+              Fase: <strong>{combate.fase}</strong>
+            </div>
+
+            <div className="linha-personagens">
+              <div>
+                🗡 <strong>Atacante:</strong> {combate.atacanteAtual}
+              </div>
+              <div>
+                🛡 <strong>Defensor:</strong> {combate.defensorAtual}
+              </div>
+            </div>
+          </section>
 
           {renderAcoes()}
 
