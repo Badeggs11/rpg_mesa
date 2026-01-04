@@ -16,7 +16,7 @@ export default function ArenaCombate() {
   const [lado, setLado] = useState(null);
 
   const atacanteId = 1;
-  const defensorId = 3;
+  const defensorId = 2;
 
   useEffect(() => {
     if (combate?.fase === 'aguardandoIniciativa') {
