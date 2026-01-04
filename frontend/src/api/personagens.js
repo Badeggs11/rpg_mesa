@@ -1,27 +1,48 @@
 export async function listarPersonagens() {
-  const res = await fetch("/personagens", {
+  const res = await fetch('/personagens', {
     headers: {
-      Accept: "application/json",
+      Accept: 'application/json',
     },
   });
 
   if (!res.ok) {
-    throw new Error("Erro ao listar personagens");
+    throw new Error('Erro ao listar personagens');
   }
 
   return res.json();
 }
 export async function criarPersonagem(dados) {
-  const res = await fetch("/personagens", {
-    method: "POST",
+  const res = await fetch('/personagens', {
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify(dados),
   });
   const json = await res.json();
   if (!res.ok) {
-    throw new Error(json.erro || "Erro ao criar o personagem");
+    throw new Error(json.erro || 'Erro ao criar o personagem');
+  }
+
+  return json;
+}
+
+/**
+ * 🆕 Atualizar personagem
+ */
+export async function atualizarPersonagem(id, dados) {
+  const res = await fetch(`/personagens/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(dados),
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json.erro || 'Erro ao atualizar o personagem');
   }
 
   return json;

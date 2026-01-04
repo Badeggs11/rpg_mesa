@@ -1,6 +1,6 @@
 ARQUITETURA — RPG de Mesa (Engine + API + Frontend)
 
-Este documento descreve a arquitetura atual do projeto rpg_mesa, incluindo engine de jogo, backend (API + banco) e frontend (React), bem como o fluxo de dados entre essas camadas.
+Este documento descreve a arquitetura atual e consolidada do projeto rpg_mesa, incluindo engine de jogo, backend (API + banco) e frontend (React), bem como o fluxo de dados entre essas camadas após a implementação completa do CRUD de personagens e do editor de atributos.
 
 Visão Geral
 
@@ -14,7 +14,7 @@ facilidade de balanceamento e ajuste fino
 
 persistência de estado via banco de dados
 
-visualização e interação via frontend
+visualização e interação explícita pelo usuário
 
 possibilidade futura de integração com IA narradora
 
@@ -84,7 +84,9 @@ Observações Importantes
 
 Controllers lidam exclusivamente com req e res
 
-Services orquestram banco + engine
+Services orquestram persistência + engine
+
+Services atuam como camada de tradução de domínio
 
 Engine é pura (sem HTTP, sem banco)
 
@@ -92,17 +94,22 @@ Frontend consome a API via fetch
 
 Proxy do Vite integra frontend/backend sem CORS
 
+Nenhuma camada “pula” a camada abaixo
+
 Organização de Pastas (Backend)
 rpg_mesa/
 └─ src/
 ├─ controllers/
-│ └─ combatController.js
+│ ├─ combatController.js
+│ └─ personagensController.js
 │
 ├─ routes/
-│ └─ combatRoutes.js
+│ ├─ combatRoutes.js
+│ └─ personagensRoutes.js
 │
 ├─ services/
-│ └─ combatService.js
+│ ├─ combatService.js
+│ └─ personagensService.js
 │
 ├─ database/
 │ └─ db.js
@@ -131,38 +138,91 @@ rpg_mesa/
 ├─ rpg.db
 └─ server.js
 
+Persistência e Tradução de Domínio (Importante)
+Banco de Dados
+
+O banco SQLite mantém nomes técnicos e estáveis, como:
+
+pontosDeVida
+
+Domínio do Sistema
+
+O restante do sistema (engine, frontend, API) utiliza:
+
+vida
+
+Regra Arquitetural
+
+A tradução entre vida ↔ pontosDeVida acontece exclusivamente no personagensService.
+
+Controllers falam a linguagem do sistema (vida)
+
+Engine fala apenas vida
+
+Frontend fala apenas vida
+
+O banco nunca “vaza” seus nomes para fora
+
+Isso funciona como uma camada anti-corrupção, protegendo o domínio do jogo de detalhes de persistência.
+
 Frontend (React + Vite)
 
-O frontend é responsável por visualizar, criar e interagir com os elementos do sistema, conduzindo explicitamente as ações do combate.
+O frontend é responsável por:
+
+listar personagens
+
+criar personagens
+
+editar atributos de personagens
+
+iniciar combates
+
+conduzir escolhas explícitas de ataque e defesa
+
+visualizar logs e estados do combate
 
 Estrutura Atual
 frontend/
 └─ src/
 ├─ api/
-│ └─ combate.js
+│ ├─ combate.js
+│ └─ personagens.js
 │
 ├─ pages/
+│ ├─ ListarPersonagens.jsx
+│ ├─ CriarPersonagem.jsx
+│ ├─ EditarPersonagem.jsx
 │ └─ ArenaCombate.jsx
+│
+├─ components/
+│ └─ log/
+│ └─ Log.jsx
 │
 ├─ App.jsx
 └─ main.jsx
 
-Funcionalidades Atuais
+Rotas do Frontend
 
-✔️ Início de combate via API
-✔️ Execução do combate fase a fase
-✔️ Escolha explícita de ataque e defesa
-✔️ Rolagem de dados acionada pelo usuário (botão 🎲)
-✔️ Visualização de turnos, fases e participantes
-✔️ Log detalhado e estruturado de cada evento
+/ → Listagem de personagens
 
-🔮 Planejado:
+/criar-personagem → Criação de personagem
 
-seleção dinâmica de personagens
+/editar-personagem → Editor de atributos de personagem
 
-escolha de armas e golpes
+/arena → Arena de combate
 
-visualização gráfica de rolagens
+As rotas do frontend não precisam espelhar as rotas da API.
+
+API — Rotas REST
+Personagens
+GET /personagens
+POST /personagens
+PUT /personagens/:id
+DELETE /personagens/:id
+
+Combate
+POST /api/combate/iniciar
+POST /api/combate/acao
 
 Integração Frontend ↔ Backend
 
@@ -170,10 +230,12 @@ O frontend não utiliza URLs públicas diretamente.
 
 O Vite Proxy redireciona chamadas automaticamente:
 
+fetch('/personagens')
 fetch('/api/combate/iniciar')
 
 ⬇️
 
+http://localhost:3000/personagens
 http://localhost:3000/api/combate/iniciar
 
 Isso evita problemas de:
@@ -268,23 +330,14 @@ gerar log estruturado e transparente
 
 A engine é totalmente desacoplada de banco, API e frontend.
 
-Persistência e Banco de Dados
-Princípios
-
-SQLite armazena estado persistente
-
-Combates acontecem em memória
-
-Apenas o resultado final é salvo
-
-Fluxo Real
+Fluxo Real de Combate
 Frontend inicia combate
 ↓
 POST /api/combate
 ↓
 Engine resolve turnos em memória
 ↓
-Vida final é persistida
+Service persiste vida final
 ↓
 Frontend exibe resultado
 
@@ -292,18 +345,29 @@ Estado Atual do Projeto
 
 Atualmente o sistema já permite:
 
+✔️ CRUD completo de personagens
+
+✔️ Editor visual de atributos
+
 ✔️ combate por turnos com iniciativa
+
 ✔️ execução faseada (iniciativa → ataque → defesa)
+
 ✔️ rolagem de dados controlada pelo usuário
+
 ✔️ integração rules → engine → frontend
+
 ✔️ logs ricos e explicáveis
+
 ✔️ engine testável de forma isolada
 
 Próximos Passos Planejados
 
 Biblioteca de golpes (personagem + arma + intenção)
 
-Seleção de arma no frontend
+Seleção dinâmica de personagens na Arena
+
+Seleção de armas no frontend
 
 Visualização detalhada de cálculos
 
@@ -327,4 +391,30 @@ aprendizado real (não apenas código copiado)
 
 evolução incremental
 
-O sistema já funciona de ponta a ponta, possui engine de combate por turnos interativa, com rolagem explícita de dados, e está preparado para crescer sem refatorações traumáticas.
+O sistema funciona de ponta a ponta, possui:
+
+engine de combate por turnos interativa
+
+rolagem explícita de dados
+
+editor completo de personagens
+
+contrato sólido entre camadas
+
+e está preparado para crescer sem refatorações traumáticas.
+
+flowchart TD
+UI[Frontend<br/>React + Vite]
+API[Backend API<br/>Express]
+C[Controllers]
+S[Services]
+E[Game Engine<br/>rules · engine · dice]
+M[Estado do Jogo<br/>Em Memória]
+DB[(SQLite<br/>Persistência)]
+
+    UI -->|HTTP JSON| API
+    API --> C
+    C --> S
+    S --> E
+    E --> M
+    S --> DB
