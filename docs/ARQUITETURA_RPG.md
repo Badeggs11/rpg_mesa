@@ -1,8 +1,18 @@
-ARQUITETURA — RPG de Mesa (Engine + API + Frontend)
+🧩 ARQUITETURA — RPG de Mesa
 
-Este documento descreve a arquitetura atual e consolidada do projeto rpg_mesa, incluindo engine de jogo, backend (API + banco) e frontend (React), bem como o fluxo de dados entre essas camadas após a implementação completa do CRUD de personagens e do editor de atributos.
+Engine + API + Frontend
 
-Visão Geral
+Este documento descreve a arquitetura atual e consolidada do projeto rpg_mesa, incluindo engine de jogo, backend (API + banco) e frontend (React), bem como o fluxo de dados entre essas camadas após a implementação de:
+
+CRUD completo de personagens
+
+Editor de atributos
+
+Sistema de combate por turnos
+
+Mecânica de stamina e ataques consecutivos
+
+📌 Visão Geral
 
 Este projeto implementa um sistema de RPG de mesa baseado em engine própria, com backend e frontend integrados, com foco em:
 
@@ -30,6 +40,10 @@ defesa
 
 cálculo de dano
 
+consumo de stamina
+
+ataques consecutivos baseados em iniciativa
+
 estado do personagem
 
 persistência em banco
@@ -40,7 +54,7 @@ consumo via frontend
 
 Essa separação permite testes isolados, simulações controladas, integração incremental e evolução segura do sistema.
 
-Filosofia do Sistema
+🧠 Filosofia do Sistema
 Princípios Fundamentais
 
 Ataque e defesa são entidades distintas
@@ -50,6 +64,14 @@ Defesa depende exclusivamente do defensor
 Ataque resolve o confronto completo (incluindo dano)
 
 O dano nunca é negativo
+
+Stamina é um recurso finito por combate
+
+Ataques consecutivos exigem:
+
+stamina suficiente para o pior cenário possível
+
+vitória em uma iniciativa extra
 
 Toda aleatoriedade vem de um único módulo (dice.js)
 
@@ -65,7 +87,7 @@ Frontend nunca acessa o banco diretamente
 
 Esses princípios evitam acoplamento indevido e facilitam manutenção, testes e expansão.
 
-Camadas do Sistema (Atual)
+🏗 Camadas do Sistema
 Frontend (React + Vite)
 ↓ HTTP (JSON)
 Backend API (Express)
@@ -74,9 +96,9 @@ Controllers
 ↓
 Services
 ↓
-Game Engine (rules, engine, dice)
+Game Engine (rules · engine · dice)
 ↓
-Estado em Memória
+Estado do Jogo (em memória)
 ↓
 Persistência (SQLite)
 
@@ -96,7 +118,7 @@ Proxy do Vite integra frontend/backend sem CORS
 
 Nenhuma camada “pula” a camada abaixo
 
-Organização de Pastas (Backend)
+📁 Organização de Pastas (Backend)
 rpg_mesa/
 └─ src/
 ├─ controllers/
@@ -125,10 +147,8 @@ rpg_mesa/
 │ │ └─ combateTurnos.js
 │ │
 │ ├─ world/
-│ │ ├─ armas/
-│ │ │ └─ espadas.js
-│ │ ├─ poderes/
-│ │ │ └─ fogo.js
+│ │ ├─ golpesAtaque.js
+│ │ ├─ golpesDefesa.js
 │ │ └─ index.js
 │ │
 │ └─ tests/
@@ -138,115 +158,71 @@ rpg_mesa/
 ├─ rpg.db
 └─ server.js
 
-Persistência e Tradução de Domínio (Importante)
+🗄 Persistência e Tradução de Domínio
 Banco de Dados
 
 O banco SQLite mantém nomes técnicos e estáveis, como:
 
 pontosDeVida
 
+stamina
+
+percepcao
+
 Domínio do Sistema
 
-O restante do sistema (engine, frontend, API) utiliza:
+O restante do sistema (engine, API, frontend) utiliza:
 
 vida
 
+stamina
+
+percepcao
+
 Regra Arquitetural
 
-A tradução entre vida ↔ pontosDeVida acontece exclusivamente no personagensService.
+A tradução entre banco ↔ domínio acontece exclusivamente no personagensService.
 
-Controllers falam a linguagem do sistema (vida)
+Controllers falam a linguagem do sistema
 
-Engine fala apenas vida
+Engine fala apenas domínio puro
 
-Frontend fala apenas vida
+Frontend fala apenas domínio
 
-O banco nunca “vaza” seus nomes para fora
+O banco nunca “vaza” seus nomes
 
 Isso funciona como uma camada anti-corrupção, protegendo o domínio do jogo de detalhes de persistência.
 
-Frontend (React + Vite)
+⚔️ Engine de Jogo — Combate
+Fluxo de Combate
+Rolagem de Iniciativa
+→ Ataque
+→ Defesa
+→ Resolução (dano + stamina)
+→ Verificação de ataque consecutivo
+→ Próximo turno ou fim do combate
 
-O frontend é responsável por:
+Mecânica de Stamina
 
-listar personagens
+Cada personagem possui stamina
 
-criar personagens
+Ao final de cada ataque:
 
-editar atributos de personagens
+o valor total do ataque é subtraído da stamina
 
-iniciar combates
+Para tentar um ataque consecutivo:
 
-conduzir escolhas explícitas de ataque e defesa
+o personagem precisa ter stamina suficiente para:
 
-visualizar logs e estados do combate
+pior cenário = 20 (dado) + intensidade do golpe
 
-Estrutura Atual
-frontend/
-└─ src/
-├─ api/
-│ ├─ combate.js
-│ └─ personagens.js
-│
-├─ pages/
-│ ├─ ListarPersonagens.jsx
-│ ├─ CriarPersonagem.jsx
-│ ├─ EditarPersonagem.jsx
-│ └─ ArenaCombate.jsx
-│
-├─ components/
-│ └─ log/
-│ └─ Log.jsx
-│
-├─ App.jsx
-└─ main.jsx
+ocorre uma rolagem de iniciativa extra
 
-Rotas do Frontend
+se vencer, mantém o ataque no mesmo turno
 
-/ → Listagem de personagens
+Essa mecânica quebra a alternância rígida de turnos e cria combates mais dinâmicos.
 
-/criar-personagem → Criação de personagem
-
-/editar-personagem → Editor de atributos de personagem
-
-/arena → Arena de combate
-
-As rotas do frontend não precisam espelhar as rotas da API.
-
-API — Rotas REST
-Personagens
-GET /personagens
-POST /personagens
-PUT /personagens/:id
-DELETE /personagens/:id
-
-Combate
-POST /api/combate/iniciar
-POST /api/combate/acao
-
-Integração Frontend ↔ Backend
-
-O frontend não utiliza URLs públicas diretamente.
-
-O Vite Proxy redireciona chamadas automaticamente:
-
-fetch('/personagens')
-fetch('/api/combate/iniciar')
-
-⬇️
-
-http://localhost:3000/personagens
-http://localhost:3000/api/combate/iniciar
-
-Isso evita problemas de:
-
-CORS
-
-HTTPS
-
-ambientes locais e Codespaces
-
-Módulo de Dados — dice.js
+🎲 Módulo de Dados — dice.js
 
 Responsável por toda a aleatoriedade do sistema.
 
@@ -270,98 +246,124 @@ balanceamento centralizado
 
 possibilidade futura de seed / replay
 
-Regras do Jogo — rules.js
+📜 Logs de Combate
 
-O módulo rules.js descreve ações, mas não executa.
+A engine gera logs estruturados e explicáveis, incluindo:
 
-Ele é responsável por:
+rolagens de iniciativa (normal e extra)
 
-calcular valores base
+ataques e defesas
 
-combinar atributos do personagem
+sucesso ou falha de direção
 
-combinar parâmetros de armas ou poderes
+dano causado
 
-definir defesas permitidas
+consumo de stamina
 
-Ele nunca:
+ataques consecutivos
 
-rola dados
+fim do combate
 
-acessa banco
+O frontend apenas renderiza o log, sem lógica de jogo.
 
-aplica dano
+🌐 Frontend (React + Vite)
 
-conhece HTTP
+Responsabilidades:
 
-Cada função retorna um objeto de regra declarativa, que será executado pela engine.
+listar personagens
 
-Engine de Jogo — game/engine
+criar personagens
 
-A engine executa as regras descritas e controla o fluxo do combate.
+editar atributos (vida, stamina, percepção, etc.)
 
-Componentes
+iniciar combates
 
-iniciativa.js
+conduzir escolhas explícitas de ataque e defesa
 
-resolverAtaque.js
+visualizar logs e estados do combate
 
-resolverDefesa.js
+Estrutura
+frontend/
+└─ src/
+├─ api/
+│ ├─ combate.js
+│ └─ personagens.js
+│
+├─ pages/
+│ ├─ ListarPersonagens.jsx
+│ ├─ CriarPersonagem.jsx
+│ ├─ EditarPersonagem.jsx
+│ └─ ArenaCombate.jsx
+│
+├─ components/
+│ └─ log/
+│ └─ Log.jsx
+│
+├─ App.jsx
+└─ main.jsx
 
-resolverDesafio.js
+🔌 API — Rotas REST
+Personagens
 
-combateTurnos.js
+GET /personagens
 
-Responsabilidades
+POST /personagens
 
-rolar iniciativa
+PUT /personagens/:id
 
-controlar fases do combate
+DELETE /personagens/:id
 
-executar ataques e defesas
+Combate
 
-aplicar bônus percentuais (dado como protagonista)
+POST /api/combate/iniciar
 
-calcular dano
+POST /api/combate/acao
 
-permitir fuga como encerramento
+🔄 Integração Frontend ↔ Backend
 
-gerar log estruturado e transparente
+O frontend não utiliza URLs públicas diretamente.
 
-A engine é totalmente desacoplada de banco, API e frontend.
+O Vite Proxy redireciona chamadas automaticamente:
 
-Fluxo Real de Combate
-Frontend inicia combate
-↓
-POST /api/combate
-↓
-Engine resolve turnos em memória
-↓
-Service persiste vida final
-↓
-Frontend exibe resultado
+fetch('/personagens')
+fetch('/api/combate/iniciar')
 
-Estado Atual do Projeto
+⬇️
 
-Atualmente o sistema já permite:
+http://localhost:3000/personagens
+http://localhost:3000/api/combate/iniciar
 
-✔️ CRUD completo de personagens
+Isso evita problemas de:
 
-✔️ Editor visual de atributos
+CORS
 
-✔️ combate por turnos com iniciativa
+HTTPS
 
-✔️ execução faseada (iniciativa → ataque → defesa)
+ambientes locais e Codespaces
 
-✔️ rolagem de dados controlada pelo usuário
+📈 Estado Atual do Projeto
 
-✔️ integração rules → engine → frontend
+O sistema já permite:
 
-✔️ logs ricos e explicáveis
+✔ CRUD completo de personagens
 
-✔️ engine testável de forma isolada
+✔ Editor visual de atributos
 
-Próximos Passos Planejados
+✔ Combate por turnos com iniciativa
+
+✔ Execução faseada (iniciativa → ataque → defesa)
+
+✔ Rolagem de dados controlada pelo usuário
+
+✔ Mecânica de stamina
+
+✔ Ataques consecutivos baseados em iniciativa
+
+✔ Logs ricos e explicáveis
+
+✔ Engine testável de forma isolada
+
+🚀 Próximos Passos Planejados
 
 Biblioteca de golpes (personagem + arma + intenção)
 
@@ -379,7 +381,7 @@ Testes automatizados
 
 IA narrativa
 
-Conclusão
+🏁 Conclusão
 
 Este projeto prioriza:
 
@@ -391,30 +393,4 @@ aprendizado real (não apenas código copiado)
 
 evolução incremental
 
-O sistema funciona de ponta a ponta, possui:
-
-engine de combate por turnos interativa
-
-rolagem explícita de dados
-
-editor completo de personagens
-
-contrato sólido entre camadas
-
-e está preparado para crescer sem refatorações traumáticas.
-
-flowchart TD
-UI[Frontend<br/>React + Vite]
-API[Backend API<br/>Express]
-C[Controllers]
-S[Services]
-E[Game Engine<br/>rules · engine · dice]
-M[Estado do Jogo<br/>Em Memória]
-DB[(SQLite<br/>Persistência)]
-
-    UI -->|HTTP JSON| API
-    API --> C
-    C --> S
-    S --> E
-    E --> M
-    S --> DB
+O sistema funciona de ponta a ponta e está preparado para crescer sem refatorações traumáticas.
