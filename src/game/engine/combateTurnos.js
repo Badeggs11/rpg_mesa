@@ -6,6 +6,11 @@ const golpesAtaque = require('../world/golpesAtaque');
 const golpesDefesa = require('../world/golpesDefesa');
 const { jogarDado } = require('../dice');
 
+function ataqueMaximoPossivel(regraAtaque) {
+  // pior cenário: dado máximo + intensidade do golpe
+  return 20 + regraAtaque.intensidade;
+}
+
 /* =========================
    ESTADO INICIAL
 ========================= */
@@ -16,8 +21,16 @@ function criarEstadoInicial(p1, p2) {
     defensorAtual: null,
 
     personagens: {
-      [p1.nome]: { ...p1 },
-      [p2.nome]: { ...p2 },
+      [p1.nome]: {
+        ...p1,
+        stamina: Number.isFinite(p1.stamina) ? p1.stamina : 0,
+        percepcao: Number.isFinite(p1.percepcao) ? p1.percepcao : 0,
+      },
+      [p2.nome]: {
+        ...p2,
+        stamina: Number.isFinite(p2.stamina) ? p2.stamina : 0,
+        percepcao: Number.isFinite(p2.percepcao) ? p2.percepcao : 0,
+      },
     },
 
     fase: 'aguardandoRolagemIniciativa',
@@ -233,19 +246,21 @@ function executarFaseDefesa(estado, payload) {
   const direcaoCorreta = resultadoDefesa.direcaoCorreta;
 
   // componentes sem dado
-  const ataqueBase =
-    estado.ataquePendente.intensidade + estado.ataquePendente.velocidade;
-
-  const defesaBase = resultadoDefesa.valorDefesa - estado.rolagemDefesa;
 
   // 🧠 REGRA DE DIREÇÃO
   let dano;
 
-  if (direcaoCorreta) {
-    // defesa leu corretamente → dano reduzido
-    dano = Math.max(0, ataqueBase - defesaBase);
+  if (resultadoDefesa.evadiu) {
+    // esquiva perfeita continua sendo 0
+    dano = 0;
+  } else if (resultadoDefesa.direcaoCorreta) {
+    // direção correta SEMPRE entra na subtração
+    dano = Math.max(
+      0,
+      resultadoAtaqueFinal.valorAtaque - resultadoDefesa.valorDefesa
+    );
   } else {
-    // defesa errou direção → dano total
+    // direção errada = dano total
     dano = resultadoAtaqueFinal.valorAtaque;
   }
 
@@ -283,6 +298,8 @@ function executarFaseDefesa(estado, payload) {
     vidaRestante: defensor.pontosDeVida,
   });
 
+  const regraAtaqueUsada = estado.ataquePendente;
+
   /* 6️⃣ Limpar estado temporário */
   estado.rolagemAtaque = null;
   estado.rolagemDefesa = null;
@@ -299,6 +316,47 @@ function executarFaseDefesa(estado, payload) {
       derrotado: estado.defensorAtual,
     });
     return;
+  }
+
+  /* 6.5️⃣ Consumir stamina do atacante */
+  const atacante = estado.personagens[estado.atacanteAtual];
+  const custoAtaque = resultadoAtaqueFinal.valorAtaque;
+
+  atacante.stamina = Math.max(0, atacante.stamina - custoAtaque);
+
+  estado.log.push({
+    tipo: 'staminaGasta',
+    personagem: atacante.nome,
+    custo: custoAtaque,
+    staminaRestante: atacante.stamina,
+  });
+
+  /* 6.6️⃣ Checar ataque consecutivo */
+  const custoMaximo = ataqueMaximoPossivel(regraAtaqueUsada);
+
+  if (atacante.stamina >= custoMaximo) {
+    const rolagemAtacante = jogarDado(20);
+    const rolagemDefensor = jogarDado(20);
+
+    estado.log.push({
+      tipo: 'rolagemIniciativaExtra',
+      atacante: atacante.nome,
+      defensor: defensor.nome,
+      rolagemAtacante,
+      rolagemDefensor,
+    });
+
+    if (rolagemAtacante > rolagemDefensor) {
+      estado.log.push({
+        tipo: 'ataqueConsecutivo',
+        atacante: atacante.nome,
+        staminaRestante: atacante.stamina,
+      });
+
+      // mantém o mesmo atacante
+      estado.fase = 'aguardandoRolagemAtaque';
+      return;
+    }
   }
 
   [estado.atacanteAtual, estado.defensorAtual] = [

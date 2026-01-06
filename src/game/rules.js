@@ -66,10 +66,10 @@ function escalarMuro(personagem, muro) {
 
 function defesaFisica({ defensor, golpe, direcao }) {
   const intensidade =
-    golpe.intensidadeBase *
-      defensor.resistencia *
-      golpe.intensidadeBase *
-      defensor.forca +
+    (golpe.intensidadeBase *
+      defensor.resistencia) +
+      (golpe.intensidadeBase *
+      defensor.forca) +
     golpe.bonusIntensidade;
 
   const velocidade =
@@ -131,8 +131,8 @@ function fugir(personagem) {
 
 function ataqueFisico({ atacante, golpe, direcao }) {
   const intensidade =
-    golpe.intensidadeBase * atacante.forca +
-    golpe.intensidadeBase * atacante.agilidade +
+    (golpe.intensidadeBase * atacante.forca )+
+    (golpe.intensidadeBase * atacante.agilidade) +
     golpe.bonusIntensidade;
 
   const velocidade =

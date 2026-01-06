@@ -15,8 +15,8 @@ export default function ArenaCombate() {
   const [altura, setAltura] = useState(null);
   const [lado, setLado] = useState(null);
 
-  const atacanteId = 1;
-  const defensorId = 2;
+  const atacanteId = 2;
+  const defensorId = 3;
 
   useEffect(() => {
     if (combate?.fase === 'aguardandoIniciativa') {
@@ -226,6 +226,16 @@ export default function ArenaCombate() {
               <div>
                 🛡 <strong>Defensor:</strong> {combate.defensorAtual}
               </div>
+            </div>
+            <div className="linha-status">
+              {Object.values(combate.personagens).map(p => (
+                <div key={p.nome} className="status-personagem">
+                  <strong>{p.nome}</strong>
+                  <br />
+                  ❤️ Vida: {p.pontosDeVida}
+                  <br />⚡ Stamina: {p.stamina}
+                </div>
+              ))}
             </div>
           </section>
 

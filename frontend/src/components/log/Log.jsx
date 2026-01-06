@@ -71,12 +71,6 @@ export default function Log({ eventos }) {
                 <p>
                   <strong>{e.defensor}</strong> tenta {e.golpe} ({e.direcao})
                 </p>
-                {e.direcaoCorreta ? (
-                  <p className="destaque">🎯 Defesa na direção correta!</p>
-                ) : (
-                  <p className="destaque">❌ Defesa fora da direção!</p>
-                )}
-                case 'narrativaDefesa':
               </div>
             );
 
@@ -100,10 +94,55 @@ export default function Log({ eventos }) {
                 </p>
 
                 <div className="destaque">
-                  💥 Dano: <strong>{e.dano}</strong>
-                  <br />
-                  ❤️ Vida restante: <strong>{e.vidaRestante}</strong>
+                  {e.evadiu && (
+                    <p className="sucesso">🤸 Esquiva perfeita! Nenhum dano.</p>
+                  )}
+
+                  {!e.evadiu && e.dano === 0 && (
+                    <p className="sucesso">🛡 Golpe totalmente bloqueado!</p>
+                  )}
+
+                  {!e.evadiu && e.dano > 0 && (
+                    <p className="alerta">💥 O golpe atravessa a defesa!</p>
+                  )}
+
+                  <p>
+                    💥 Dano: <strong>{e.dano}</strong>
+                  </p>
+                  <p>
+                    ❤️ Vida restante: <strong>{e.vidaRestante}</strong>
+                  </p>
                 </div>
+              </div>
+            );
+
+          case 'staminaGasta':
+            return (
+              <div key={i} className="card card-stamina">
+                ⚡ <strong>{e.personagem}</strong> gastou{' '}
+                <strong>{e.custo}</strong> de stamina
+                <br />
+                🔋 Stamina restante: <strong>{e.staminaRestante}</strong>
+              </div>
+            );
+          case 'rolagemIniciativaExtra':
+            return (
+              <div key={i} className="card card-iniciativa">
+                <div className="card-title">🎲 Iniciativa Extra</div>
+                <p>
+                  {e.atacante}: <strong>{e.rolagemAtacante}</strong>
+                </p>
+                <p>
+                  {e.defensor}: <strong>{e.rolagemDefensor}</strong>
+                </p>
+              </div>
+            );
+          case 'ataqueConsecutivo':
+            return (
+              <div key={i} className="card card-ataque">
+                🔥 <strong>{e.atacante}</strong> força um ataque consecutivo!
+                <br />
+                🔋 Stamina restante: <strong>{e.staminaRestante}</strong>
               </div>
             );
 

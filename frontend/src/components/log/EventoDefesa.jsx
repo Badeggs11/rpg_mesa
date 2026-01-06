@@ -17,7 +17,13 @@ export default function EventoDefesa({ evento }) {
         ❤️ Vida restante: <strong>{evento.vidaRestante}</strong>
       </div>
 
-      {evento.evadiu && <p className="sucesso">✨ Esquivou com sucesso!</p>}
+      {evento.evadiu ? (
+        <p className="sucesso">✨ Esquivou com sucesso! (dano zero)</p>
+      ) : evento.direcaoCorreta ? (
+        <p className="info">🛡 Defesa parcial (dano reduzido)</p>
+      ) : (
+        <p className="alerta">❌ Defesa falhou (dano total)</p>
+      )}
     </div>
   );
 }

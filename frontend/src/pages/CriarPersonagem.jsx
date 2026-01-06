@@ -1,16 +1,19 @@
-import { useState } from "react";
-import { criarPersonagem } from "../api/personagens";
-import "./CriarPersonagem.css";
+import { useState } from 'react';
+import { criarPersonagem } from '../api/personagens';
+import './CriarPersonagem.css';
 
 export default function CriarPersonagem() {
   const [form, setForm] = useState({
-    nome: "",
-    pontosDeVida: 100,
+    nome: '',
+    vida: 100,
+    stamina: 100,
+    percepcao: 10,
     forca: 10,
     resistencia: 10,
     agilidade: 8,
     inteligencia: 6,
   });
+
   console.log(form);
 
   const [loading, setLoading] = useState(false);
@@ -21,12 +24,12 @@ export default function CriarPersonagem() {
     const { name, value, type } = e.target;
     setForm({
       ...form,
-      [name]: type === "number" ? Number(value) : value,
+      [name]: type === 'number' ? Number(value) : value,
     });
   }
   async function handleSubmit(e) {
     e.preventDefault();
-    console.log("Personagem", form);
+    console.log('Personagem', form);
     setErro(null);
     setSucesso(false);
     setLoading(true);
@@ -35,8 +38,10 @@ export default function CriarPersonagem() {
       await criarPersonagem(form);
       setSucesso(true);
       setForm({
-        nome: "",
-        pontosDeVida: 100,
+        nome: '',
+        vida: 100,
+        stamina: 100,
+        percepcao: 10,
         forca: 10,
         resistencia: 10,
         agilidade: 8,
@@ -65,14 +70,34 @@ export default function CriarPersonagem() {
         </label>
 
         <label>
-          Pontos de Vida
+          Vida
           <input
             type="number"
-            name="pontosDeVida"
-            value={form.pontosDeVida}
+            name="vida"
+            value={form.vida}
             onChange={handleChange}
           />
         </label>
+        <label>
+          Stamina
+          <input
+            type="number"
+            name="stamina"
+            value={form.stamina}
+            onChange={handleChange}
+          />
+        </label>
+
+        <label>
+          Percepção
+          <input
+            type="number"
+            name="percepcao"
+            value={form.percepcao}
+            onChange={handleChange}
+          />
+        </label>
+
         <label>
           Forca
           <input
@@ -110,7 +135,7 @@ export default function CriarPersonagem() {
           />
         </label>
         <button type="submit" disabled={loading}>
-          {loading ? "Criando..." : "Criar Personagem"}
+          {loading ? 'Criando...' : 'Criar Personagem'}
         </button>
       </form>
       {erro && <p className="erro">❌ {erro}</p>}

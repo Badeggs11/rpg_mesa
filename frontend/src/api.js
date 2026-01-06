@@ -1,5 +1,3 @@
-const API_BASE =
-  "https://redesigned-robot-5pqgrvq6wvj3p7qr-3000.app.github.dev";
 
 export async function executarCombate(payload) {
   const res = await fetch("/api/combate", {

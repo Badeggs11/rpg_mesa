@@ -10,6 +10,8 @@ export default function EditarPersonagem() {
     id: null,
     nome: '',
     vida: 0,
+    stamina: 0,
+    percepcao: 0,
     forca: 0,
     resistencia: 0,
     agilidade: 0,
@@ -46,6 +48,8 @@ export default function EditarPersonagem() {
       id: p.id, // 👈 ESTA LINHA É A CHAVE
       nome: p.nome ?? '',
       vida: p.vida ?? 0,
+      stamina: p.stamina ?? 0,
+      percepcao: p.percepcao ?? 0,
       forca: p.forca ?? 0,
       resistencia: p.resistencia ?? 0,
       agilidade: p.agilidade ?? 0,
@@ -79,10 +83,21 @@ export default function EditarPersonagem() {
 
       {selecionado && (
         <div className="formulario">
-          <h2>{form.nome}</h2>
+          <h2>Editar personagem</h2>
+
+          <label>
+            🏷 Nome
+            <input
+              type="text"
+              value={form.nome}
+              onChange={e => alterar('nome', e.target.value)}
+            />
+          </label>
 
           {[
             ['vida', '❤️ Vida'],
+            ['stamina', '⚡ Stamina'],
+            ['percepcao', '👁 Percepção'],
             ['forca', '💪 Força'],
             ['agilidade', '⚡ Agilidade'],
             ['resistencia', '🛡 Resistência'],

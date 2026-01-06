@@ -35,12 +35,22 @@ module.exports = {
   async atualizar(req, res) {
     try {
       const id = req.params.id;
-      const { nome, vida, forca, resistencia, agilidade, inteligencia } =
-        req.body;
+      const {
+        nome,
+        vida,
+        stamina,
+        percepcao,
+        forca,
+        resistencia,
+        agilidade,
+        inteligencia,
+      } = req.body;
 
       const atualizado = await personagensService.atualizar(id, {
         nome,
         vida,
+        stamina,
+        percepcao,
         forca,
         resistencia,
         agilidade,

@@ -3,7 +3,7 @@ function rolarIniciativa({ personagemA, personagemB, rolagemA, rolagemB }) {
   const baseB = (personagemB.agilidade || 0) + (personagemB.inteligencia || 0);
 
   const diferenca = Math.abs(baseA - baseB);
-  const bonus = Math.floor(diferenca / 5);
+  const bonus = Math.floor(diferenca / 10);
 
   const bonusA = baseA > baseB ? bonus : 0;
   const bonusB = baseB > baseA ? bonus : 0;

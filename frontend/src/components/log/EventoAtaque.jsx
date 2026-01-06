@@ -16,6 +16,11 @@ export default function EventoAtaque({ evento }) {
       <p>
         💫 Ataque total: <strong>{evento.valorAtaque}</strong>
       </p>
+      {evento.custoStamina !== undefined && (
+        <p className="stamina">
+          ⚡ Custo de stamina: <strong>{evento.custoStamina}</strong>
+        </p>
+      )}
     </div>
   );
 }
