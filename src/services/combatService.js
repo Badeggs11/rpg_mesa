@@ -30,6 +30,10 @@ async function iniciarCombate({ atacanteId, defensorId }) {
   if (!atacante || !defensor) {
     throw new Error('Personagem não encontrado');
   }
+
+  console.log('Atacante vindo do service:', atacante);
+  console.log('Defensor vindo do service:', defensor);
+
   const estado = criarEstadoInicial(atacante, defensor);
 
   const combate = {

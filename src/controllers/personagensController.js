@@ -13,12 +13,18 @@ module.exports = {
 
   async criar(req, res) {
     try {
-      const { nome, vida, forca, resistencia, agilidade, inteligencia } =
-        req.body;
+      const {
+        nome,
+        pontosDeVida,
+        forca,
+        resistencia,
+        agilidade,
+        inteligencia,
+      } = req.body;
 
       const novo = await personagensService.criar({
         nome,
-        vida,
+        pontosDeVida,
         forca,
         resistencia,
         agilidade,
@@ -37,7 +43,7 @@ module.exports = {
       const id = req.params.id;
       const {
         nome,
-        vida,
+        pontosDeVida,
         stamina,
         percepcao,
         forca,
@@ -48,7 +54,7 @@ module.exports = {
 
       const atualizado = await personagensService.atualizar(id, {
         nome,
-        vida,
+        pontosDeVida,
         stamina,
         percepcao,
         forca,

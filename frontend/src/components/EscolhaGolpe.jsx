@@ -9,6 +9,7 @@ export default function EscolhaGolpe({
       <h3>{titulo}</h3>
       {golpes.map(g => (
         <button
+          type="button"
           key={g.id}
           className={selecionado === g.id ? 'ativo' : ''}
           onClick={() => onSelecionar(g.id)}

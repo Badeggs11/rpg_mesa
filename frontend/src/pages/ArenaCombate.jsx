@@ -15,8 +15,8 @@ export default function ArenaCombate() {
   const [altura, setAltura] = useState(null);
   const [lado, setLado] = useState(null);
 
-  const atacanteId = 2;
-  const defensorId = 3;
+  const atacanteId = 1;
+  const defensorId = 4;
 
   useEffect(() => {
     if (combate?.fase === 'aguardandoIniciativa') {
@@ -127,6 +127,7 @@ export default function ArenaCombate() {
             />
 
             <button
+              type="button"
               className="confirmar"
               disabled={!golpe || !direcaoCompleta()}
               onClick={() => {
@@ -174,6 +175,7 @@ export default function ArenaCombate() {
             />
 
             <button
+              type="button"
               className="confirmar"
               disabled={!golpe || !direcaoCompleta()}
               onClick={() => {

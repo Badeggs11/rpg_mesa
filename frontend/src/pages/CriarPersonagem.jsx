@@ -5,7 +5,7 @@ import './CriarPersonagem.css';
 export default function CriarPersonagem() {
   const [form, setForm] = useState({
     nome: '',
-    vida: 100,
+    pontosDeVida: 100,
     stamina: 100,
     percepcao: 10,
     forca: 10,
@@ -39,7 +39,7 @@ export default function CriarPersonagem() {
       setSucesso(true);
       setForm({
         nome: '',
-        vida: 100,
+        pontosDeVida: 100,
         stamina: 100,
         percepcao: 10,
         forca: 10,
@@ -73,7 +73,7 @@ export default function CriarPersonagem() {
           Vida
           <input
             type="number"
-            name="vida"
+            name="pontosDeVida"
             value={form.vida}
             onChange={handleChange}
           />

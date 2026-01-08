@@ -1,3 +1,5 @@
+import './log.css';
+
 export default function Log({ eventos }) {
   if (!eventos || eventos.length === 0) {
     return <p className="log-vazio">Nenhum evento ainda</p>;
@@ -75,47 +77,60 @@ export default function Log({ eventos }) {
             );
 
           case 'resolucaoTurno':
+            console.log('resolucaoTurno', e);
+
             return (
-              <div key={i} className="card">
-                <div className="card-title">⚔️ Resolução do Turno</div>
-
-                <p>
-                  <strong>{e.atacante}</strong> atacou com{' '}
-                  <em>{e.golpeAtaque}</em> ({e.direcao})
-                </p>
-
-                <p>
-                  Ataque: 🎲 {e.rolagemAtaque} →{' '}
-                  <strong>{e.valorAtaque}</strong>
-                </p>
-                <p>
-                  Defesa: 🎲 {e.rolagemDefesa} →{' '}
-                  <strong>{e.valorDefesa}</strong>
-                </p>
-
-                <div className="destaque">
-                  {e.evadiu && (
-                    <p className="sucesso">🤸 Esquiva perfeita! Nenhum dano.</p>
-                  )}
-
-                  {!e.evadiu && e.dano === 0 && (
-                    <p className="sucesso">🛡 Golpe totalmente bloqueado!</p>
-                  )}
-
-                  {!e.evadiu && e.dano > 0 && (
-                    <p className="alerta">💥 O golpe atravessa a defesa!</p>
-                  )}
+              <div key={i}>
+                <div className="card">
+                  <div className="card-title">⚔️ Resolução do Turno</div>
 
                   <p>
-                    💥 Dano: <strong>{e.dano}</strong>
+                    <strong>{e.atacante}</strong> atacou com{' '}
+                    <em>{e.golpeAtaque}</em> ({e.direcaoAtaque})
+                  </p>
+
+                  <p>
+                    Defesa escolhida: <strong>{e.direcaoDefesa}</strong>{' '}
+                    {!e.direcaoCorreta && <em>(direção errada)</em>}
+                  </p>
+
+                  <p>
+                    Ataque: 🎲 {e.rolagemAtaque} →{' '}
+                    <strong>{e.valorAtaque}</strong>
                   </p>
                   <p>
-                    ❤️ Vida restante: <strong>{e.vidaRestante}</strong>
+                    Defesa: 🎲 {e.rolagemDefesa} →{' '}
+                    <strong>{e.valorDefesa}</strong>
                   </p>
+
+                  <div className="destaque">
+                    {e.evadiu && (
+                      <p className="sucesso">
+                        🤸 Esquiva perfeita! Nenhum dano.
+                      </p>
+                    )}
+
+                    {!e.evadiu && e.dano === 0 && (
+                      <p className="sucesso">🛡 Golpe totalmente bloqueado!</p>
+                    )}
+
+                    {!e.evadiu && e.dano > 0 && (
+                      <p className="alerta">💥 O golpe atravessa a defesa!</p>
+                    )}
+
+                    <p>
+                      💥 Dano: <strong>{e.dano}</strong>
+                    </p>
+                    <p>
+                      ❤️ Vida restante: <strong>{e.vidaRestante}</strong>
+                    </p>
+                  </div>
                 </div>
+
+                {/* separador visual entre ataques */}
+                <div className="separador-turno" />
               </div>
             );
-
           case 'staminaGasta':
             return (
               <div key={i} className="card card-stamina">
@@ -137,12 +152,27 @@ export default function Log({ eventos }) {
                 </p>
               </div>
             );
+          case 'resultadoIniciativaExtra':
+            return (
+              <div key={i} className="card card-iniciativa">
+                <p className="texto-narrativo">
+                  {e.conseguiu
+                    ? `🔥 ${e.atacante} ganhou uma iniciativa extra e continua atacando!`
+                    : `⛔ ${e.atacante} não conseguiu iniciativa extra. Agora é a vez de ${e.defensor}.`}
+                </p>
+              </div>
+            );
+
           case 'ataqueConsecutivo':
             return (
               <div key={i} className="card card-ataque">
-                🔥 <strong>{e.atacante}</strong> força um ataque consecutivo!
-                <br />
-                🔋 Stamina restante: <strong>{e.staminaRestante}</strong>
+                <p className="texto-narrativo">
+                  🔥 <strong>{e.atacante}</strong> força um ataque consecutivo!
+                </p>
+
+                <p>
+                  🔋 Stamina restante: <strong>{e.staminaRestante}</strong>
+                </p>
               </div>
             );
 

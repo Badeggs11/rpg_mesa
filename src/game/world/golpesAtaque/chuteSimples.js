@@ -5,6 +5,6 @@ module.exports = {
   intensidadeBase: 0.1,
   velocidadeBase: 0.1,
 
-  bonusIntensidade: 2, // mais força
-  bonusVelocidade: -1, // mais lento
+  bonusIntensidade: 0, // mais força
+  bonusVelocidade: 0, // mais lento
 };

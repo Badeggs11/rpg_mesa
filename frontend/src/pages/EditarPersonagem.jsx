@@ -9,7 +9,8 @@ export default function EditarPersonagem() {
   const [form, setForm] = useState({
     id: null,
     nome: '',
-    vida: 0,
+    pontosDeVida: 0,
+
     stamina: 0,
     percepcao: 0,
     forca: 0,
@@ -47,7 +48,8 @@ export default function EditarPersonagem() {
     setForm({
       id: p.id, // 👈 ESTA LINHA É A CHAVE
       nome: p.nome ?? '',
-      vida: p.vida ?? 0,
+      pontosDeVida: p.pontosDeVida ?? 0,
+
       stamina: p.stamina ?? 0,
       percepcao: p.percepcao ?? 0,
       forca: p.forca ?? 0,
@@ -95,7 +97,8 @@ export default function EditarPersonagem() {
           </label>
 
           {[
-            ['vida', '❤️ Vida'],
+            ['pontosDeVida', '❤️ Vida'],
+
             ['stamina', '⚡ Stamina'],
             ['percepcao', '👁 Percepção'],
             ['forca', '💪 Força'],

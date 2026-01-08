@@ -14,7 +14,7 @@ module.exports = {
         resolve({
           id: row.id,
           nome: row.nome,
-          vida: row.pontosDeVida,
+          pontosDeVida: Number(row.pontosDeVida ?? 0),
           stamina: Number(row.stamina ?? 0),
           percepcao: Number(row.percepcao ?? 0),
 
@@ -34,7 +34,7 @@ module.exports = {
         const personagens = rows.map(row => ({
           id: row.id,
           nome: row.nome,
-          vida: row.pontosDeVida,
+          pontosDeVida: Number(row.pontosDeVida ?? 0),
           stamina: Number(row.stamina ?? 0),
           percepcao: Number(row.percepcao ?? 0),
 
@@ -51,7 +51,7 @@ module.exports = {
 
   criar({
     nome,
-    vida = 100,
+    pontosDeVida = 100,
     stamina = 100,
     percepcao = 10,
     forca = 10,
@@ -68,7 +68,7 @@ module.exports = {
         query,
         [
           nome,
-          vida,
+          pontosDeVida,
           stamina,
           percepcao,
           forca,
@@ -82,7 +82,7 @@ module.exports = {
           resolve({
             id: this.lastID,
             nome,
-            vida,
+            pontosDeVida,
             stamina,
             percepcao,
             forca,
@@ -98,7 +98,7 @@ module.exports = {
     id,
     {
       nome,
-      vida,
+      pontosDeVida,
       stamina,
       percepcao,
       forca,
@@ -124,7 +124,7 @@ module.exports = {
         query,
         [
           nome,
-          vida,
+          pontosDeVida,
           stamina,
           percepcao,
           forca,
@@ -139,7 +139,7 @@ module.exports = {
           resolve({
             id,
             nome,
-            vida,
+            pontosDeVida,
             stamina,
             percepcao,
             forca,

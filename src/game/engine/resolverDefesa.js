@@ -13,10 +13,15 @@ function resolverDefesa(regraDefesa, regraAtaque, rolagemDefesa) {
   const direcaoCorreta = regraDefesa.direcao === regraAtaque.direcao;
 
   // 5️⃣ esquiva pura (velocidade + direção)
-  const evadiu = reagiu && direcaoCorreta;
+  const ehEsquiva = regraDefesa.estilo === 'esquiva';
+
+  const evadiu = ehEsquiva && reagiu && direcaoCorreta;
 
   // 6️⃣ bloqueio parcial ou total
-  const neutralizouGolpe = !evadiu && valorDefesa >= regraAtaque.intensidade;
+  const ehBloqueio = regraDefesa.estilo === 'bloqueio';
+
+  const neutralizouGolpe =
+    ehBloqueio && direcaoCorreta && valorDefesa >= regraAtaque.intensidade;
 
   return {
     tipo: 'resultadoDefesa',

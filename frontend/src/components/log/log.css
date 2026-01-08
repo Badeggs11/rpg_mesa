@@ -1,8 +1,17 @@
 .log {
-  max-width: 720px;
-  margin: 24px autp;
-  padding: 0 16px;
+  background: #f4ecd8;
+  color: #3b2f1c;
+  padding: 18px;
+  border-radius: 10px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+  font-family: Georgia, Garamond, serif;
 }
+
+.texto-narrativo {
+  font-style: italic;
+  opacity: 0.9;
+}
+
 .card {
   background: #1c2236;
   color: #e8e8ea;
@@ -46,9 +55,14 @@
   border-left: 4px solid #51cf66;
 }
 
-.destaque.sucesso {
-  background: rgba(81, 207, 102, 0.15);
+.sucesso {
   color: #51cf66;
+  font-weight: bold;
+}
+
+.alerta {
+  color: #ff6b6b;
+  font-weight: bold;
 }
 
 .destaque.falha {
@@ -59,4 +73,10 @@
 .card-stamina {
   background: #1c1c1c;
   border-left: 4px solid #f5c542;
+}
+
+.separador-turno {
+  height: 12px;
+  border-bottom: 2px dashed rgba(0, 0, 0, 0.25);
+  margin: 10px 0 18px;
 }

@@ -38,7 +38,7 @@ export default function ListarPersonagens({ onSelecionar }) {
           }}
         >
           <strong>{p.nome}</strong>
-          <div>❤️ Vida: {p.vida}</div>
+          <div>❤️ Vida: {p.pontosDeVida}</div>
           <div>⚡️ Stamina: {p.stamina}</div>
           <div>👁 Percepção: {p.percepcao}</div>
 

@@ -4,6 +4,7 @@ export default function EscolhaDirecao({ altura, lado, setAltura, setLado }) {
       <h3>Altura</h3>
       {['alto', 'medio', 'baixo'].map(a => (
         <button
+          type="button"
           key={a}
           className={altura === a ? 'ativo' : ''}
           onClick={() => setAltura(a)}
@@ -15,6 +16,7 @@ export default function EscolhaDirecao({ altura, lado, setAltura, setLado }) {
       <h3>Direção</h3>
       {['esquerda', 'frontal', 'direita'].map(l => (
         <button
+          type="button"
           key={l}
           className={lado === l ? 'ativo' : ''}
           onClick={() => setLado(l)}
