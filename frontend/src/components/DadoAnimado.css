@@ -1,0 +1,47 @@
+.dado {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  height: 42px;
+
+  margin: 0 6px;
+
+  font-weight: 700;
+  font-size: 18px;
+
+  color: #000; /* ← AQUI: cor do número */
+
+  border-radius: 8px;
+  border: 2px solid #333;
+
+  background: linear-gradient(145deg, #f8f8f8, #dcdcdc);
+  box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.6),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.15), 2px 2px 4px rgba(0, 0, 0, 0.3);
+
+  transition: background 0.2s;
+}
+
+.dado-rolando {
+  animation: shake 0.25s infinite;
+  background: linear-gradient(145deg, #eaeaea, #cfcfcf);
+}
+
+@keyframes shake {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  25% {
+    transform: rotate(6deg) scale(1.05);
+  }
+  50% {
+    transform: rotate(-6deg) scale(1.05);
+  }
+  75% {
+    transform: rotate(6deg) scale(1.05);
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+}

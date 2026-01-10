@@ -1,4 +1,6 @@
 import './log.css';
+import DadoD20SVG from '../DadoD20SVG';
+import DadoD20Three from '../DadoD20Three';
 
 export default function Log({ eventos }) {
   if (!eventos || eventos.length === 0) {
@@ -9,18 +11,23 @@ export default function Log({ eventos }) {
     <div className="log">
       {eventos.map((e, i) => {
         switch (e.tipo) {
-          case 'rolagemIniciativa':
+          case 'rolagemIniciativa': {
+            const delay = 5000;
             return (
               <div key={i} className="card card-iniciativa">
                 <div className="card-title">🎲 Rolagem de Iniciativa</div>
-                <p>
-                  {e.personagemA}: <strong>{e.rolagemA}</strong>
-                </p>
-                <p>
-                  {e.personagemB}: <strong>{e.rolagemB}</strong>
-                </p>
+                <div>
+                  {e.personagemA}:{' '}
+                  <DadoD20SVG valor={e.rolagemA} delay={delay} />
+                </div>
+
+                <div>
+                  {e.personagemB}:{' '}
+                  <DadoD20SVG valor={e.rolagemB} delay={delay} />
+                </div>
               </div>
             );
+          }
 
           case 'empateIniciativa':
             return (
@@ -53,19 +60,26 @@ export default function Log({ eventos }) {
               </div>
             );
 
-          case 'rolagemAtaque':
+          case 'rolagemAtaque': {
+            const delay = 8000;
             return (
               <div key={i} className="card card-ataque">
-                🎲 Rolagem de Ataque: <strong>{e.valor}</strong>
+                🎲 Rolagem de Ataque:{' '}
+                <DadoD20Three valor={e.valor} delay={delay} />
               </div>
             );
+          }
 
-          case 'rolagemDefesa':
+          case 'rolagemDefesa': {
+            const delay = 5000;
             return (
               <div key={i} className="card card-defesa">
-                🎲 Rolagem de Defesa: <strong>{e.valor}</strong>
+                🎲 Rolagem de Defesa:{' '}
+                <DadoD20Three valor={e.valor} delay={delay} />
               </div>
             );
+          }
+
           case 'narrativaDefesa':
             return (
               <div key={i} className="card card-defesa">
@@ -140,18 +154,26 @@ export default function Log({ eventos }) {
                 🔋 Stamina restante: <strong>{e.staminaRestante}</strong>
               </div>
             );
-          case 'rolagemIniciativaExtra':
+          case 'rolagemIniciativaExtra': {
+            const delay = 5000;
+
             return (
               <div key={i} className="card card-iniciativa">
                 <div className="card-title">🎲 Iniciativa Extra</div>
-                <p>
-                  {e.atacante}: <strong>{e.rolagemAtacante}</strong>
-                </p>
-                <p>
-                  {e.defensor}: <strong>{e.rolagemDefensor}</strong>
-                </p>
+
+                <div>
+                  {e.atacante}:{' '}
+                  <DadoD20SVG valor={e.rolagemAtacante} delay={delay} />
+                </div>
+
+                <div>
+                  {e.defensor}:{' '}
+                  <DadoD20SVG valor={e.rolagemDefensor} delay={delay} />
+                </div>
               </div>
             );
+          }
+
           case 'resultadoIniciativaExtra':
             return (
               <div key={i} className="card card-iniciativa">
