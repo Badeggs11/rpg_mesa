@@ -6,6 +6,39 @@ const golpesAtaque = require('../world/golpesAtaque');
 const golpesDefesa = require('../world/golpesDefesa');
 const { jogarDado } = require('../dice');
 
+function normalizarDirecao(d) {
+  if (!d) return { vertical: null, horizontal: null };
+
+  // Caso 1: string "alto-esquerda"
+  if (typeof d === 'string') {
+    const partes = d.split('-').map(s => s.trim().toLowerCase());
+    const vertical =
+      partes.find(p => ['alto', 'medio', 'médio', 'baixo'].includes(p)) || null;
+    const horizontal =
+      partes.find(p => ['esquerda', 'direita', 'frontal'].includes(p)) || null;
+
+    return {
+      vertical: vertical === 'médio' ? 'medio' : vertical,
+      horizontal,
+    };
+  }
+
+  // Caso 2: objeto { vertical, horizontal }
+  if (typeof d === 'object') {
+    const vertical =
+      d.vertical ?? d.altura ?? d.nivel ?? d.eixoVertical ?? null;
+
+    const horizontal = d.horizontal ?? d.lado ?? d.eixoHorizontal ?? null;
+
+    return {
+      vertical: vertical ? String(vertical).toLowerCase() : null,
+      horizontal: horizontal ? String(horizontal).toLowerCase() : null,
+    };
+  }
+
+  return { vertical: null, horizontal: null };
+}
+
 function ataqueMaximoPossivel(regraAtaque) {
   // pior cenário: dado máximo + intensidade do golpe
   return 20 + regraAtaque.intensidade;
@@ -263,22 +296,55 @@ function executarFaseDefesa(estado, payload) {
   // componentes sem dado
 
   // 🧠 REGRA DE DIREÇÃO
+  const ataqueDirecao = normalizarDirecao(direcaoAtaque);
+  const defesaDirecao = normalizarDirecao(direcaoDefesa);
+
+  let acertosDirecao = 0;
+
+  if (
+    ataqueDirecao.vertical &&
+    defesaDirecao.vertical &&
+    ataqueDirecao.vertical === defesaDirecao.vertical
+  ) {
+    acertosDirecao++;
+  }
+
+  if (
+    ataqueDirecao.horizontal &&
+    defesaDirecao.horizontal &&
+    ataqueDirecao.horizontal === defesaDirecao.horizontal
+  ) {
+    acertosDirecao++;
+  }
+
   let dano;
   const ehEsquiva = golpeDefesa.tipo === 'esquiva';
 
   if (ehEsquiva && resultadoDefesa.evadiu) {
     dano = 0;
-  } else if (resultadoDefesa.direcaoCorreta) {
+  } else if (acertosDirecao === 2) {
+    // defesa plena
     dano = Math.max(
       0,
       resultadoAtaqueFinal.valorAtaque - resultadoDefesa.valorDefesa
     );
+  } else if (acertosDirecao === 1) {
+    // 🔥 MEIA DIREÇÃO
+    dano = Math.floor(resultadoAtaqueFinal.valorAtaque * 0.5);
   } else {
+    // errou tudo
     dano = resultadoAtaqueFinal.valorAtaque;
   }
 
   /* 4️⃣ Aplicar dano */
   defensor.pontosDeVida -= dano;
+
+  estado.log.push({
+    tipo: 'resultadoDirecao',
+    ataqueDirecao,
+    defesaDirecao,
+    acertosDirecao,
+  });
 
   estado.log.push({
     tipo: 'narrativaDefesa',
