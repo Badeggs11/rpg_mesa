@@ -6,10 +6,13 @@ const golpesAtaque = require('../world/golpesAtaque');
 const golpesDefesa = require('../world/golpesDefesa');
 const { jogarDado } = require('../dice');
 
+/* =========================
+   UTILIDADES
+========================= */
+
 function normalizarDirecao(d) {
   if (!d) return { vertical: null, horizontal: null };
 
-  // Caso 1: string "alto-esquerda"
   if (typeof d === 'string') {
     const partes = d.split('-').map(s => s.trim().toLowerCase());
     const vertical =
@@ -23,12 +26,9 @@ function normalizarDirecao(d) {
     };
   }
 
-  // Caso 2: objeto { vertical, horizontal }
   if (typeof d === 'object') {
-    const vertical =
-      d.vertical ?? d.altura ?? d.nivel ?? d.eixoVertical ?? null;
-
-    const horizontal = d.horizontal ?? d.lado ?? d.eixoHorizontal ?? null;
+    const vertical = d.vertical ?? d.altura ?? d.nivel ?? null;
+    const horizontal = d.horizontal ?? d.lado ?? null;
 
     return {
       vertical: vertical ? String(vertical).toLowerCase() : null,
@@ -41,15 +41,24 @@ function normalizarDirecao(d) {
 
 function ataqueMaximoPossivel(regraAtaque) {
   // pior cenário: dado máximo + intensidade do golpe
-  return 20 + regraAtaque.intensidade;
+  return 20 + (regraAtaque?.intensidade ?? 0);
 }
 
 /* =========================
    ESTADO INICIAL
 ========================= */
+
 function criarEstadoInicial(p1, p2) {
-  console.log('P1 recebido pela engine:', p1);
-  console.log('P2 recebido pela engine:', p2);
+  // garante números
+  const fix = p => ({
+    ...p,
+    pontosDeVida: Number.isFinite(p.pontosDeVida) ? p.pontosDeVida : 0,
+    stamina: Number.isFinite(p.stamina) ? p.stamina : 0,
+    percepcao: Number.isFinite(p.percepcao) ? p.percepcao : 0,
+  });
+
+  const a = fix(p1);
+  const b = fix(p2);
 
   return {
     turno: 0,
@@ -57,89 +66,51 @@ function criarEstadoInicial(p1, p2) {
     defensorAtual: null,
 
     personagens: {
-      [p1.nome]: {
-        ...p1,
-        [p1.nome]: {
-          ...p1,
-          pontosDeVida: Number.isFinite(p1.pontosDeVida) ? p1.pontosDeVida : 0,
-          stamina: Number.isFinite(p1.stamina) ? p1.stamina : 0,
-          percepcao: Number.isFinite(p1.percepcao) ? p1.percepcao : 0,
-        },
-      },
-      [p2.nome]: {
-        ...p2,
-        pontosDeVida: Number.isFinite(p2.pontosDeVida) ? p2.pontosDeVida : 0,
-        stamina: Number.isFinite(p2.stamina) ? p2.stamina : 0,
-        percepcao: Number.isFinite(p2.percepcao) ? p2.percepcao : 0,
-      },
+      [a.nome]: { ...a },
+      [b.nome]: { ...b },
     },
 
     fase: 'aguardandoRolagemIniciativa',
 
     rolagemIniciativaA: null,
     rolagemIniciativaB: null,
+    rolagemAtaque: null,
+    rolagemDefesa: null,
+
+    ataquePendente: null,
 
     log: [],
     finalizado: false,
   };
 }
+
+/* =========================
+   INICIATIVA
+========================= */
+
 function executarRolagemIniciativa(estado) {
   const [nomeA, nomeB] = Object.keys(estado.personagens);
+
+  estado.log.push({
+    tipo: 'rolagemIniciativaIniciada',
+    personagemA: nomeA,
+    personagemB: nomeB,
+  });
 
   estado.rolagemIniciativaA = jogarDado(20);
   estado.rolagemIniciativaB = jogarDado(20);
 
   estado.log.push({
-    tipo: 'rolagemIniciativa',
+    tipo: 'rolagemIniciativaResultado',
     personagemA: nomeA,
     personagemB: nomeB,
     rolagemA: estado.rolagemIniciativaA,
     rolagemB: estado.rolagemIniciativaB,
   });
 
-  estado.fase = 'aguardandoIniciativa';
+  // resolve imediatamente
+  executarFaseIniciativa(estado);
 }
-
-/* =========================
-   DISPATCHER PRINCIPAL
-========================= */
-function executarTurno(estado, payload = {}) {
-  if (estado.finalizado) {
-    throw new Error('Combate já finalizado');
-  }
-
-  switch (estado.fase) {
-    case 'aguardandoRolagemIniciativa':
-      executarRolagemIniciativa(estado);
-      break;
-    case 'aguardandoIniciativa':
-      executarFaseIniciativa(estado);
-      break;
-
-    case 'aguardandoRolagemAtaque':
-      executarRolagemAtaque(estado);
-      break;
-
-    case 'aguardandoAtaque':
-      executarFaseAtaque(estado, payload);
-      break;
-
-    case 'aguardandoRolagemDefesa':
-      executarRolagemDefesa(estado);
-      break;
-
-    case 'aguardandoDefesa':
-      executarFaseDefesa(estado, payload);
-      break;
-
-    default:
-      throw new Error(`Fase inválida: ${estado.fase}`);
-  }
-}
-
-/* =========================
-   FASES
-========================= */
 
 function executarFaseIniciativa(estado) {
   const [p1, p2] = Object.values(estado.personagens);
@@ -183,35 +154,32 @@ function executarFaseIniciativa(estado) {
     primeiro: iniciativa.primeiro.nome,
   });
 
-  // limpa após uso
   estado.rolagemIniciativaA = null;
   estado.rolagemIniciativaB = null;
 }
 
-/* ---------- ROLAGEM ATAQUE ---------- */
+/* =========================
+   ATAQUE
+========================= */
 
 function executarRolagemAtaque(estado) {
-  const rolagem = jogarDado(20);
-  estado.rolagemAtaque = rolagem;
+  estado.log.push({ tipo: 'rolagemAtaqueIniciada' });
 
-  estado.log.push({
-    tipo: 'rolagemAtaque',
-    valor: rolagem,
-  });
-
+  // dado só será rolado no Confirmar Ataque
+  estado.rolagemAtaque = null;
   estado.fase = 'aguardandoAtaque';
 }
 
-/* ---------- ATAQUE ---------- */
-
 function executarFaseAtaque(estado, payload) {
   const { golpe, direcao } = payload;
+
   if (!golpe || !direcao) {
     throw new Error('Golpe ou direção não informados');
   }
 
   const atacante = estado.personagens[estado.atacanteAtual];
   const golpeAtaque = golpesAtaque[golpe];
+
   if (!golpeAtaque) {
     throw new Error('Golpe de ataque inválido');
   }
@@ -223,8 +191,10 @@ function executarFaseAtaque(estado, payload) {
   });
 
   regraAtaque.direcao = direcao;
-
   estado.ataquePendente = regraAtaque;
+
+  // 🎲 ROLA O DADO SOMENTE AGORA (confirmar ataque)
+  estado.rolagemAtaque = jogarDado(20);
 
   estado.log.push({
     tipo: 'ataque',
@@ -235,31 +205,29 @@ function executarFaseAtaque(estado, payload) {
     velocidade: regraAtaque.velocidade,
   });
 
+  estado.log.push({
+    tipo: 'rolagemAtaqueResultado',
+    valor: estado.rolagemAtaque,
+  });
+
   estado.fase = 'aguardandoRolagemDefesa';
 }
 
-/* ---------- ROLAGEM DEFESA ---------- */
+/* =========================
+   DEFESA
+========================= */
 
 function executarRolagemDefesa(estado) {
-  const rolagem = jogarDado(20);
-  estado.rolagemDefesa = rolagem;
+  estado.log.push({ tipo: 'rolagemDefesaIniciada' });
 
-  estado.log.push({
-    tipo: 'rolagemDefesa',
-    valor: rolagem,
-  });
-
+  // dado só será rolado no Confirmar Defesa
+  estado.rolagemDefesa = null;
   estado.fase = 'aguardandoDefesa';
 }
-
-/* ---------- DEFESA ---------- */
 
 function executarFaseDefesa(estado, payload) {
   const { golpe, direcao: direcaoDefesa } = payload;
 
-  if (estado.rolagemDefesa == null) {
-    throw new Error('Rolagem de defesa não realizada');
-  }
   if (!golpe || !direcaoDefesa) {
     throw new Error('Golpe ou direção não informados');
   }
@@ -267,15 +235,27 @@ function executarFaseDefesa(estado, payload) {
     throw new Error('Nenhum ataque pendente');
   }
 
-  const direcaoAtaque = estado.ataquePendente.direcao;
+  const nomeAtacante = estado.atacanteAtual;
+  const nomeDefensor = estado.defensorAtual;
 
-  const defensor = estado.personagens[estado.defensorAtual];
+  const defensor = estado.personagens[nomeDefensor];
   const golpeDefesa = golpesDefesa[golpe];
+
   if (!golpeDefesa) {
     throw new Error('Golpe de defesa inválido');
   }
 
-  /* 1️⃣ Resolver defesa */
+  const direcaoAtaque = estado.ataquePendente.direcao;
+
+  // 🎲 ROLA O DADO SOMENTE AGORA (confirmar defesa)
+  estado.rolagemDefesa = jogarDado(20);
+
+  estado.log.push({
+    tipo: 'rolagemDefesaResultado',
+    valor: estado.rolagemDefesa,
+  });
+
+  /* 1) resolver defesa */
   const resultadoDefesa = resolverDefesa(
     rules.defesaFisica({
       defensor,
@@ -286,33 +266,30 @@ function executarFaseDefesa(estado, payload) {
     estado.rolagemDefesa
   );
 
-  /* 2️⃣ Resolver ataque final */
+  /* 2) resolver ataque final */
   const resultadoAtaqueFinal = resolverAtaque(
     estado.ataquePendente,
     resultadoDefesa,
     estado.rolagemAtaque
   );
 
-  // componentes sem dado
-
-  // 🧠 REGRA DE DIREÇÃO
-  const ataqueDirecao = normalizarDirecao(direcaoAtaque);
-  const defesaDirecao = normalizarDirecao(direcaoDefesa);
+  /* 3) regra de direção (0/1/2 acertos) */
+  const ataqueDir = normalizarDirecao(direcaoAtaque);
+  const defesaDir = normalizarDirecao(direcaoDefesa);
 
   let acertosDirecao = 0;
 
   if (
-    ataqueDirecao.vertical &&
-    defesaDirecao.vertical &&
-    ataqueDirecao.vertical === defesaDirecao.vertical
+    ataqueDir.vertical &&
+    defesaDir.vertical &&
+    ataqueDir.vertical === defesaDir.vertical
   ) {
     acertosDirecao++;
   }
-
   if (
-    ataqueDirecao.horizontal &&
-    defesaDirecao.horizontal &&
-    ataqueDirecao.horizontal === defesaDirecao.horizontal
+    ataqueDir.horizontal &&
+    defesaDir.horizontal &&
+    ataqueDir.horizontal === defesaDir.horizontal
   ) {
     acertosDirecao++;
   }
@@ -323,29 +300,21 @@ function executarFaseDefesa(estado, payload) {
   if (ehEsquiva && resultadoDefesa.evadiu) {
     dano = 0;
   } else if (acertosDirecao === 2) {
-    // defesa plena
     dano = Math.max(
       0,
       resultadoAtaqueFinal.valorAtaque - resultadoDefesa.valorDefesa
     );
   } else if (acertosDirecao === 1) {
-    // 🔥 MEIA DIREÇÃO
+    // meia direção: metade do ataque (como você queria)
     dano = Math.floor(resultadoAtaqueFinal.valorAtaque * 0.5);
   } else {
-    // errou tudo
     dano = resultadoAtaqueFinal.valorAtaque;
   }
 
-  /* 4️⃣ Aplicar dano */
+  /* 4) aplicar dano */
   defensor.pontosDeVida -= dano;
 
-  estado.log.push({
-    tipo: 'resultadoDirecao',
-    ataqueDirecao,
-    defesaDirecao,
-    acertosDirecao,
-  });
-
+  /* 5) logs do turno (SEMPRE antes de qualquer return) */
   estado.log.push({
     tipo: 'narrativaDefesa',
     defensor: defensor.nome,
@@ -355,22 +324,20 @@ function executarFaseDefesa(estado, payload) {
     direcaoAtaque,
   });
 
-  /* 5️⃣ Logs (ordem segura) */
   estado.log.push({
     tipo: 'resolucaoTurno',
-
-    atacante: estado.atacanteAtual,
-    defensor: defensor.nome,
-
-    golpeAtaque: estado.ataquePendente.estilo,
-    direcaoAtaque,
-    direcaoDefesa,
+    atacante: nomeAtacante,
+    defensor: nomeDefensor,
 
     rolagemAtaque: resultadoAtaqueFinal.rolagem,
     valorAtaque: resultadoAtaqueFinal.valorAtaque,
 
     rolagemDefesa: resultadoDefesa.rolagem,
     valorDefesa: resultadoDefesa.valorDefesa,
+
+    direcaoAtaque,
+    direcaoDefesa,
+    acertosDirecao,
 
     evadiu: resultadoDefesa.evadiu,
     neutralizouGolpe: resultadoDefesa.neutralizouGolpe,
@@ -380,28 +347,27 @@ function executarFaseDefesa(estado, payload) {
     vidaRestante: defensor.pontosDeVida,
   });
 
-  const regraAtaqueUsada = estado.ataquePendente;
-
-  /* 6️⃣ Limpar estado temporário */
-  estado.rolagemAtaque = null;
-  estado.rolagemDefesa = null;
-  estado.ataquePendente = null;
-
-  /* 7️⃣ Fim ou próximo turno */
+  /* 6) fim do combate */
   if (defensor.pontosDeVida <= 0) {
     estado.finalizado = true;
     estado.fase = 'finalizado';
 
     estado.log.push({
       tipo: 'fimCombate',
-      vencedor: estado.atacanteAtual,
-      derrotado: estado.defensorAtual,
+      vencedor: nomeAtacante,
+      derrotado: nomeDefensor,
     });
+
+    // limpeza final
+    estado.rolagemAtaque = null;
+    estado.rolagemDefesa = null;
+    estado.ataquePendente = null;
+
     return;
   }
 
-  /* 6.5️⃣ Consumir stamina do atacante */
-  const atacante = estado.personagens[estado.atacanteAtual];
+  /* 7) stamina do atacante */
+  const atacante = estado.personagens[nomeAtacante];
   const custoAtaque = resultadoAtaqueFinal.valorAtaque;
 
   atacante.stamina = Math.max(0, atacante.stamina - custoAtaque);
@@ -413,8 +379,8 @@ function executarFaseDefesa(estado, payload) {
     staminaRestante: atacante.stamina,
   });
 
-  /* 6.6️⃣ Checar ataque consecutivo */
-  const custoMaximo = ataqueMaximoPossivel(regraAtaqueUsada);
+  /* 8) iniciativa extra / ataque consecutivo */
+  const custoMaximo = custoAtaque;
 
   if (atacante.stamina >= custoMaximo) {
     const rolagemAtacante = jogarDado(20);
@@ -437,29 +403,69 @@ function executarFaseDefesa(estado, payload) {
       conseguiu: conseguiuExtra,
     });
 
-    if (rolagemAtacante > rolagemDefensor) {
+    if (conseguiuExtra) {
       estado.log.push({
         tipo: 'ataqueConsecutivo',
         atacante: atacante.nome,
         staminaRestante: atacante.stamina,
       });
 
-      // mantém o mesmo atacante
+      // 🧹 limpa o turno e mantém o atacante
+      estado.rolagemAtaque = null;
+      estado.rolagemDefesa = null;
+      estado.ataquePendente = null;
+
       estado.fase = 'aguardandoRolagemAtaque';
       return;
     }
   }
 
-  [estado.atacanteAtual, estado.defensorAtual] = [
-    estado.defensorAtual,
-    estado.atacanteAtual,
-  ];
+  /* 9) troca atacante e próximo turno */
+  // 🧹 limpa o turno
+  estado.rolagemAtaque = null;
+  estado.rolagemDefesa = null;
+  estado.ataquePendente = null;
+
+  [estado.atacanteAtual, estado.defensorAtual] = [nomeDefensor, nomeAtacante];
 
   estado.turno += 1;
   estado.fase = 'aguardandoRolagemAtaque';
 }
 
-/* ========================= */
+/* =========================
+   DISPATCHER
+========================= */
+
+function executarTurno(estado, payload = {}) {
+  if (estado.finalizado) {
+    throw new Error('Combate já finalizado');
+  }
+
+  switch (estado.fase) {
+    case 'aguardandoRolagemIniciativa':
+      executarRolagemIniciativa(estado);
+      break;
+
+    case 'aguardandoRolagemAtaque':
+      executarRolagemAtaque(estado);
+      break;
+
+    case 'aguardandoAtaque':
+      executarFaseAtaque(estado, payload);
+      break;
+
+    case 'aguardandoRolagemDefesa':
+      executarRolagemDefesa(estado);
+      break;
+
+    case 'aguardandoDefesa':
+      executarFaseDefesa(estado, payload);
+      break;
+
+    default:
+      throw new Error(`Fase inválida: ${estado.fase}`);
+  }
+}
 
 module.exports = {
   criarEstadoInicial,

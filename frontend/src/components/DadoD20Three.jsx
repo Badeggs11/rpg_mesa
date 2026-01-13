@@ -4,11 +4,15 @@ import * as THREE from 'three';
 /* ======================
    CONFIG GLOBAL
 ====================== */
-const SIZE = 120; // tamanho visual do canvas
-const DADO_SCALE = 1.5; // escala do dado
+const SIZE = 120;
+const DADO_SCALE = 1.5;
 const FACE_OFFSET = 0.06;
 
-export default function DadoD20Three({ valor, delay = 4000 }) {
+export default function DadoD20Three({
+  valor,
+  delay = 4000,
+  revelar = true, // ⭐ NOVO
+}) {
   const mountRef = useRef(null);
 
   useEffect(() => {
@@ -57,19 +61,15 @@ export default function DadoD20Three({ valor, delay = 4000 }) {
     const geometry = new THREE.IcosahedronGeometry(1).toNonIndexed();
 
     const material = new THREE.MeshStandardMaterial({
-      color: 0xe8dcc3, // osso
+      color: 0xe8dcc3,
       roughness: 0.55,
       metalness: 0.05,
       flatShading: true,
-      side: THREE.FrontSide,
     });
 
     const d20 = new THREE.Mesh(geometry, material);
     group.add(d20);
 
-    /* ======================
-       ARESTAS
-    ====================== */
     const edges = new THREE.LineSegments(
       new THREE.EdgesGeometry(geometry),
       new THREE.LineBasicMaterial({ color: 0x6b5a3a })
@@ -77,7 +77,7 @@ export default function DadoD20Three({ valor, delay = 4000 }) {
     group.add(edges);
 
     /* ======================
-       FUNÇÃO: textura do número
+       TEXTURA DO NÚMERO
     ====================== */
     function makeNumberTexture(n, destaque = false) {
       const canvas = document.createElement('canvas');
@@ -85,13 +85,12 @@ export default function DadoD20Three({ valor, delay = 4000 }) {
       canvas.height = 256;
       const ctx = canvas.getContext('2d');
 
-      ctx.clearRect(0, 0, 256, 256);
       ctx.font = 'bold 150px serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
       ctx.fillStyle = 'rgba(0,0,0,0.35)';
-      ctx.fillText(String(n), 128 + 4, 148 + 4);
+      ctx.fillText(String(n), 132, 152);
 
       ctx.fillStyle = destaque ? '#9b111e' : '#5b1b1b';
       ctx.fillText(String(n), 128, 148);
@@ -102,7 +101,7 @@ export default function DadoD20Three({ valor, delay = 4000 }) {
     }
 
     /* ======================
-       CRIAR NÚMEROS (20 FACES)
+       FACES
     ====================== */
     const pos = geometry.attributes.position;
     const faces = [];
@@ -126,12 +125,8 @@ export default function DadoD20Three({ valor, delay = 4000 }) {
         new THREE.MeshBasicMaterial({
           map: makeNumberTexture(faceNumber),
           transparent: true,
-          depthTest: true,
-          depthWrite: false,
-          side: THREE.FrontSide,
           polygonOffset: true,
           polygonOffsetFactor: -2,
-          polygonOffsetUnits: -2,
         })
       );
 
@@ -141,7 +136,6 @@ export default function DadoD20Three({ valor, delay = 4000 }) {
       plane.lookAt(center.clone().add(normal));
 
       group.add(plane);
-
       faces.push({ normal, plane, number: faceNumber });
       planes.push(plane);
     }
@@ -164,37 +158,43 @@ export default function DadoD20Three({ valor, delay = 4000 }) {
     animate();
 
     /* ======================
-       PARAR ROLAGEM
+       REVELAÇÃO (SÓ SE revelar === true)
     ====================== */
-    const stopTimeout = setTimeout(() => {
-      rolling = false;
+    let stopTimeout;
 
-      const targetFace = faces.find(f => f.number === valor);
-      if (!targetFace) return;
+    if (revelar) {
+      stopTimeout = setTimeout(() => {
+        rolling = false;
 
-      const cameraDir = new THREE.Vector3(0, 0, 1);
+        const targetFace = faces.find(f => f.number === valor);
+        if (!targetFace) return;
 
-      const quat = new THREE.Quaternion().setFromUnitVectors(
-        targetFace.normal.clone().normalize(),
-        cameraDir
-      );
+        const cameraDir = new THREE.Vector3(0, 0, 1);
+        const quat = new THREE.Quaternion().setFromUnitVectors(
+          targetFace.normal.clone().normalize(),
+          cameraDir
+        );
 
-      group.quaternion.copy(quat);
+        group.quaternion.copy(quat);
 
-      for (const f of faces) {
-        f.plane.material.map.dispose();
-        f.plane.material.map = makeNumberTexture(f.number, f.number === valor);
-        f.plane.material.needsUpdate = true;
-      }
+        for (const f of faces) {
+          f.plane.material.map.dispose();
+          f.plane.material.map = makeNumberTexture(
+            f.number,
+            f.number === valor
+          );
+          f.plane.material.needsUpdate = true;
+        }
 
-      highlightLight.intensity = 1.4;
-    }, delay);
+        highlightLight.intensity = 1.4;
+      }, delay);
+    }
 
     /* ======================
        CLEANUP
     ====================== */
     return () => {
-      clearTimeout(stopTimeout);
+      if (stopTimeout) clearTimeout(stopTimeout);
       cancelAnimationFrame(frameId);
 
       planes.forEach(p => {
@@ -206,7 +206,7 @@ export default function DadoD20Three({ valor, delay = 4000 }) {
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [valor, delay]);
+  }, [valor, delay, revelar]);
 
   return (
     <div

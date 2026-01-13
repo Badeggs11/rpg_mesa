@@ -18,12 +18,6 @@ export default function ArenaCombate() {
   const atacanteId = 1;
   const defensorId = 2;
 
-  useEffect(() => {
-    if (combate?.fase === 'aguardandoIniciativa') {
-      enviarAcao({});
-    }
-  }, [combate?.fase]);
-
   function direcaoCompleta() {
     if (!altura || !lado) return null;
     return `${altura}-${lado}`;

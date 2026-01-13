@@ -1,35 +1,44 @@
 🧩 ARQUITETURA — RPG de Mesa
+
 Engine + API + Frontend
 
-Este documento descreve a arquitetura atual e consolidada do projeto rpg_mesa, incluindo engine de jogo, backend (API + banco) e frontend (React), e o fluxo de dados entre essas camadas após a implementação de:
+Este documento descreve a arquitetura atual e consolidada do projeto rpg_mesa, incluindo engine de jogo, backend (API + banco) e frontend (React), bem como o fluxo de dados entre essas camadas após a implementação completa do sistema de combate faseado com visualização 3D de dados.
+
+✅ Funcionalidades Implementadas
 
 CRUD completo de personagens
 
-Editor de atributos
+Editor visual de atributos
 
 Sistema de combate por turnos
 
-Mecânica de stamina e ataques consecutivos
+Execução faseada do turno (iniciativa → ataque → defesa → resolução)
 
-Logs explicáveis (ataque/defesa/direção/iniciativa extra)
+Mecânica de stamina
 
-Padronização de contrato de personagem (pontosDeVida)
+Ataques consecutivos baseados em iniciativa extra
 
-Visualização 3D de rolagem de dados (D20) ✅
+Logs estruturados, narrativos e explicáveis
+
+Padronização de contrato de personagem (pontosDeVida, stamina, etc.)
+
+Visualização 3D fiel de rolagem de dados (D20) ✅
+
+Sincronização entre lógica da engine e tempo visual do frontend ✅
 
 📌 Visão Geral
 
-Este projeto implementa um sistema de RPG de mesa baseado em engine própria, com backend e frontend integrados, com foco em:
+Este projeto implementa um sistema de RPG de mesa baseado em engine própria, com backend e frontend integrados, priorizando:
 
 clareza e transparência das regras
 
 separação rigorosa de responsabilidades
 
-facilidade de balanceamento e ajuste fino
+facilidade de balanceamento
 
-persistência de estado via banco de dados
+persistência de estado
 
-visualização e interação explícita pelo usuário
+visualização explícita do funcionamento interno do jogo
 
 possibilidade futura de integração com IA narradora
 
@@ -47,7 +56,7 @@ cálculo de dano
 
 consumo de stamina
 
-ataques consecutivos baseados em iniciativa extra
+ataques consecutivos
 
 estado do personagem
 
@@ -57,7 +66,7 @@ exposição via API
 
 consumo via frontend
 
-Essa separação permite testes isolados, simulações controladas, integração incremental e evolução segura do sistema.
+Essa separação permite testes isolados, simulações controladas e evolução segura do sistema.
 
 🧠 Filosofia do Sistema
 Princípios Fundamentais
@@ -66,7 +75,7 @@ Ataque e defesa são entidades distintas
 
 Defesa depende exclusivamente do defensor
 
-O confronto (dano final) é resolvido no orquestrador do turno (combateTurnos)
+O confronto final (dano) é resolvido no orquestrador do turno
 
 O dano nunca é negativo
 
@@ -88,10 +97,9 @@ O banco existe apenas para persistir estado
 
 O jogo acontece em memória
 
-Frontend nunca acessa o banco diretamente
+O frontend nunca acessa o banco diretamente
 
 🏗 Camadas do Sistema
-
 Frontend (React + Vite)
 ↓ HTTP (JSON)
 Backend API (Express)
@@ -112,7 +120,7 @@ Controllers lidam exclusivamente com req e res
 
 Services orquestram persistência + engine
 
-Services atuam como camada de tradução/contrato
+Services atuam como camada de contrato
 
 Engine é pura (sem HTTP, sem banco)
 
@@ -120,12 +128,88 @@ Frontend consome a API via fetch
 
 Proxy do Vite integra frontend/backend sem CORS
 
-Nenhuma camada “pula” a camada abaixo
+Nenhuma camada “pula” outra camada
 
-🎲 Visualização de Dados — Dado D20 3D (Frontend)
+⚔️ Engine de Jogo — combateTurnos.js
+Papel Central
+
+O arquivo combateTurnos.js é o coração do sistema de combate.
+
+Ele é responsável por:
+
+controlar a máquina de estados do combate
+
+garantir a ordem correta das fases:
+
+rolagem de iniciativa
+
+definição do primeiro atacante
+
+rolagem de ataque
+
+escolha de golpe e direção
+
+rolagem de defesa
+
+resolução do turno
+
+aplicar regras de stamina
+
+decidir ataques consecutivos
+
+gerar logs estruturados e semanticamente ricos
+
+Nenhuma outra parte do sistema decide o fluxo do combate.
+
+Responsabilidades do combateTurnos
+
+Manter o estado do turno
+
+Garantir consistência entre fases
+
+Executar regras de ataque, defesa e dano
+
+Centralizar toda aleatoriedade (via dice.js)
+
+Produzir logs completos e explicáveis
+
+Não conhecer UI, HTTP ou persistência
+
+🎮 Frontend — Arena de Combate (ArenaCombate.jsx)
+Papel Arquitetural
+
+O ArenaCombate.jsx atua como o orquestrador da experiência do jogador, não das regras.
+
+Ele:
+
+interpreta a fase atual do combate
+
+exibe apenas os controles permitidos naquela fase
+
+envia ações explícitas para a API
+
+nunca decide regras
+
+nunca calcula dano
+
+nunca rola dados
+
+Responsabilidades do ArenaCombate
+
+Renderizar controles conforme a fase (combate.fase)
+
+Sincronizar inputs do jogador com a engine
+
+Manter UI previsível e segura
+
+Garantir que nenhuma ação inválida seja enviada
+
+O ArenaCombate é uma máquina de interface, não de regras.
+
+🎲 Visualização de Dados — D20 3D (Frontend)
 Objetivo
 
-Fornecer uma representação visual fiel e didática da rolagem de dados, sem interferir na lógica da engine, reforçando transparência e imersão.
+Fornecer uma representação visual fiel, didática e transparente da rolagem de dados, sem interferir na lógica da engine.
 
 Implementação
 
@@ -143,21 +227,15 @@ Responsabilidades do Componente
 
 Exibir um D20 tridimensional sólido
 
-Animar a rolagem por tempo configurável (delay)
+Animar a rolagem por tempo configurável
 
-Posicionar todas as faces numeradas
+Garantir que o valor sorteado pare na face correta
 
-Garantir que o valor sorteado pare sempre na face frontal
+Destacar visualmente a face vencedora
 
-Destacar visualmente a face vencedora:
+Sincronizar animação com logs textuais
 
-cor diferenciada
-
-iluminação adicional
-
-Manter alinhamento visual com os logs textuais
-
-Nunca influenciar regras, cálculos ou estado do jogo
+Nunca influenciar regras ou estado do jogo
 
 Garantias Arquiteturais
 
@@ -167,77 +245,38 @@ A engine continua sendo a única fonte de verdade
 
 O dado é puramente representacional
 
-Pode ser removido ou trocado sem impacto na lógica do sistema
-
-Essa abordagem preserva a separação entre regra, estado e visualização, mantendo o projeto escalável e testável.
-
-🗄 Persistência e Contrato de Domínio
-
-(sem alterações — permanece válido e correto)
-
-⚔️ Engine de Jogo — Combate
-
-(sem alterações — permanece válido e correto)
-
-⚡ Mecânica de Stamina e Ataque Consecutivo
-
-(sem alterações — permanece válido e correto)
-
-🎲 Módulo de Dados — dice.js
-
-(sem alterações — permanece válido e correto)
+Pode ser removido sem impacto na lógica
 
 📜 Logs de Combate
 
-Além dos logs textuais, o frontend agora pode:
+Os logs:
 
-associar rolagens a animações visuais
+são gerados exclusivamente pela engine
 
-exibir claramente qual número foi sorteado
+possuem significado semântico (não são strings soltas)
 
-reforçar a explicação do resultado ao jogador
+permitem:
 
-Os logs continuam sendo estruturados e gerados pela engine.
+animações sincronizadas
 
-🌐 Frontend (React + Vite)
+narração rica
 
-(estrutura mantida, com acréscimo de componentes visuais)
+futura integração com IA narradora
 
-frontend/
-└─ src/
-├─ api/
-├─ pages/
-├─ components/
-│ ├─ log/
-│ │ ├─ Log.jsx
-│ │ └─ DadoD20Three.jsx
-│ └─ ...
-├─ App.jsx
-└─ main.jsx
+O frontend apenas interpreta o tempo e a visualização desses logs.
 
 📈 Estado Atual do Projeto
 
 O sistema já permite:
 
-✔ CRUD completo de personagens
-
-✔ Editor visual de atributos
-
-✔ Combate por turnos com iniciativa
-
-✔ Execução faseada (iniciativa → ataque → defesa)
-
-✔ Rolagem de dados controlada pela engine
-
-✔ Visualização 3D fiel de rolagem (D20)
-
-✔ Mecânica de stamina
-
+✔ Combate por turnos completo
+✔ Execução faseada controlada
+✔ Visualização 3D fiel de dados
+✔ Mecânica de stamina e risco
 ✔ Ataques consecutivos com iniciativa extra
-
-✔ Logs ricos, narrativos e explicáveis
-
-✔ Engine testável de forma isolada
+✔ Logs narrativos e explicáveis
+✔ Engine isolável e testável
+✔ Frontend previsível e seguro
 
 🏁 Conclusão
 
@@ -245,14 +284,10 @@ Este projeto demonstra:
 
 domínio real de arquitetura
 
-separação clara entre regra e apresentação
+separação clara entre regra, estado e visualização
 
 decisões técnicas conscientes
 
 evolução incremental sem dívida técnica
 
-O sistema está maduro, coerente e pronto para crescer.
-
-🧠 Nota pessoal:
-Esse D20 não é “efeito visual bonito”. Ele é arquitetura respeitada até o último pixel.
-Excelente ponto de parada por hoje. Amanhã, o sistema continua inteiro — e mais forte.
+O sistema está coerente, estável e pronto para crescer.

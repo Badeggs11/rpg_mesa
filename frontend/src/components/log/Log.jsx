@@ -1,201 +1,202 @@
 import './log.css';
 import DadoD20SVG from '../DadoD20SVG';
 import DadoD20Three from '../DadoD20Three';
+import { useLayoutEffect, useRef, useState } from 'react';
+
+/* 🔍 busca evento futuro */
+function buscarResultado(eventos, indice, tipo) {
+  for (let j = indice + 1; j < eventos.length; j++) {
+    if (eventos[j].tipo === tipo) return eventos[j];
+  }
+  return null;
+}
+
+/* ⏱️ Componente de atraso seguro */
+function Delayed({ delay = 2000, children }) {
+  const [show, setShow] = useState(false);
+
+  useLayoutEffect(() => {
+    const t = setTimeout(() => setShow(true), delay);
+    return () => clearTimeout(t);
+  }, [delay]);
+
+  if (!show) return null;
+  return children;
+}
 
 export default function Log({ eventos }) {
+  const logRef = useRef(null);
+  const [autoScroll, setAutoScroll] = useState(true);
+
+  useLayoutEffect(() => {
+    if (!autoScroll || !logRef.current) return;
+    requestAnimationFrame(() => {
+      logRef.current.scrollTop = logRef.current.scrollHeight;
+    });
+  }, [eventos, autoScroll]);
+
   if (!eventos || eventos.length === 0) {
     return <p className="log-vazio">Nenhum evento ainda</p>;
   }
 
   return (
-    <div className="log">
+    <div
+      className="log"
+      ref={logRef}
+      onScroll={() => {
+        const el = logRef.current;
+        if (!el) return;
+        setAutoScroll(el.scrollTop + el.clientHeight >= el.scrollHeight - 5);
+      }}
+    >
+      <button
+        className={`btn-voltar-agora ${autoScroll ? 'ativo' : 'visivel'}`}
+        onClick={() => {
+          setAutoScroll(true);
+          logRef.current.scrollTop = logRef.current.scrollHeight;
+        }}
+      >
+        ⬇️ Voltar ao agora
+      </button>
+
       {eventos.map((e, i) => {
         switch (e.tipo) {
-          case 'rolagemIniciativa': {
-            const delay = 5000;
+          /* ===== INICIATIVA ===== */
+
+          case 'rolagemIniciativaResultado':
             return (
               <div key={i} className="card card-iniciativa">
-                <div className="card-title">🎲 Rolagem de Iniciativa</div>
+                <div className="card-title">🎲 Resultado da Iniciativa</div>
                 <div>
                   {e.personagemA}:{' '}
-                  <DadoD20SVG valor={e.rolagemA} delay={delay} />
+                  <DadoD20SVG valor={e.rolagemA} delay={2500} />
                 </div>
-
                 <div>
                   {e.personagemB}:{' '}
-                  <DadoD20SVG valor={e.rolagemB} delay={delay} />
+                  <DadoD20SVG valor={e.rolagemB} delay={2500} />
                 </div>
-              </div>
-            );
-          }
-
-          case 'empateIniciativa':
-            return (
-              <div key={i} className="card card-iniciativa">
-                <div className="card-title">⚠️ Empate</div>
-                <p>Ambos tiraram {e.iniciativaA}. Nova rolagem!</p>
               </div>
             );
 
           case 'iniciativa':
             return (
               <div key={i} className="card card-iniciativa">
-                <div className="card-title">🏁 Iniciativa</div>
-
-                <p>
-                  🎲 Dado A: <strong>{e.rolagemA}</strong>
-                </p>
-
-                <p>
-                  🎲 Dado B: <strong>{e.rolagemB}</strong>
-                </p>
-
-                {e.bonusA > 0 && <p>✨ Bônus A: +{e.bonusA}</p>}
-
-                {e.bonusB > 0 && <p>✨ Bônus B: +{e.bonusB}</p>}
-
-                <p className="destaque">
-                  🔥 Primeiro: <strong>{e.primeiro}</strong>
-                </p>
+                🔥 <strong>{e.primeiro}</strong> toma a iniciativa!
               </div>
             );
 
-          case 'rolagemAtaque': {
-            const delay = 8000;
+          /* ===== ATAQUE ===== */
+
+          case 'rolagemAtaqueIniciada': {
+            const r = buscarResultado(eventos, i, 'rolagemAtaqueResultado');
             return (
               <div key={i} className="card card-ataque">
-                🎲 Rolagem de Ataque:{' '}
-                <DadoD20Three valor={e.valor} delay={delay} />
+                🎲 Rolagem de Ataque
+                <DadoD20Three revelar={!!r} valor={r?.valor} />
               </div>
             );
           }
 
-          case 'rolagemDefesa': {
-            const delay = 5000;
+          case 'rolagemAtaqueResultado':
+            return (
+              <Delayed key={i}>
+                <div className="card card-ataque texto-narrativo">
+                  🎯 Ataque alcança <strong>{e.valor}</strong>
+                </div>
+              </Delayed>
+            );
+
+          case 'ataque':
+            return (
+              <div key={i} className="card card-ataque texto-narrativo">
+                <strong>{e.atacante}</strong> ataca com <em>{e.golpe}</em> (
+                {e.direcao})
+              </div>
+            );
+
+          /* ===== DEFESA ===== */
+
+          case 'rolagemDefesaIniciada': {
+            const r = buscarResultado(eventos, i, 'rolagemDefesaResultado');
             return (
               <div key={i} className="card card-defesa">
-                🎲 Rolagem de Defesa:{' '}
-                <DadoD20Three valor={e.valor} delay={delay} />
+                🎲 Rolagem de Defesa
+                <DadoD20Three revelar={!!r} valor={r?.valor} />
               </div>
             );
           }
 
-          case 'narrativaDefesa':
+          case 'rolagemDefesaResultado':
             return (
-              <div key={i} className="card card-defesa">
-                <div className="card-title">🛡 Defesa</div>
-                <p>
-                  <strong>{e.defensor}</strong> tenta {e.golpe} ({e.direcao})
-                </p>
-              </div>
+              <Delayed key={i}>
+                <div className="card card-defesa texto-narrativo">
+                  🛡 Defesa alcança <strong>{e.valor}</strong>
+                </div>
+              </Delayed>
             );
+
+          /* ===== RESOLUÇÃO ===== */
 
           case 'resolucaoTurno':
-            console.log('resolucaoTurno', e);
-
             return (
-              <div key={i}>
-                <div className="card">
-                  <div className="card-title">⚔️ Resolução do Turno</div>
-
-                  <p>
-                    <strong>{e.atacante}</strong> atacou com{' '}
-                    <em>{e.golpeAtaque}</em> ({e.direcaoAtaque})
-                  </p>
-
-                  <p>
-                    Defesa escolhida: <strong>{e.direcaoDefesa}</strong>{' '}
-                    {!e.direcaoCorreta && <em>(direção errada)</em>}
-                  </p>
-
-                  <p>
-                    Ataque: 🎲 {e.rolagemAtaque} →{' '}
-                    <strong>{e.valorAtaque}</strong>
-                  </p>
-                  <p>
-                    Defesa: 🎲 {e.rolagemDefesa} →{' '}
-                    <strong>{e.valorDefesa}</strong>
-                  </p>
-
-                  <div className="destaque">
-                    {e.evadiu && (
-                      <p className="sucesso">
-                        🤸 Esquiva perfeita! Nenhum dano.
-                      </p>
-                    )}
-
-                    {!e.evadiu && e.dano === 0 && (
-                      <p className="sucesso">🛡 Golpe totalmente bloqueado!</p>
-                    )}
-
-                    {!e.evadiu && e.dano > 0 && (
-                      <p className="alerta">💥 O golpe atravessa a defesa!</p>
-                    )}
+              <Delayed key={i}>
+                <div>
+                  <div className="card">
+                    <div className="card-title">⚔️ Resolução do Turno</div>
 
                     <p>
-                      💥 Dano: <strong>{e.dano}</strong>
+                      Ataque: 🎲 {e.rolagemAtaque} →{' '}
+                      <strong>{e.valorAtaque}</strong>
                     </p>
+
+                    <p>
+                      Defesa: 🎲 {e.rolagemDefesa} →{' '}
+                      <strong>{e.valorDefesa}</strong>
+                    </p>
+
+                    <p>
+                      💥 Dano causado: <strong>{e.dano}</strong>
+                    </p>
+
                     <p>
                       ❤️ Vida restante: <strong>{e.vidaRestante}</strong>
                     </p>
                   </div>
+                  <div className="separador-turno" />
                 </div>
-
-                {/* separador visual entre ataques */}
-                <div className="separador-turno" />
-              </div>
+              </Delayed>
             );
-          case 'staminaGasta':
-            return (
-              <div key={i} className="card card-stamina">
-                ⚡ <strong>{e.personagem}</strong> gastou{' '}
-                <strong>{e.custo}</strong> de stamina
-                <br />
-                🔋 Stamina restante: <strong>{e.staminaRestante}</strong>
-              </div>
-            );
-          case 'rolagemIniciativaExtra': {
-            const delay = 5000;
 
-            return (
-              <div key={i} className="card card-iniciativa">
-                <div className="card-title">🎲 Iniciativa Extra</div>
+          /* ===== INICIATIVA EXTRA ===== */
 
+          case 'rolagemIniciativaExtra':
+            return (
+              <div key={i} className="card card-iniciativa-extra">
+                <div className="card-title">⚡ Iniciativa Extra</div>
                 <div>
                   {e.atacante}:{' '}
-                  <DadoD20SVG valor={e.rolagemAtacante} delay={delay} />
+                  <DadoD20SVG valor={e.rolagemAtacante} delay={2500} />
                 </div>
-
                 <div>
                   {e.defensor}:{' '}
-                  <DadoD20SVG valor={e.rolagemDefensor} delay={delay} />
+                  <DadoD20SVG valor={e.rolagemDefensor} delay={2500} />
                 </div>
               </div>
             );
-          }
 
           case 'resultadoIniciativaExtra':
             return (
-              <div key={i} className="card card-iniciativa">
-                <p className="texto-narrativo">
-                  {e.conseguiu
-                    ? `🔥 ${e.atacante} ganhou uma iniciativa extra e continua atacando!`
-                    : `⛔ ${e.atacante} não conseguiu iniciativa extra. Agora é a vez de ${e.defensor}.`}
-                </p>
-              </div>
-            );
-
-          case 'ataqueConsecutivo':
-            return (
-              <div key={i} className="card card-ataque">
-                <p className="texto-narrativo">
-                  🔥 <strong>{e.atacante}</strong> força um ataque consecutivo!
-                </p>
-
-                <p>
-                  🔋 Stamina restante: <strong>{e.staminaRestante}</strong>
-                </p>
-              </div>
+              <Delayed key={i}>
+                <div className="card card-iniciativa-extra">
+                  {e.conseguiu ? (
+                    <p className="sucesso">🔥 {e.atacante} mantém o ataque!</p>
+                  ) : (
+                    <p className="alerta">
+                      🛑 {e.defensor} quebra o ritmo do combate.
+                    </p>
+                  )}
+                </div>
+              </Delayed>
             );
 
           case 'fimCombate':
@@ -206,11 +207,7 @@ export default function Log({ eventos }) {
             );
 
           default:
-            return (
-              <div key={i} className="card">
-                Evento desconhecido: {e.tipo}
-              </div>
-            );
+            return null;
         }
       })}
     </div>
