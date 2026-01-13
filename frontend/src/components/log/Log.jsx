@@ -3,6 +3,11 @@ import DadoD20SVG from '../DadoD20SVG';
 import DadoD20Three from '../DadoD20Three';
 import { useLayoutEffect, useRef, useState } from 'react';
 
+/* ⏱️ Ajuste aqui os tempos */
+const TEMPO_DADO_SVG = 2500;
+const TEMPO_DADO_THREE = 2500;
+const TEMPO_RESPIRO = 300;
+
 /* 🔍 busca evento futuro */
 function buscarResultado(eventos, indice, tipo) {
   for (let j = indice + 1; j < eventos.length; j++) {
@@ -11,11 +16,12 @@ function buscarResultado(eventos, indice, tipo) {
   return null;
 }
 
-/* ⏱️ Componente de atraso seguro */
+/* ⏱️ Atraso seguro (sem quebrar regras de hooks) */
 function Delayed({ delay = 2000, children }) {
   const [show, setShow] = useState(false);
 
   useLayoutEffect(() => {
+    setShow(false);
     const t = setTimeout(() => setShow(true), delay);
     return () => clearTimeout(t);
   }, [delay]);
@@ -69,11 +75,11 @@ export default function Log({ eventos }) {
                 <div className="card-title">🎲 Resultado da Iniciativa</div>
                 <div>
                   {e.personagemA}:{' '}
-                  <DadoD20SVG valor={e.rolagemA} delay={2500} />
+                  <DadoD20SVG valor={e.rolagemA} delay={TEMPO_DADO_SVG} />
                 </div>
                 <div>
                   {e.personagemB}:{' '}
-                  <DadoD20SVG valor={e.rolagemB} delay={2500} />
+                  <DadoD20SVG valor={e.rolagemB} delay={TEMPO_DADO_SVG} />
                 </div>
               </div>
             );
@@ -89,17 +95,22 @@ export default function Log({ eventos }) {
 
           case 'rolagemAtaqueIniciada': {
             const r = buscarResultado(eventos, i, 'rolagemAtaqueResultado');
+
             return (
               <div key={i} className="card card-ataque">
                 🎲 Rolagem de Ataque
-                <DadoD20Three revelar={!!r} valor={r?.valor} />
+                <DadoD20Three
+                  valor={r?.valor}
+                  delay={TEMPO_DADO_THREE}
+                  revelar={!!r}
+                />
               </div>
             );
           }
 
           case 'rolagemAtaqueResultado':
             return (
-              <Delayed key={i}>
+              <Delayed key={i} delay={TEMPO_DADO_THREE + TEMPO_RESPIRO}>
                 <div className="card card-ataque texto-narrativo">
                   🎯 Ataque alcança <strong>{e.valor}</strong>
                 </div>
@@ -118,28 +129,42 @@ export default function Log({ eventos }) {
 
           case 'rolagemDefesaIniciada': {
             const r = buscarResultado(eventos, i, 'rolagemDefesaResultado');
+
             return (
               <div key={i} className="card card-defesa">
                 🎲 Rolagem de Defesa
-                <DadoD20Three revelar={!!r} valor={r?.valor} />
+                <DadoD20Three
+                  valor={r?.valor}
+                  delay={TEMPO_DADO_THREE}
+                  revelar={!!r}
+                />
               </div>
             );
           }
 
           case 'rolagemDefesaResultado':
             return (
-              <Delayed key={i}>
+              <Delayed key={i} delay={TEMPO_DADO_THREE + TEMPO_RESPIRO}>
                 <div className="card card-defesa texto-narrativo">
                   🛡 Defesa alcança <strong>{e.valor}</strong>
                 </div>
               </Delayed>
             );
 
+          case 'narrativaDefesa':
+            return (
+              <div key={i} className="card card-defesa texto-narrativo">
+                <strong>{e.defensor}</strong> tenta {e.golpe} ({e.direcao})
+                {!e.direcaoCorreta && <em> — direção incorreta</em>}
+              </div>
+            );
+
           /* ===== RESOLUÇÃO ===== */
+          /* aparece depois da defesa parar (tempo do dado + respiro + extra) */
 
           case 'resolucaoTurno':
             return (
-              <Delayed key={i}>
+              <Delayed key={i} delay={TEMPO_DADO_THREE + TEMPO_RESPIRO + 400}>
                 <div>
                   <div className="card">
                     <div className="card-title">⚔️ Resolução do Turno</div>
@@ -175,18 +200,24 @@ export default function Log({ eventos }) {
                 <div className="card-title">⚡ Iniciativa Extra</div>
                 <div>
                   {e.atacante}:{' '}
-                  <DadoD20SVG valor={e.rolagemAtacante} delay={2500} />
+                  <DadoD20SVG
+                    valor={e.rolagemAtacante}
+                    delay={TEMPO_DADO_SVG}
+                  />
                 </div>
                 <div>
                   {e.defensor}:{' '}
-                  <DadoD20SVG valor={e.rolagemDefensor} delay={2500} />
+                  <DadoD20SVG
+                    valor={e.rolagemDefensor}
+                    delay={TEMPO_DADO_SVG}
+                  />
                 </div>
               </div>
             );
 
           case 'resultadoIniciativaExtra':
             return (
-              <Delayed key={i}>
+              <Delayed key={i} delay={TEMPO_DADO_SVG + TEMPO_RESPIRO}>
                 <div className="card card-iniciativa-extra">
                   {e.conseguiu ? (
                     <p className="sucesso">🔥 {e.atacante} mantém o ataque!</p>

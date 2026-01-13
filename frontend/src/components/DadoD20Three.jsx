@@ -1,26 +1,21 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
-/* ======================
-   CONFIG GLOBAL
-====================== */
 const SIZE = 120;
 const DADO_SCALE = 1.5;
 const FACE_OFFSET = 0.06;
 
 export default function DadoD20Three({
   valor,
-  delay = 4000,
-  revelar = true, // ⭐ NOVO
+  delay = 2500,
+  revelar = true,
+  onFinish,
 }) {
   const mountRef = useRef(null);
 
   useEffect(() => {
     if (!mountRef.current) return;
 
-    /* ======================
-       CENA / CÂMERA / RENDER
-    ====================== */
     const scene = new THREE.Scene();
 
     const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
@@ -35,9 +30,6 @@ export default function DadoD20Three({
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     mountRef.current.appendChild(renderer.domElement);
 
-    /* ======================
-       LUZ
-    ====================== */
     scene.add(new THREE.AmbientLight(0xffffff, 0.35));
 
     const mainLight = new THREE.DirectionalLight(0xffffff, 1);
@@ -48,16 +40,10 @@ export default function DadoD20Three({
     highlightLight.position.set(0, 0, 4);
     scene.add(highlightLight);
 
-    /* ======================
-       GRUPO DO DADO
-    ====================== */
     const group = new THREE.Group();
     group.scale.set(DADO_SCALE, DADO_SCALE, DADO_SCALE);
     scene.add(group);
 
-    /* ======================
-       D20
-    ====================== */
     const geometry = new THREE.IcosahedronGeometry(1).toNonIndexed();
 
     const material = new THREE.MeshStandardMaterial({
@@ -76,9 +62,6 @@ export default function DadoD20Three({
     );
     group.add(edges);
 
-    /* ======================
-       TEXTURA DO NÚMERO
-    ====================== */
     function makeNumberTexture(n, destaque = false) {
       const canvas = document.createElement('canvas');
       canvas.width = 256;
@@ -100,9 +83,6 @@ export default function DadoD20Three({
       return tex;
     }
 
-    /* ======================
-       FACES
-    ====================== */
     const pos = geometry.attributes.position;
     const faces = [];
     const planes = [];
@@ -140,9 +120,6 @@ export default function DadoD20Three({
       planes.push(plane);
     }
 
-    /* ======================
-       ANIMAÇÃO
-    ====================== */
     let rolling = true;
     let frameId;
 
@@ -157,12 +134,10 @@ export default function DadoD20Three({
 
     animate();
 
-    /* ======================
-       REVELAÇÃO (SÓ SE revelar === true)
-    ====================== */
     let stopTimeout;
 
-    if (revelar) {
+    // ✅ só tenta revelar se tiver valor e revelar=true
+    if (revelar && valor != null) {
       stopTimeout = setTimeout(() => {
         rolling = false;
 
@@ -187,12 +162,10 @@ export default function DadoD20Three({
         }
 
         highlightLight.intensity = 1.4;
+        onFinish?.();
       }, delay);
     }
 
-    /* ======================
-       CLEANUP
-    ====================== */
     return () => {
       if (stopTimeout) clearTimeout(stopTimeout);
       cancelAnimationFrame(frameId);
@@ -206,7 +179,7 @@ export default function DadoD20Three({
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [valor, delay, revelar]);
+  }, [valor, delay, revelar, onFinish]);
 
   return (
     <div
