@@ -324,8 +324,28 @@ function executarFaseDefesa(estado, payload) {
     direcaoAtaque,
   });
 
+  const defesaBemSucedida =
+    resultadoDefesa.valorDefesa >= resultadoAtaqueFinal.valorAtaque;
+
+  let resultadoDirecao = 'errouTudo';
+  if (acertosDirecao === 2) resultadoDirecao = 'acertoTotal';
+  else if (acertosDirecao === 1) resultadoDirecao = 'acertoParcial';
+
+  let motivoDanoZero = null;
+
+  if (dano === 0) {
+    if (resultadoDefesa.evadiu) {
+      motivoDanoZero = 'esquivou';
+    } else if (defesaBemSucedida && acertosDirecao === 2) {
+      motivoDanoZero = 'defesaSuperior';
+    } else if (acertosDirecao === 0) {
+      motivoDanoZero = 'direcaoErrada';
+    }
+  }
+
   estado.log.push({
     tipo: 'resolucaoTurno',
+
     atacante: nomeAtacante,
     defensor: nomeDefensor,
 
@@ -338,12 +358,15 @@ function executarFaseDefesa(estado, payload) {
     direcaoAtaque,
     direcaoDefesa,
     acertosDirecao,
+    resultadoDirecao,
 
+    defesaBemSucedida,
     evadiu: resultadoDefesa.evadiu,
     neutralizouGolpe: resultadoDefesa.neutralizouGolpe,
     direcaoCorreta: resultadoDefesa.direcaoCorreta,
 
     dano,
+    motivoDanoZero, // ⭐ chave nova
     vidaRestante: defensor.pontosDeVida,
   });
 
@@ -370,7 +393,27 @@ function executarFaseDefesa(estado, payload) {
   const atacante = estado.personagens[nomeAtacante];
   const custoAtaque = resultadoAtaqueFinal.valorAtaque;
 
+  /* 6) recuperação de stamina do defensor */
+  const resistencia = Number.isFinite(defensor.resistencia)
+    ? defensor.resistencia
+    : 0;
+
+  const recuperacao = Math.floor(resistencia / 2);
+
+  const staminaAntes = defensor.stamina;
+
+  defensor.stamina = Math.min(100, defensor.stamina + recuperacao);
+
   atacante.stamina = Math.max(0, atacante.stamina - custoAtaque);
+
+  estado.log.push({
+    tipo: 'staminaRecuperada',
+    personagem: defensor.nome,
+    resistencia,
+    recuperacao,
+    staminaAntes,
+    staminaAtual: defensor.stamina,
+  });
 
   estado.log.push({
     tipo: 'staminaGasta',
@@ -380,7 +423,16 @@ function executarFaseDefesa(estado, payload) {
   });
 
   /* 8) iniciativa extra / ataque consecutivo */
-  const custoMaximo = custoAtaque;
+  const intensidade = estado.ataquePendente?.intensidade ?? 0;
+  const custoMaximo = 20 + intensidade;
+
+  estado.log.push({
+    tipo: 'avaliacaoIniciativaExtra',
+    atacante: atacante.nome,
+    staminaAtual: atacante.stamina,
+    staminaNecessaria: custoMaximo,
+    podeTentar: atacante.stamina >= custoMaximo,
+  });
 
   if (atacante.stamina >= custoMaximo) {
     const rolagemAtacante = jogarDado(20);

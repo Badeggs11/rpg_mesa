@@ -112,7 +112,7 @@ export default function Log({ eventos }) {
             return (
               <Delayed key={i} delay={TEMPO_DADO_THREE + TEMPO_RESPIRO}>
                 <div className="card card-ataque texto-narrativo">
-                  🎯 Ataque alcança <strong>{e.valor}</strong>
+                  🎯 Ataque alcança <strong>{e.valor}</strong> no dado
                 </div>
               </Delayed>
             );
@@ -146,7 +146,7 @@ export default function Log({ eventos }) {
             return (
               <Delayed key={i} delay={TEMPO_DADO_THREE + TEMPO_RESPIRO}>
                 <div className="card card-defesa texto-narrativo">
-                  🛡 Defesa alcança <strong>{e.valor}</strong>
+                  🛡 Defesa alcança <strong>{e.valor}</strong> no dado
                 </div>
               </Delayed>
             );
@@ -163,6 +163,32 @@ export default function Log({ eventos }) {
           /* aparece depois da defesa parar (tempo do dado + respiro + extra) */
 
           case 'resolucaoTurno':
+            let explicacao = null;
+
+            if (e.dano === 0) {
+              if (e.evadiu) {
+                explicacao =
+                  '🤸 Defesa perfeita! O golpe foi totalmente esquivado.';
+              } else if (e.defesaBemSucedida && e.acertosDirecao === 2) {
+                explicacao =
+                  '🛡 Defesa sólida! A direção foi correta e o ataque foi neutralizado.';
+              } else if (e.acertosDirecao === 0) {
+                explicacao =
+                  '❌ Ataque mal direcionado — o golpe passou longe do alvo.';
+              } else {
+                explicacao =
+                  '⚔️ A defesa resistiu ao ataque e absorveu todo o impacto.';
+              }
+            } else {
+              if (e.acertosDirecao === 2) {
+                explicacao =
+                  '🔥 Golpe direto! Ataque e direção foram perfeitamente executados.';
+              } else if (e.acertosDirecao === 1) {
+                explicacao =
+                  '⚠️ Acerto parcial — a defesa reduziu parte do impacto.';
+              }
+            }
+
             return (
               <Delayed key={i} delay={TEMPO_DADO_THREE + TEMPO_RESPIRO + 400}>
                 <div>
@@ -183,6 +209,11 @@ export default function Log({ eventos }) {
                       💥 Dano causado: <strong>{e.dano}</strong>
                     </p>
 
+                    {/* 👇 AQUI entra a explicação */}
+                    {explicacao && (
+                      <p className="texto-narrativo destaque">{explicacao}</p>
+                    )}
+
                     <p>
                       ❤️ Vida restante: <strong>{e.vidaRestante}</strong>
                     </p>
@@ -190,6 +221,17 @@ export default function Log({ eventos }) {
                   <div className="separador-turno" />
                 </div>
               </Delayed>
+            );
+
+          case 'staminaRecuperada':
+            return (
+              <div key={i} className="card card-stamina">
+                🔋 <strong>{e.personagem}</strong> recupera{' '}
+                <strong>{e.recuperacao}</strong> de stamina
+                <br />
+                (Resistência: {e.resistencia})<br />
+                Stamina: {e.staminaAntes} → <strong>{e.staminaAtual}</strong>
+              </div>
             );
 
           /* ===== INICIATIVA EXTRA ===== */
@@ -212,6 +254,30 @@ export default function Log({ eventos }) {
                     delay={TEMPO_DADO_SVG}
                   />
                 </div>
+              </div>
+            );
+
+          case 'avaliacaoIniciativaExtra':
+            return (
+              <div
+                key={i}
+                className="card card-iniciativa-extra texto-narrativo"
+              >
+                ⚡ <strong>{e.atacante}</strong> avalia um ataque consecutivo:
+                <br />
+                Stamina atual: <strong>{e.staminaAtual}</strong>
+                <br />
+                Necessária: <strong>{e.staminaNecessaria}</strong>
+                <br />
+                {e.podeTentar ? (
+                  <span className="sucesso">
+                    🔥 Força suficiente para tentar!
+                  </span>
+                ) : (
+                  <span className="alerta">
+                    ❌ Cansado demais para continuar.
+                  </span>
+                )}
               </div>
             );
 
