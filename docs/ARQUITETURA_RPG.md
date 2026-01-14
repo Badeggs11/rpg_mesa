@@ -2,7 +2,7 @@
 
 Engine + API + Frontend
 
-Este documento descreve a arquitetura atual e consolidada do projeto rpg_mesa, incluindo engine de jogo, backend (API + banco) e frontend (React), bem como o fluxo de dados entre essas camadas após a implementação completa do sistema de combate faseado com visualização 3D de dados.
+Este documento descreve a arquitetura atual e consolidada do projeto rpg_mesa, incluindo engine de jogo, backend (API + banco) e frontend (React), bem como o fluxo de dados entre essas camadas após a implementação do sistema de combate faseado com sincronização visual de dados.
 
 ✅ Funcionalidades Implementadas
 
@@ -12,31 +12,47 @@ Editor visual de atributos
 
 Sistema de combate por turnos
 
-Execução faseada do turno (iniciativa → ataque → defesa → resolução)
+Execução faseada do turno
 
-Mecânica de stamina
+iniciativa → ataque → defesa → resolução
 
-Ataques consecutivos baseados em iniciativa extra
+Mecânica de stamina com:
+
+consumo por ataque
+
+recuperação passiva ao defender
+
+limite máximo configurável (100)
+
+Ataques consecutivos baseados em:
+
+stamina mínima necessária (pior cenário)
+
+vitória em iniciativa extra
 
 Logs estruturados, narrativos e explicáveis
 
-Padronização de contrato de personagem (pontosDeVida, stamina, etc.)
+Padronização de contrato de personagem
 
-Visualização 3D fiel de rolagem de dados (D20) ✅
+pontosDeVida, stamina, resistencia, etc.
 
-Sincronização entre lógica da engine e tempo visual do frontend ✅
+Visualização 3D fiel de rolagem de dados (D20)
+
+Sincronização precisa entre engine e tempo visual do frontend
+
+Separação rigorosa entre regra, estado e apresentação
 
 📌 Visão Geral
 
-Este projeto implementa um sistema de RPG de mesa baseado em engine própria, com backend e frontend integrados, priorizando:
+O projeto implementa um sistema de RPG de mesa baseado em engine própria, priorizando:
 
 clareza e transparência das regras
 
 separação rigorosa de responsabilidades
 
-facilidade de balanceamento
+previsibilidade de estado
 
-persistência de estado
+facilidade de balanceamento
 
 visualização explícita do funcionamento interno do jogo
 
@@ -54,7 +70,7 @@ defesa
 
 cálculo de dano
 
-consumo de stamina
+consumo e recuperação de stamina
 
 ataques consecutivos
 
@@ -66,7 +82,7 @@ exposição via API
 
 consumo via frontend
 
-Essa separação permite testes isolados, simulações controladas e evolução segura do sistema.
+Essa separação permite testes isolados, simulações controladas e evolução segura.
 
 🧠 Filosofia do Sistema
 Princípios Fundamentais
@@ -79,7 +95,7 @@ O confronto final (dano) é resolvido no orquestrador do turno
 
 O dano nunca é negativo
 
-Stamina é um recurso finito por combate
+Stamina é um recurso finito e estratégico
 
 Ataques consecutivos exigem:
 
@@ -87,13 +103,15 @@ stamina suficiente para o pior cenário possível
 
 vitória em uma iniciativa extra
 
+O defensor recupera stamina a cada rodada de defesa
+
 Toda aleatoriedade vem de um único módulo (dice.js)
 
 Regras de jogo não conhecem banco de dados nem HTTP
 
 Engine não conhece SQL, Express ou frontend
 
-O banco existe apenas para persistir estado
+O banco apenas persiste estado
 
 O jogo acontece em memória
 
@@ -101,22 +119,22 @@ O frontend nunca acessa o banco diretamente
 
 🏗 Camadas do Sistema
 Frontend (React + Vite)
-↓ HTTP (JSON)
+        ↓ HTTP (JSON)
 Backend API (Express)
-↓
+        ↓
 Controllers
-↓
+        ↓
 Services
-↓
+        ↓
 Game Engine (rules · engine · dice)
-↓
+        ↓
 Estado do Jogo (em memória)
-↓
+        ↓
 Persistência (SQLite)
 
 Observações Importantes
 
-Controllers lidam exclusivamente com req e res
+Controllers lidam apenas com req e res
 
 Services orquestram persistência + engine
 
@@ -139,21 +157,11 @@ Ele é responsável por:
 
 controlar a máquina de estados do combate
 
-garantir a ordem correta das fases:
+garantir a ordem correta das fases
 
-rolagem de iniciativa
+aplicar todas as regras de ataque, defesa e dano
 
-definição do primeiro atacante
-
-rolagem de ataque
-
-escolha de golpe e direção
-
-rolagem de defesa
-
-resolução do turno
-
-aplicar regras de stamina
+gerenciar stamina (consumo e recuperação)
 
 decidir ataques consecutivos
 
@@ -161,24 +169,26 @@ gerar logs estruturados e semanticamente ricos
 
 Nenhuma outra parte do sistema decide o fluxo do combate.
 
-Responsabilidades do combateTurnos
+Responsabilidades Principais (Resumo)
 
 Manter o estado do turno
 
 Garantir consistência entre fases
 
-Executar regras de ataque, defesa e dano
+Centralizar toda aleatoriedade (dice.js)
 
-Centralizar toda aleatoriedade (via dice.js)
+Resolver completamente um turno
 
-Produzir logs completos e explicáveis
+Produzir logs narrativos e explicáveis
 
 Não conhecer UI, HTTP ou persistência
+
+👉 Toda a verdade do combate vive aqui.
 
 🎮 Frontend — Arena de Combate (ArenaCombate.jsx)
 Papel Arquitetural
 
-O ArenaCombate.jsx atua como o orquestrador da experiência do jogador, não das regras.
+O ArenaCombate.jsx é o orquestrador da experiência do jogador, não das regras.
 
 Ele:
 
@@ -194,17 +204,19 @@ nunca calcula dano
 
 nunca rola dados
 
-Responsabilidades do ArenaCombate
+Responsabilidades (Resumo)
 
-Renderizar controles conforme a fase (combate.fase)
+Renderizar controles conforme combate.fase
 
 Sincronizar inputs do jogador com a engine
 
-Manter UI previsível e segura
+Garantir UI previsível e segura
 
-Garantir que nenhuma ação inválida seja enviada
+Impedir ações inválidas
 
-O ArenaCombate é uma máquina de interface, não de regras.
+Exibir estado, status e logs do combate
+
+👉 O ArenaCombate é uma máquina de interface, não uma engine.
 
 🎲 Visualização de Dados — D20 3D (Frontend)
 Objetivo
@@ -223,20 +235,6 @@ Não gera números aleatórios
 
 Apenas visualiza resultados já calculados pela engine
 
-Responsabilidades do Componente
-
-Exibir um D20 tridimensional sólido
-
-Animar a rolagem por tempo configurável
-
-Garantir que o valor sorteado pare na face correta
-
-Destacar visualmente a face vencedora
-
-Sincronizar animação com logs textuais
-
-Nunca influenciar regras ou estado do jogo
-
 Garantias Arquiteturais
 
 O valor exibido é imutável
@@ -249,13 +247,13 @@ Pode ser removido sem impacto na lógica
 
 📜 Logs de Combate
 
-Os logs:
+Logs são gerados exclusivamente pela engine
 
-são gerados exclusivamente pela engine
+Não são strings soltas
 
-possuem significado semântico (não são strings soltas)
+Possuem significado semântico
 
-permitem:
+Permitem:
 
 animações sincronizadas
 
@@ -263,7 +261,7 @@ narração rica
 
 futura integração com IA narradora
 
-O frontend apenas interpreta o tempo e a visualização desses logs.
+O frontend interpreta tempo e visualização, nunca o conteúdo.
 
 📈 Estado Atual do Projeto
 
@@ -272,9 +270,9 @@ O sistema já permite:
 ✔ Combate por turnos completo
 ✔ Execução faseada controlada
 ✔ Visualização 3D fiel de dados
-✔ Mecânica de stamina e risco
+✔ Mecânica de stamina com risco e recuperação
 ✔ Ataques consecutivos com iniciativa extra
-✔ Logs narrativos e explicáveis
+✔ Logs narrativos, explicáveis e sincronizados
 ✔ Engine isolável e testável
 ✔ Frontend previsível e seguro
 
