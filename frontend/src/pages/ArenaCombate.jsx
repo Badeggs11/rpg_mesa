@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import './ArenaCombate.css';
 import Log from '../components/log/Log';
+import ControleLateral from '../components/controle/ControleLateral';
 
 import Rolagem from '../components/Rolagem';
 import EscolhaGolpe from '../components/EscolhaGolpe';
@@ -15,8 +16,52 @@ export default function ArenaCombate() {
   const [altura, setAltura] = useState(null);
   const [lado, setLado] = useState(null);
 
+  const [mostrarGolpes, setMostrarGolpes] = useState(false);
+
+  useEffect(() => {
+    setMostrarGolpes(false);
+    setGolpe(null);
+  }, [combate?.fase]);
+
   const atacanteId = 1;
   const defensorId = 2;
+  function acaoDoBotaoDado() {
+    if (!combate) return;
+
+    // 🎲 confirmar ATAQUE
+    if (
+      combate.fase === 'aguardandoAtaque' &&
+      mostrarGolpes &&
+      golpe &&
+      direcaoCompleta()
+    ) {
+      enviarAcao({ golpe, direcao: direcaoCompleta() });
+      limparSelecao();
+      return;
+    }
+
+    // 🎲 confirmar DEFESA
+    if (
+      combate.fase === 'aguardandoDefesa' &&
+      mostrarGolpes &&
+      golpe &&
+      direcaoCompleta()
+    ) {
+      enviarAcao({ golpe, direcao: direcaoCompleta() });
+      limparSelecao();
+      return;
+    }
+
+    // 🎲 rolagens (iniciativa / ataque / defesa)
+    enviarAcao({});
+  }
+
+  function limparSelecao() {
+    setGolpe(null);
+    setAltura(null);
+    setLado(null);
+    setMostrarGolpes(false);
+  }
 
   function direcaoCompleta() {
     if (!altura || !lado) return null;
@@ -71,126 +116,22 @@ export default function ArenaCombate() {
     }
   }
   function renderAcoes() {
-    if (!combate || combate.finalizado) return null;
-
-    switch (combate.fase) {
-      case 'aguardandoRolagemIniciativa':
-        return (
-          <Rolagem
-            texto="Rolar Iniciativa"
-            onRolar={() => enviarAcao({})}
-            disabled={carregando}
-          />
-        );
-
-      case 'aguardandoIniciativa':
-        // essa fase resolve a iniciativa automaticamente no backend
-        return (
-          <div className="acoes">
-            <p>Resolvendo iniciativa...</p>
-          </div>
-        );
-
-      case 'aguardandoRolagemAtaque':
-        return (
-          <Rolagem
-            texto="Rolar Ataque"
-            onRolar={() => enviarAcao({})}
-            disabled={carregando}
-          />
-        );
-
-      case 'aguardandoAtaque':
-        return (
-          <>
-            <EscolhaGolpe
-              titulo="Golpe de Ataque"
-              golpes={[
-                { id: 'socoSimples', label: '👊 Soco' },
-                { id: 'chuteSimples', label: '🦵 Chute' },
-              ]}
-              selecionado={golpe}
-              onSelecionar={setGolpe}
-            />
-
-            <EscolhaDirecao
-              altura={altura}
-              lado={lado}
-              setAltura={setAltura}
-              setLado={setLado}
-            />
-
-            <button
-              type="button"
-              className="confirmar"
-              disabled={!golpe || !direcaoCompleta()}
-              onClick={() => {
-                enviarAcao({
-                  golpe,
-                  direcao: direcaoCompleta(),
-                });
-                setGolpe(null);
-                setAltura(null);
-                setLado(null);
-              }}
-            >
-              Confirmar Ataque
-            </button>
-          </>
-        );
-
-      case 'aguardandoRolagemDefesa':
-        return (
-          <Rolagem
-            texto="Rolar Defesa"
-            onRolar={() => enviarAcao({})}
-            disabled={carregando}
-          />
-        );
-
-      case 'aguardandoDefesa':
-        return (
-          <>
-            <EscolhaGolpe
-              titulo="Golpe de Defesa"
-              golpes={[
-                { id: 'bloqueioSimples', label: '🛡 Bloqueio' },
-                { id: 'esquivaSimples', label: '🤸 Esquiva' },
-              ]}
-              selecionado={golpe}
-              onSelecionar={setGolpe}
-            />
-
-            <EscolhaDirecao
-              altura={altura}
-              lado={lado}
-              setAltura={setAltura}
-              setLado={setLado}
-            />
-
-            <button
-              type="button"
-              className="confirmar"
-              disabled={!golpe || !direcaoCompleta()}
-              onClick={() => {
-                enviarAcao({
-                  golpe,
-                  direcao: direcaoCompleta(),
-                });
-                setGolpe(null);
-                setAltura(null);
-                setLado(null);
-              }}
-            >
-              Confirmar Defesa
-            </button>
-          </>
-        );
-
-      default:
-        return null;
-    }
+    return null;
   }
+
+  const prontoParaConfirmarAtaque =
+    combate?.fase === 'aguardandoAtaque' &&
+    mostrarGolpes &&
+    golpe &&
+    direcaoCompleta();
+
+  const prontoParaConfirmarDefesa =
+    combate?.fase === 'aguardandoDefesa' &&
+    mostrarGolpes &&
+    golpe &&
+    direcaoCompleta();
+
+  const podeConfirmar = prontoParaConfirmarAtaque || prontoParaConfirmarDefesa;
 
   return (
     <div className="arena">
@@ -237,9 +178,33 @@ export default function ArenaCombate() {
 
           {renderAcoes()}
 
-          <div className="log-wrapper">
-            <h3>📜 Log do Combate</h3>
-            <Log eventos={combate.log} />
+          <div className="painel-inferior">
+            <div className="log-wrapper">
+              <h3>📜 Log do Combate</h3>
+              <Log eventos={combate.log} />
+            </div>
+            <ControleLateral
+              fase={combate.fase}
+              setAltura={setAltura}
+              setLado={setLado}
+              golpes={
+                combate.fase === 'aguardandoDefesa'
+                  ? [
+                      { id: 'bloqueioSimples', label: '🛡 Bloqueio' },
+                      { id: 'esquivaSimples', label: '🤸 Esquiva' },
+                    ]
+                  : [
+                      { id: 'socoSimples', label: '👊 Soco' },
+                      { id: 'chuteSimples', label: '🦵 Chute' },
+                    ]
+              }
+              golpeSelecionado={golpe}
+              onSelecionarGolpe={setGolpe}
+              mostrarGolpes={mostrarGolpes}
+              onToggleGolpes={() => setMostrarGolpes(v => !v)}
+              onRolar={acaoDoBotaoDado}
+              podeConfirmar={podeConfirmar}
+            />
           </div>
 
           {combate.finalizado && <h2 className="fim">🏆 Combate Finalizado</h2>}

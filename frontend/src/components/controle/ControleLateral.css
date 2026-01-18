@@ -1,0 +1,147 @@
+.controle-lateral {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: fit-content;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+
+  position: relative; /* âncora do overlay */
+
+  margin-top: 188px; /* ajuste fino: 16px, 24px, 32px */
+}
+
+/* 🎮 Botões principais */
+.controle-acoes {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.controle-acoes .btn {
+  flex: 1;
+  padding: 12px 0;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn.red {
+  background: #b22222;
+  color: #fff;
+}
+
+.btn.blue {
+  background: #1e90ff;
+  color: #fff;
+}
+
+.btn.yellow {
+  background: #daa520;
+  color: #000;
+}
+
+/* 🧭 Direcional (D-pad) */
+.controle-direcional {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 6px;
+  justify-items: center;
+  align-items: center;
+}
+
+.btn-direcao {
+  width: 48px;
+  height: 48px;
+  font-size: 1.2rem;
+  border-radius: 8px;
+  background: #2a2a2a;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-direcao:hover {
+  background: #3a3a3a;
+}
+
+/* Posições do direcional */
+.btn-direcao.up {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.btn-direcao.left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.btn-direcao.center {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.btn-direcao.right {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.btn-direcao.down {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.controle-golpes {
+  position: absolute;
+
+  bottom: 72px; /* sobe acima do botão ATK */
+  left: 0;
+  right: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: rgba(20, 20, 20, 0.95);
+  border-radius: 8px;
+  bottom: 305px; /* ajuste fino: 96px, 104px, 120px */
+  z-index: 20;
+}
+
+.btn-golpe {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: none;
+  background: #333;
+  color: #fff;
+  cursor: pointer;
+  text-align: left;
+}
+
+.btn-golpe.ativo {
+  outline: 2px solid #fff;
+  background: #444;
+}
+@keyframes piscar {
+  0% {
+    box-shadow: 0 0 0 rgba(255, 215, 0, 0);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.9);
+    transform: scale(1.05);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(255, 215, 0, 0);
+    transform: scale(1);
+  }
+}
+
+.btn.yellow.piscar {
+  animation: piscar 1s infinite;
+}

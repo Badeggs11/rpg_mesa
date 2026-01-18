@@ -79,7 +79,13 @@ function criarEstadoInicial(p1, p2) {
 
     ataquePendente: null,
 
-    log: [],
+    log: [
+      {
+        tipo: 'instrucao',
+        texto: '🎲 Jogue os dados para decidir a iniciativa do jogo.',
+      },
+    ],
+
     finalizado: false,
   };
 }
@@ -153,6 +159,10 @@ function executarFaseIniciativa(estado) {
     bonusB: iniciativa.bonusB,
     primeiro: iniciativa.primeiro.nome,
   });
+  estado.log.push({
+    tipo: 'instrucao',
+    texto: '🎲 Jogue o dado para iniciar o ataque.',
+  });
 
   estado.rolagemIniciativaA = null;
   estado.rolagemIniciativaB = null;
@@ -211,6 +221,11 @@ function executarFaseAtaque(estado, payload) {
   });
 
   estado.fase = 'aguardandoRolagemDefesa';
+
+  estado.log.push({
+    tipo: 'instrucao',
+    texto: '🎲 Jogue o dado para iniciar a defesa.',
+  });
 }
 
 /* =========================
@@ -381,7 +396,7 @@ function executarFaseDefesa(estado, payload) {
       derrotado: nomeDefensor,
     });
 
-    // limpeza final
+    // limpeza mínima
     estado.rolagemAtaque = null;
     estado.rolagemDefesa = null;
     estado.ataquePendente = null;
@@ -422,7 +437,18 @@ function executarFaseDefesa(estado, payload) {
     staminaRestante: atacante.stamina,
   });
 
-  /* 8) iniciativa extra / ataque consecutivo */
+  // limpa dados de rolagem
+  estado.rolagemAtaque = null;
+  estado.rolagemDefesa = null;
+
+  // avança corretamente o fluxo
+  estado.fase = 'avaliandoIniciativaExtra';
+}
+
+function executarAvaliacaoIniciativaExtra(estado) {
+  const atacante = estado.personagens[estado.atacanteAtual];
+  const defensor = estado.personagens[estado.defensorAtual];
+
   const intensidade = estado.ataquePendente?.intensidade ?? 0;
   const custoMaximo = 20 + intensidade;
 
@@ -432,6 +458,11 @@ function executarFaseDefesa(estado, payload) {
     staminaAtual: atacante.stamina,
     staminaNecessaria: custoMaximo,
     podeTentar: atacante.stamina >= custoMaximo,
+  });
+
+  estado.log.push({
+    tipo: 'instrucao',
+    texto: '🎲 Jogue o dado para tentar continuar atacando.',
   });
 
   if (atacante.stamina >= custoMaximo) {
@@ -462,23 +493,29 @@ function executarFaseDefesa(estado, payload) {
         staminaRestante: atacante.stamina,
       });
 
-      // 🧹 limpa o turno e mantém o atacante
-      estado.rolagemAtaque = null;
-      estado.rolagemDefesa = null;
-      estado.ataquePendente = null;
+      estado.log.push({
+        tipo: 'instrucao',
+        texto: '🎲 Jogue o dado para continuar o ataque.',
+      });
 
+      estado.ataquePendente = null;
       estado.fase = 'aguardandoRolagemAtaque';
       return;
     }
   }
 
-  /* 9) troca atacante e próximo turno */
-  // 🧹 limpa o turno
-  estado.rolagemAtaque = null;
-  estado.rolagemDefesa = null;
+  // ❌ não conseguiu iniciativa extra → troca turno
+  estado.log.push({
+    tipo: 'instrucao',
+    texto: '🎲 Jogue o dado para iniciar o ataque.',
+  });
+
   estado.ataquePendente = null;
 
-  [estado.atacanteAtual, estado.defensorAtual] = [nomeDefensor, nomeAtacante];
+  [estado.atacanteAtual, estado.defensorAtual] = [
+    estado.defensorAtual,
+    estado.atacanteAtual,
+  ];
 
   estado.turno += 1;
   estado.fase = 'aguardandoRolagemAtaque';
@@ -497,6 +534,9 @@ function executarTurno(estado, payload = {}) {
     case 'aguardandoRolagemIniciativa':
       executarRolagemIniciativa(estado);
       break;
+    case 'resolvendoIniciativa':
+      executarFaseIniciativa(estado);
+      break;
 
     case 'aguardandoRolagemAtaque':
       executarRolagemAtaque(estado);
@@ -512,6 +552,10 @@ function executarTurno(estado, payload = {}) {
 
     case 'aguardandoDefesa':
       executarFaseDefesa(estado, payload);
+      break;
+
+    case 'avaliandoIniciativaExtra':
+      executarAvaliacaoIniciativaExtra(estado);
       break;
 
     default:

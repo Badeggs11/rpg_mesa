@@ -119,17 +119,17 @@ O frontend nunca acessa o banco diretamente
 
 🏗 Camadas do Sistema
 Frontend (React + Vite)
-        ↓ HTTP (JSON)
+↓ HTTP (JSON)
 Backend API (Express)
-        ↓
+↓
 Controllers
-        ↓
+↓
 Services
-        ↓
+↓
 Game Engine (rules · engine · dice)
-        ↓
+↓
 Estado do Jogo (em memória)
-        ↓
+↓
 Persistência (SQLite)
 
 Observações Importantes
@@ -275,6 +275,178 @@ O sistema já permite:
 ✔ Logs narrativos, explicáveis e sincronizados
 ✔ Engine isolável e testável
 ✔ Frontend previsível e seguro
+
+🎮 Controle de Combate — ControleLateral (Frontend)
+Evolução Recente do Controle
+
+O sistema de controle do combate foi evoluído para operar como um controle físico virtual, inspirado em gamepads, desacoplado da lógica de jogo e totalmente guiado pelo estado da engine.
+
+O componente ControleLateral.jsx passou a ser o único ponto de entrada das ações do jogador durante o combate.
+
+Princípios do Controle
+
+O controle não decide regras
+
+O controle não conhece dano, iniciativa ou stamina
+
+O controle apenas envia intenções
+
+A engine valida, resolve e retorna novo estado
+
+O controle reage exclusivamente a combate.fase
+
+Estrutura Conceitual do Controle
+
+O controle é composto por três grupos de input:
+
+1️⃣ Botões de Ação (ATK / DEF / 🎲)
+
+ATK (vermelho)
+
+Disponível apenas na fase aguardandoAtaque
+
+Alterna a visualização dos golpes de ataque
+
+DEF (azul)
+
+Disponível apenas na fase aguardandoDefesa
+
+Alterna a visualização dos golpes de defesa
+
+🎲 Botão Amarelo (confirmar / rolar)
+
+Atua como botão contextual
+
+Pode representar:
+
+rolagem de iniciativa
+
+rolagem de ataque
+
+rolagem de defesa
+
+confirmação de ataque ou defesa
+
+Pisca visualmente quando a ação atual pode ser confirmada
+
+👉 O botão 🎲 não sabe o que está fazendo, apenas chama onRolar().
+
+2️⃣ Seleção de Golpes (Plano Independente)
+
+Os golpes não alteram o layout do controle
+
+São exibidos em um plano visual acima do botão ATK/DEF
+
+Abertura e fechamento são controlados por estado local (mostrarGolpes)
+
+O controle apenas:
+
+exibe opções
+
+informa qual golpe foi selecionado
+
+A engine valida se o golpe é permitido naquela fase.
+
+3️⃣ Direcionais (Altura + Lado)
+
+O direcional funciona como um combinador de intenção:
+
+Altura:
+
+alto
+
+medio
+
+baixo
+
+Lado:
+
+esquerda
+
+direita
+
+frontal (centro)
+
+A direção final só é considerada válida quando ambos os eixos estão definidos.
+
+👉 O controle não interpreta direção correta ou errada —
+isso é responsabilidade exclusiva da engine.
+
+Confirmação de Ação
+
+Uma ação só pode ser confirmada quando:
+
+um golpe está selecionado
+
+uma direção completa foi escolhida
+
+a fase do combate permite confirmação
+
+Essa regra é expressa no frontend como:
+
+podeConfirmar =
+prontoParaConfirmarAtaque || prontoParaConfirmarDefesa;
+
+O feedback visual (piscar do botão 🎲) é puramente informativo, não lógico.
+
+Integração com a Engine
+
+O controle envia apenas:
+
+{
+"golpe": "idDoGolpe",
+"direcao": "alto-direita"
+}
+
+Ou, em fases de rolagem simples:
+
+{}
+
+A engine decide:
+
+se a ação é válida
+
+se o dado será rolado
+
+como o turno avança
+
+quais logs serão produzidos
+
+🧠 Impacto Arquitetural das Alterações
+
+Essas mudanças garantem que:
+
+O frontend nunca antecipa decisões
+
+O fluxo do combate é 100% dirigido pela engine
+
+A UI é previsível, segura e didática
+
+O controle pode ser:
+
+reestilizado
+
+substituído por teclado
+
+substituído por controle físico
+
+ou por input de IA
+sem tocar na engine
+
+📌 Conclusão da Atualização
+
+A evolução do ControleLateral consolidou:
+
+separação total entre input e regra
+
+um modelo de controle reaproveitável
+
+uma UI orientada a estado
+
+e um fluxo de combate impossível de “quebrar” via frontend
+
+👉 O controle agora é uma casca de intenção.
+👉 A engine continua sendo a única fonte de verdade.
 
 🏁 Conclusão
 

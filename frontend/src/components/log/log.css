@@ -109,3 +109,9 @@
   border-bottom: 2px dashed rgba(0, 0, 0, 0.25);
   margin: 10px 0 18px;
 }
+
+.card-instrucao {
+  background: #1a1a1a;
+  border-left: 4px solid #f5c542;
+  font-style: italic;
+}

@@ -67,6 +67,13 @@ export default function Log({ eventos }) {
 
       {eventos.map((e, i) => {
         switch (e.tipo) {
+          case 'instrucao':
+            return (
+              <div key={i} className="card card-instrucao texto-narrativo">
+                {e.texto}
+              </div>
+            );
+
           /* ===== INICIATIVA ===== */
 
           case 'rolagemIniciativaResultado':
@@ -86,9 +93,11 @@ export default function Log({ eventos }) {
 
           case 'iniciativa':
             return (
-              <div key={i} className="card card-iniciativa">
-                🔥 <strong>{e.primeiro}</strong> toma a iniciativa!
-              </div>
+              <Delayed key={i} delay={TEMPO_DADO_SVG + TEMPO_RESPIRO}>
+                <div className="card card-iniciativa">
+                  🔥 <strong>{e.primeiro}</strong> toma a iniciativa!
+                </div>
+              </Delayed>
             );
 
           /* ===== ATAQUE ===== */
