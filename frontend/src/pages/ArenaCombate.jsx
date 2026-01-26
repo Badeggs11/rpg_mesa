@@ -2,10 +2,14 @@ import { useState, useEffect } from 'react';
 import './ArenaCombate.css';
 import Log from '../components/log/Log';
 import ControleLateral from '../components/controle/ControleLateral';
+import cenaInicio from '../assets/cenas/inicio.png';
+import jakeAtaca from '../assets/cenas/jake_ataca.png';
+import goblinAtaca from '../assets/cenas/goblin_ataca.png';
 
-import Rolagem from '../components/Rolagem';
-import EscolhaGolpe from '../components/EscolhaGolpe';
-import EscolhaDirecao from '../components/EscolhaDirecao';
+import jakeDefende from '../assets/cenas/jake_defende.png';
+import goblinDefende from '../assets/cenas/goblin_defende.png';
+
+import ControleFlutuante from '../components/controle/ControleFlutuante';
 
 export default function ArenaCombate() {
   const [combate, setCombate] = useState(null);
@@ -18,6 +22,8 @@ export default function ArenaCombate() {
 
   const [mostrarGolpes, setMostrarGolpes] = useState(false);
 
+  const [mostrarControle, setMostrarControle] = useState(true);
+
   useEffect(() => {
     setMostrarGolpes(false);
     setGolpe(null);
@@ -25,10 +31,22 @@ export default function ArenaCombate() {
 
   const atacanteId = 1;
   const defensorId = 2;
+
+  function direcaoCompleta() {
+    if (!altura || !lado) return null;
+    return `${altura}-${lado}`;
+  }
+
+  function limparSelecao() {
+    setGolpe(null);
+    setAltura(null);
+    setLado(null);
+    setMostrarGolpes(false);
+  }
+
   function acaoDoBotaoDado() {
     if (!combate) return;
 
-    // 🎲 confirmar ATAQUE
     if (
       combate.fase === 'aguardandoAtaque' &&
       mostrarGolpes &&
@@ -40,7 +58,6 @@ export default function ArenaCombate() {
       return;
     }
 
-    // 🎲 confirmar DEFESA
     if (
       combate.fase === 'aguardandoDefesa' &&
       mostrarGolpes &&
@@ -52,20 +69,7 @@ export default function ArenaCombate() {
       return;
     }
 
-    // 🎲 rolagens (iniciativa / ataque / defesa)
     enviarAcao({});
-  }
-
-  function limparSelecao() {
-    setGolpe(null);
-    setAltura(null);
-    setLado(null);
-    setMostrarGolpes(false);
-  }
-
-  function direcaoCompleta() {
-    if (!altura || !lado) return null;
-    return `${altura}-${lado}`;
   }
 
   async function iniciarCombate() {
@@ -89,6 +93,7 @@ export default function ArenaCombate() {
       setCarregando(false);
     }
   }
+
   async function enviarAcao(payload) {
     if (!combate) return;
 
@@ -115,9 +120,6 @@ export default function ArenaCombate() {
       setCarregando(false);
     }
   }
-  function renderAcoes() {
-    return null;
-  }
 
   const prontoParaConfirmarAtaque =
     combate?.fase === 'aguardandoAtaque' &&
@@ -132,10 +134,52 @@ export default function ArenaCombate() {
     direcaoCompleta();
 
   const podeConfirmar = prontoParaConfirmarAtaque || prontoParaConfirmarDefesa;
+  function cena(path) {
+    return new URL(path, import.meta.url).href;
+  }
+
+  function resolverCenaNarrativa(combate) {
+    if (!combate) return cenaInicio;
+
+    const { fase, atacanteAtual } = combate;
+
+    // Início / encerramento
+    if (fase === 'aguardandoRolagemIniciativa' || fase === 'finalizado') {
+      return cenaInicio;
+    }
+
+    // ATAQUE
+    if (fase === 'aguardandoRolagemAtaque' || fase === 'aguardandoAtaque') {
+      return atacanteAtual === 'Jake' ? jakeAtaca : goblinAtaca;
+    }
+
+    // DEFESA
+    if (fase === 'aguardandoRolagemDefesa' || fase === 'aguardandoDefesa') {
+      return atacanteAtual === 'Jake' ? goblinDefende : jakeDefende;
+    }
+
+    return cenaInicio;
+  }
 
   return (
     <div className="arena">
-      <h1>⚔️ Arena de Combate</h1>
+      {combate && (
+        <header className="arena-header">
+          <div className="titulo">⚔️ Arena de Combate</div>
+
+          <div className="status-header">
+            {Object.values(combate.personagens).map(p => (
+              <span key={p.nome} className="status-mini">
+                <strong>{p.nome}</strong>{' '}
+                <span className="vida">❤️ {p.pontosDeVida}</span>{' '}
+                <span className="stamina">⚡ {p.stamina}</span>
+              </span>
+            ))}
+          </div>
+        </header>
+      )}
+
+      <h1 className="titulo-pre">⚔️ Arena de Combate</h1>
 
       {!combate && (
         <button onClick={iniciarCombate} disabled={carregando}>
@@ -146,70 +190,62 @@ export default function ArenaCombate() {
       {erro && <p className="erro">{erro}</p>}
 
       {combate && (
-        <>
-          <section className="painel-combate">
-            <div className="linha-turno">
-              ⚔️ Turno <span>{combate.turno}</span>
-            </div>
+        <div className="arena-main">
+          {/* LOG À ESQUERDA */}
+          <section className="arena-log">
+            <h3>📜 Log do Combate</h3>
+            <Log eventos={combate.log} />
+          </section>
 
-            <div className="linha-fase">
-              Fase: <strong>{combate.fase}</strong>
-            </div>
+          {/* CENA À DIREITA */}
+          <section className="arena-cena">
+            <img
+              className="cena-imagem"
+              src={resolverCenaNarrativa(combate)}
+              alt="Cena do combate"
+            />
 
-            <div className="linha-personagens">
-              <div>
-                🗡 <strong>Atacante:</strong> {combate.atacanteAtual}
-              </div>
-              <div>
-                🛡 <strong>Defensor:</strong> {combate.defensorAtual}
-              </div>
-            </div>
-            <div className="linha-status">
-              {Object.values(combate.personagens).map(p => (
-                <div key={p.nome} className="status-personagem">
-                  <strong>{p.nome}</strong>
-                  <br />
-                  ❤️ Vida: {p.pontosDeVida}
-                  <br />⚡ Stamina: {p.stamina}
-                </div>
-              ))}
+            <div className="cena-legenda">
+              {combate.atacanteAtual} encara {combate.defensorAtual}
             </div>
           </section>
 
-          {renderAcoes()}
-
-          <div className="painel-inferior">
-            <div className="log-wrapper">
-              <h3>📜 Log do Combate</h3>
-              <Log eventos={combate.log} />
-            </div>
-            <ControleLateral
-              fase={combate.fase}
-              setAltura={setAltura}
-              setLado={setLado}
-              golpes={
-                combate.fase === 'aguardandoDefesa'
-                  ? [
-                      { id: 'bloqueioSimples', label: '🛡 Bloqueio' },
-                      { id: 'esquivaSimples', label: '🤸 Esquiva' },
-                    ]
-                  : [
-                      { id: 'socoSimples', label: '👊 Soco' },
-                      { id: 'chuteSimples', label: '🦵 Chute' },
-                    ]
-              }
-              golpeSelecionado={golpe}
-              onSelecionarGolpe={setGolpe}
-              mostrarGolpes={mostrarGolpes}
-              onToggleGolpes={() => setMostrarGolpes(v => !v)}
-              onRolar={acaoDoBotaoDado}
-              podeConfirmar={podeConfirmar}
-            />
-          </div>
-
-          {combate.finalizado && <h2 className="fim">🏆 Combate Finalizado</h2>}
-        </>
+          {/* CONTROLE FLUTUANTE (FORA DO FLUXO) */}
+          {mostrarControle && (
+            <ControleFlutuante>
+              <ControleLateral
+                fase={combate.fase}
+                setAltura={setAltura}
+                setLado={setLado}
+                golpes={
+                  combate.fase === 'aguardandoDefesa'
+                    ? [
+                        { id: 'bloqueioSimples', label: '🛡 Bloqueio' },
+                        { id: 'esquivaSimples', label: '🤸 Esquiva' },
+                      ]
+                    : [
+                        { id: 'socoSimples', label: '👊 Soco' },
+                        { id: 'chuteSimples', label: '🦵 Chute' },
+                      ]
+                }
+                golpeSelecionado={golpe}
+                onSelecionarGolpe={setGolpe}
+                mostrarGolpes={mostrarGolpes}
+                onToggleGolpes={() => setMostrarGolpes(v => !v)}
+                onRolar={acaoDoBotaoDado}
+                podeConfirmar={podeConfirmar}
+              />
+            </ControleFlutuante>
+          )}
+        </div>
       )}
+      {/* BOTÃO PARA MOSTRAR / ESCONDER O CONTROLE */}
+      <button
+        className="btn-toggle-controle"
+        onClick={() => setMostrarControle(v => !v)}
+      >
+        🎮
+      </button>
     </div>
   );
 }

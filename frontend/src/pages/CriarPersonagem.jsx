@@ -14,8 +14,6 @@ export default function CriarPersonagem() {
     inteligencia: 6,
   });
 
-  console.log(form);
-
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState(null);
   const [sucesso, setSucesso] = useState(false);
@@ -74,7 +72,7 @@ export default function CriarPersonagem() {
           <input
             type="number"
             name="pontosDeVida"
-            value={form.vida}
+            value={form.pontosDeVida}
             onChange={handleChange}
           />
         </label>

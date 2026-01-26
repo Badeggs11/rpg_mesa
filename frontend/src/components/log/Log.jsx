@@ -109,6 +109,7 @@ export default function Log({ eventos }) {
               <div key={i} className="card card-ataque">
                 🎲 Rolagem de Ataque
                 <DadoD20Three
+                  key={`atk-${i}`}
                   valor={r?.valor}
                   delay={TEMPO_DADO_THREE}
                   revelar={!!r}
@@ -143,6 +144,7 @@ export default function Log({ eventos }) {
               <div key={i} className="card card-defesa">
                 🎲 Rolagem de Defesa
                 <DadoD20Three
+                  key={`def-${i}`}
                   valor={r?.valor}
                   delay={TEMPO_DADO_THREE}
                   revelar={!!r}

@@ -1,0 +1,16 @@
+.controle-flutuante {
+  position: fixed;
+  z-index: 1100;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+}
+
+.barra-arrasto {
+  padding: 6px;
+  background: #222;
+  cursor: grab;
+  text-align: center;
+  user-select: none;
+}

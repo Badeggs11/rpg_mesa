@@ -73,11 +73,7 @@ export default function ControleLateral({
 
         <button
           className="btn-direcao center"
-          onClick={() => {
-            setAltura(null);
-            setLado(null);
-          }}
-          title="Centro (médio / frontal)"
+          onClick={() => setLado('frontal')}
         >
           ⏺
         </button>
