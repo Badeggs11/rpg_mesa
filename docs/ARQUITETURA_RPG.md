@@ -2,478 +2,149 @@
 
 Engine + API + Frontend
 
-Este documento descreve a arquitetura atual e consolidada do projeto rpg_mesa, incluindo engine de jogo, backend (API + banco) e frontend (React), bem como o fluxo de dados entre essas camadas após a implementação do sistema de combate faseado com sincronização visual de dados.
-
-✅ Funcionalidades Implementadas
-
-CRUD completo de personagens
-
-Editor visual de atributos
-
-Sistema de combate por turnos
-
-Execução faseada do turno
-
-iniciativa → ataque → defesa → resolução
-
-Mecânica de stamina com:
-
-consumo por ataque
-
-recuperação passiva ao defender
-
-limite máximo configurável (100)
-
-Ataques consecutivos baseados em:
-
-stamina mínima necessária (pior cenário)
-
-vitória em iniciativa extra
-
-Logs estruturados, narrativos e explicáveis
-
-Padronização de contrato de personagem
-
-pontosDeVida, stamina, resistencia, etc.
-
-Visualização 3D fiel de rolagem de dados (D20)
-
-Sincronização precisa entre engine e tempo visual do frontend
-
-Separação rigorosa entre regra, estado e apresentação
-
-📌 Visão Geral
+📌 1. Visão do Sistema
 
 O projeto implementa um sistema de RPG de mesa baseado em engine própria, priorizando:
 
-clareza e transparência das regras
+clareza das regras
 
 separação rigorosa de responsabilidades
 
 previsibilidade de estado
 
-facilidade de balanceamento
+visualização explícita do funcionamento interno
 
-visualização explícita do funcionamento interno do jogo
-
-possibilidade futura de integração com IA narradora
+evolução segura e testável
 
 O sistema separa explicitamente:
 
-rolagem de dados
+dados aleatórios · iniciativa · ataque · defesa · dano · stamina · ataques consecutivos · estado · persistência · API · visualização
 
-iniciativa
+🧠 2. Princípios Arquiteturais
 
-ataque
+Engine é pura (sem banco, HTTP ou UI)
 
-defesa
+Regras não conhecem infraestrutura
 
-cálculo de dano
+Estado do combate vive em memória
 
-consumo e recuperação de stamina
+Banco apenas persiste
 
-ataques consecutivos
+Frontend nunca acessa banco
 
-estado do personagem
+Toda aleatoriedade vem de dice.js
 
-persistência em banco
+Intenção vem de fora, regra vive dentro
 
-exposição via API
-
-consumo via frontend
-
-Essa separação permite testes isolados, simulações controladas e evolução segura.
-
-🧠 Filosofia do Sistema
-Princípios Fundamentais
-
-Ataque e defesa são entidades distintas
-
-Defesa depende exclusivamente do defensor
-
-O confronto final (dano) é resolvido no orquestrador do turno
-
-O dano nunca é negativo
-
-Stamina é um recurso finito e estratégico
-
-Ataques consecutivos exigem:
-
-stamina suficiente para o pior cenário possível
-
-vitória em uma iniciativa extra
-
-O defensor recupera stamina a cada rodada de defesa
-
-Toda aleatoriedade vem de um único módulo (dice.js)
-
-Regras de jogo não conhecem banco de dados nem HTTP
-
-Engine não conhece SQL, Express ou frontend
-
-O banco apenas persiste estado
-
-O jogo acontece em memória
-
-O frontend nunca acessa o banco diretamente
-
-🏗 Camadas do Sistema
-Frontend (React + Vite)
-↓ HTTP (JSON)
-Backend API (Express)
+🏗 3. Camadas do Sistema
+Frontend (React)
+↓ HTTP
+API (Express)
 ↓
 Controllers
 ↓
 Services
 ↓
-Game Engine (rules · engine · dice)
+Engine (rules · engine · dice)
 ↓
-Estado do Jogo (em memória)
+Estado em memória
 ↓
-Persistência (SQLite)
+SQLite (persistência)
 
-Observações Importantes
+⚔️ 4. Engine de Combate (combateTurnos.js)
 
-Controllers lidam apenas com req e res
+Responsável por:
 
-Services orquestram persistência + engine
+máquina de estados do combate
 
-Services atuam como camada de contrato
+ordem das fases
 
-Engine é pura (sem HTTP, sem banco)
+regras de ataque/defesa/dano
 
-Frontend consome a API via fetch
+consumo e recuperação de stamina
 
-Proxy do Vite integra frontend/backend sem CORS
+ataques consecutivos
 
-Nenhuma camada “pula” outra camada
-
-⚔️ Engine de Jogo — combateTurnos.js
-Papel Central
-
-O arquivo combateTurnos.js é o coração do sistema de combate.
-
-Ele é responsável por:
-
-controlar a máquina de estados do combate
-
-garantir a ordem correta das fases
-
-aplicar todas as regras de ataque, defesa e dano
-
-gerenciar stamina (consumo e recuperação)
-
-decidir ataques consecutivos
-
-gerar logs estruturados e semanticamente ricos
-
-Nenhuma outra parte do sistema decide o fluxo do combate.
-
-Responsabilidades Principais (Resumo)
-
-Manter o estado do turno
-
-Garantir consistência entre fases
-
-Centralizar toda aleatoriedade (dice.js)
-
-Resolver completamente um turno
-
-Produzir logs narrativos e explicáveis
-
-Não conhecer UI, HTTP ou persistência
+geração de logs semânticos
 
 👉 Toda a verdade do combate vive aqui.
 
-🎮 Frontend — Arena de Combate (ArenaCombate.jsx)
-Papel Arquitetural
+🎮 5. Interface (ArenaCombate.jsx)
 
-O ArenaCombate.jsx é o orquestrador da experiência do jogador, não das regras.
+A UI:
 
-Ele:
+interpreta combate.fase
 
-interpreta a fase atual do combate
+exibe apenas controles válidos
 
-exibe apenas os controles permitidos naquela fase
+envia intenções para a API
 
-envia ações explícitas para a API
+nunca calcula regras
 
-nunca decide regras
+Layout Atual
+Esquerda Log mecânico (linha do tempo)
+Direita Cena narrativa (visual)
 
-nunca calcula dano
+Log = verdade mecânica
+Cena = interpretação visual
 
-nunca rola dados
+🎮 6. Controle e Agentes
+Controle Flutuante
 
-Responsabilidades (Resumo)
+Independente do layout
 
-Renderizar controles conforme combate.fase
+Arrastável
 
-Sincronizar inputs do jogador com a engine
+Pode ser ocultado
 
-Garantir UI previsível e segura
+Camada de input sobreposta
 
-Impedir ações inválidas
+Modelo de Controle
 
-Exibir estado, status e logs do combate
+O sistema aceita três tipos de agentes:
 
-👉 O ArenaCombate é uma máquina de interface, não uma engine.
+Tipo Origem da intenção
+Humano UI
+CPU IA (decidirAcaoCpu.js)
+Engine valida e resolve
 
-🎲 Visualização de Dados — D20 3D (Frontend)
-Objetivo
+A IA gera o mesmo payload que o frontend enviaria.
 
-Fornecer uma representação visual fiel, didática e transparente da rolagem de dados, sem interferir na lógica da engine.
+🎲 7. Visualização de Dados
 
-Implementação
+O dado 3D:
 
-Componente: DadoD20Three.jsx
+executa apenas no frontend
 
-Tecnologia: Three.js (WebGL)
+não gera números
 
-Executado exclusivamente no frontend
+apenas visualiza resultados da engine
 
-Não gera números aleatórios
+📜 8. Logs de Combate
 
-Apenas visualiza resultados já calculados pela engine
+gerados exclusivamente pela engine
 
-Garantias Arquiteturais
+estruturados semanticamente
 
-O valor exibido é imutável
+permitem animação e narração
 
-A engine continua sendo a única fonte de verdade
+frontend controla apenas tempo e visualização
 
-O dado é puramente representacional
+🧠 9. Garantias Arquiteturais
 
-Pode ser removido sem impacto na lógica
+✔ Engine isolável e testável
+✔ UI não decide regras
+✔ IA não altera estado diretamente
+✔ Logs são a fonte narrativa
+✔ Layout não influencia regras
 
-📜 Logs de Combate
-
-Logs são gerados exclusivamente pela engine
-
-Não são strings soltas
-
-Possuem significado semântico
-
-Permitem:
-
-animações sincronizadas
-
-narração rica
-
-futura integração com IA narradora
-
-O frontend interpreta tempo e visualização, nunca o conteúdo.
-
-📈 Estado Atual do Projeto
-
-O sistema já permite:
+📈 10. Estado Atual do Projeto
 
 ✔ Combate por turnos completo
-✔ Execução faseada controlada
-✔ Visualização 3D fiel de dados
-✔ Mecânica de stamina com risco e recuperação
-✔ Ataques consecutivos com iniciativa extra
-✔ Logs narrativos, explicáveis e sincronizados
-✔ Engine isolável e testável
-✔ Frontend previsível e seguro
-
-🎮 Controle de Combate — ControleLateral (Frontend)
-Evolução Recente do Controle
-
-O sistema de controle do combate foi evoluído para operar como um controle físico virtual, inspirado em gamepads, desacoplado da lógica de jogo e totalmente guiado pelo estado da engine.
-
-O componente ControleLateral.jsx passou a ser o único ponto de entrada das ações do jogador durante o combate.
-
-Princípios do Controle
-
-O controle não decide regras
-
-O controle não conhece dano, iniciativa ou stamina
-
-O controle apenas envia intenções
-
-A engine valida, resolve e retorna novo estado
-
-O controle reage exclusivamente a combate.fase
-
-Estrutura Conceitual do Controle
-
-O controle é composto por três grupos de input:
-
-1️⃣ Botões de Ação (ATK / DEF / 🎲)
-
-ATK (vermelho)
-
-Disponível apenas na fase aguardandoAtaque
-
-Alterna a visualização dos golpes de ataque
-
-DEF (azul)
-
-Disponível apenas na fase aguardandoDefesa
-
-Alterna a visualização dos golpes de defesa
-
-🎲 Botão Amarelo (confirmar / rolar)
-
-Atua como botão contextual
-
-Pode representar:
-
-rolagem de iniciativa
-
-rolagem de ataque
-
-rolagem de defesa
-
-confirmação de ataque ou defesa
-
-Pisca visualmente quando a ação atual pode ser confirmada
-
-👉 O botão 🎲 não sabe o que está fazendo, apenas chama onRolar().
-
-2️⃣ Seleção de Golpes (Plano Independente)
-
-Os golpes não alteram o layout do controle
-
-São exibidos em um plano visual acima do botão ATK/DEF
-
-Abertura e fechamento são controlados por estado local (mostrarGolpes)
-
-O controle apenas:
-
-exibe opções
-
-informa qual golpe foi selecionado
-
-A engine valida se o golpe é permitido naquela fase.
-
-3️⃣ Direcionais (Altura + Lado)
-
-O direcional funciona como um combinador de intenção:
-
-Altura:
-
-alto
-
-medio
-
-baixo
-
-Lado:
-
-esquerda
-
-direita
-
-frontal (centro)
-
-A direção final só é considerada válida quando ambos os eixos estão definidos.
-
-👉 O controle não interpreta direção correta ou errada —
-isso é responsabilidade exclusiva da engine.
-
-Confirmação de Ação
-
-Uma ação só pode ser confirmada quando:
-
-um golpe está selecionado
-
-uma direção completa foi escolhida
-
-a fase do combate permite confirmação
-
-Essa regra é expressa no frontend como:
-
-podeConfirmar =
-prontoParaConfirmarAtaque || prontoParaConfirmarDefesa;
-
-O feedback visual (piscar do botão 🎲) é puramente informativo, não lógico.
-
-Integração com a Engine
-
-O controle envia apenas:
-
-{
-"golpe": "idDoGolpe",
-"direcao": "alto-direita"
-}
-
-Ou, em fases de rolagem simples:
-
-{}
-
-A engine decide:
-
-se a ação é válida
-
-se o dado será rolado
-
-como o turno avança
-
-quais logs serão produzidos
-
-🧠 Impacto Arquitetural das Alterações
-
-Essas mudanças garantem que:
-
-O frontend nunca antecipa decisões
-
-O fluxo do combate é 100% dirigido pela engine
-
-A UI é previsível, segura e didática
-
-O controle pode ser:
-
-reestilizado
-
-substituído por teclado
-
-substituído por controle físico
-
-ou por input de IA
-sem tocar na engine
-
-📌 Conclusão da Atualização
-
-A evolução do ControleLateral consolidou:
-
-separação total entre input e regra
-
-um modelo de controle reaproveitável
-
-uma UI orientada a estado
-
-e um fluxo de combate impossível de “quebrar” via frontend
-
-👉 O controle agora é uma casca de intenção.
-👉 A engine continua sendo a única fonte de verdade.
-
-🏁 Conclusão
-
-Este projeto demonstra:
-
-domínio real de arquitetura
-
-separação clara entre regra, estado e visualização
-
-decisões técnicas conscientes
-
-evolução incremental sem dívida técnica
-
-O sistema está coerente, estável e pronto para crescer.
-
-Essa será a tela do Arena de Combate.
-┌──────────────────────────────────────────────────────────┐
-│ Arena de Combate Jake ❤️100 ⚡100 | Goblin ❤️100 ⚡100 │ ← Header (compacto)
-├──────────────────────────────────────────────────────────┤
-│ │
-│ [ IMAGEM / CENA NARRATIVA DO COMBATE ] │ ← Área visual central
-│ │
-├──────────────────────────────────────────────────────────┤
-│ 📜 LOG DE COMBATE 🎮 CONTROLE LATERAL │
-│ Turno 0 ┌───────────────┐ │
-│ Fase: aguardandoRolagemIniciativa │ ⬆ ⏺ ⬇ │ │
-│ Jake encara o Goblin... │ ← 🎲 → │ │
-│ │ ATK DEF │ │
-│ └───────────────┘ │
-└──────────────────────────────────────────────────────────┘
+✔ Execução faseada
+✔ D20 3D sincronizado
+✔ Stamina estratégica
+✔ Ataques consecutivos
+✔ Log narrativo sincronizado
+✔ Controle flutuante
+✔ Suporte a CPU vs Humano

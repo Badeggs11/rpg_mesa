@@ -17,12 +17,16 @@ function buscarResultado(eventos, indice, tipo) {
 }
 
 /* ⏱️ Atraso seguro (sem quebrar regras de hooks) */
-function Delayed({ delay = 2000, children }) {
+function Delayed({ delay = 2000, onShow, children }) {
   const [show, setShow] = useState(false);
 
   useLayoutEffect(() => {
     setShow(false);
-    const t = setTimeout(() => setShow(true), delay);
+    const t = setTimeout(() => {
+      setShow(true);
+      onShow?.(); // 🔥 avisa o log
+    }, delay);
+
     return () => clearTimeout(t);
   }, [delay]);
 
@@ -33,6 +37,13 @@ function Delayed({ delay = 2000, children }) {
 export default function Log({ eventos }) {
   const logRef = useRef(null);
   const [autoScroll, setAutoScroll] = useState(true);
+
+  function scrollParaAgora() {
+    if (!logRef.current) return;
+    requestAnimationFrame(() => {
+      logRef.current.scrollTop = logRef.current.scrollHeight;
+    });
+  }
 
   useLayoutEffect(() => {
     if (!autoScroll || !logRef.current) return;
@@ -93,7 +104,11 @@ export default function Log({ eventos }) {
 
           case 'iniciativa':
             return (
-              <Delayed key={i} delay={TEMPO_DADO_SVG + TEMPO_RESPIRO}>
+              <Delayed
+                key={i}
+                delay={TEMPO_DADO_SVG + TEMPO_RESPIRO}
+                onShow={scrollParaAgora}
+              >
                 <div className="card card-iniciativa">
                   🔥 <strong>{e.primeiro}</strong> toma a iniciativa!
                 </div>
@@ -120,7 +135,11 @@ export default function Log({ eventos }) {
 
           case 'rolagemAtaqueResultado':
             return (
-              <Delayed key={i} delay={TEMPO_DADO_THREE + TEMPO_RESPIRO}>
+              <Delayed
+                key={i}
+                delay={TEMPO_DADO_THREE + TEMPO_RESPIRO}
+                onShow={scrollParaAgora}
+              >
                 <div className="card card-ataque texto-narrativo">
                   🎯 Ataque alcança <strong>{e.valor}</strong> no dado
                 </div>
@@ -201,7 +220,11 @@ export default function Log({ eventos }) {
             }
 
             return (
-              <Delayed key={i} delay={TEMPO_DADO_THREE + TEMPO_RESPIRO + 400}>
+              <Delayed
+                key={i}
+                delay={TEMPO_DADO_THREE + TEMPO_RESPIRO + 400}
+                onShow={scrollParaAgora}
+              >
                 <div>
                   <div className="card">
                     <div className="card-title">⚔️ Resolução do Turno</div>
@@ -294,7 +317,11 @@ export default function Log({ eventos }) {
 
           case 'resultadoIniciativaExtra':
             return (
-              <Delayed key={i} delay={TEMPO_DADO_SVG + TEMPO_RESPIRO}>
+              <Delayed
+                key={i}
+                delay={TEMPO_DADO_SVG + TEMPO_RESPIRO}
+                onShow={scrollParaAgora}
+              >
                 <div className="card card-iniciativa-extra">
                   {e.conseguiu ? (
                     <p className="sucesso">🔥 {e.atacante} mantém o ataque!</p>

@@ -80,7 +80,12 @@ export default function ArenaCombate() {
       const res = await fetch('/api/combate/iniciar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ atacanteId, defensorId }),
+        body: JSON.stringify({
+          atacanteId,
+          defensorId,
+          controladorA: 'humano',
+          controladorB: 'cpu',
+        }),
       });
 
       const data = await res.json();

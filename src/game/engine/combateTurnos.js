@@ -52,6 +52,9 @@ function criarEstadoInicial(p1, p2) {
   // garante números
   const fix = p => ({
     ...p,
+
+    controlador: p.controlador || 'humano',
+
     pontosDeVida: Number.isFinite(p.pontosDeVida) ? p.pontosDeVida : 0,
     stamina: Number.isFinite(p.stamina) ? p.stamina : 0,
     percepcao: Number.isFinite(p.percepcao) ? p.percepcao : 0,
