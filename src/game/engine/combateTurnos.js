@@ -64,6 +64,9 @@ function criarEstadoInicial(p1, p2) {
   const b = fix(p2);
 
   return {
+    tempoLimite: null,
+    tipoTempo: null,
+
     turno: 0,
     atacanteAtual: null,
     defensorAtual: null,
@@ -142,6 +145,12 @@ function executarFaseIniciativa(estado) {
     estado.rolagemIniciativaA = null;
     estado.rolagemIniciativaB = null;
     estado.fase = 'aguardandoRolagemIniciativa';
+
+    estado.log.push({
+      tipo: 'instrucao',
+      texto: '🎲 Jogue o dado para definir o tempo de ataque.',
+    });
+
     return;
   }
 
@@ -150,7 +159,12 @@ function executarFaseIniciativa(estado) {
     iniciativa.primeiro.nome === p1.nome ? p2.nome : p1.nome;
 
   estado.turno = 1;
-  estado.fase = 'aguardandoRolagemAtaque';
+  estado.fase = 'aguardandoRolagemTempoAtaque';
+
+  estado.log.push({
+    tipo: 'instrucao',
+    texto: '🎲 Jogue o dado para definir o tempo de ataque.',
+  });
 
   estado.log.push({
     tipo: 'iniciativa',
@@ -162,13 +176,134 @@ function executarFaseIniciativa(estado) {
     bonusB: iniciativa.bonusB,
     primeiro: iniciativa.primeiro.nome,
   });
+
+  estado.rolagemIniciativaA = null;
+  estado.rolagemIniciativaB = null;
+}
+
+function executarRolagemTempoAtaque(estado) {
+  estado.log.push({ tipo: 'rolagemTempoAtaqueIniciada' });
+
+  estado.tempoLimite = jogarDado(20);
+  estado.tipoTempo = 'ataque';
+
+  estado.log.push({
+    tipo: 'rolagemTempoAtaqueResultado',
+    valor: estado.tempoLimite,
+  });
+
+  estado.fase = 'preContagemAtaque';
+}
+
+function iniciarTempoAtaque(estado) {
+  estado.fase = 'tempoDeAtaque';
+}
+
+function tempoEsgotado(estado) {
+  estado.log.push({ tipo: 'tempoEsgotado', quem: estado.atacanteAtual });
+
+  // perde turno
+  [estado.atacanteAtual, estado.defensorAtual] = [
+    estado.defensorAtual,
+    estado.atacanteAtual,
+  ];
+
+  estado.turno += 1;
+  estado.fase = 'aguardandoRolagemTempoAtaque';
+
+  estado.tempoLimite = null;
+  estado.tipoTempo = null;
+}
+
+function executarRolagemTempoDefesa(estado) {
+  estado.log.push({ tipo: 'rolagemTempoDefesaIniciada' });
+
+  estado.tempoLimite = jogarDado(20);
+  estado.tipoTempo = 'defesa';
+
+  estado.log.push({
+    tipo: 'rolagemTempoDefesaResultado',
+    valor: estado.tempoLimite,
+  });
+
+  estado.fase = 'preContagemDefesa';
+}
+
+function iniciarTempoDefesa(estado) {
+  estado.fase = 'tempoDeDefesa';
+}
+
+function tempoDefesaEsgotado(estado) {
+  const nomeAtacante = estado.atacanteAtual;
+  const nomeDefensor = estado.defensorAtual;
+
+  const defensor = estado.personagens[nomeDefensor];
+
+  estado.log.push({
+    tipo: 'tempoDefesaEsgotado',
+    defensor: nomeDefensor,
+  });
+
+  // recebe dano total do ataque pendente
+  const dano = estado.ataquePendente
+    ? estado.rolagemAtaque + (estado.ataquePendente.intensidade ?? 0)
+    : 0;
+
+  defensor.pontosDeVida -= dano;
+
+  estado.log.push({
+    tipo: 'danoPorTempoEsgotado',
+    defensor: nomeDefensor,
+    dano,
+    vidaRestante: defensor.pontosDeVida,
+  });
+
+  estado.rolagemAtaque = null;
+  estado.rolagemDefesa = null;
+  estado.ataquePendente = null;
+
+  if (defensor.pontosDeVida <= 0) {
+    estado.finalizado = true;
+    estado.fase = 'finalizado';
+
+    estado.log.push({
+      tipo: 'fimCombate',
+      vencedor: nomeAtacante,
+      derrotado: nomeDefensor,
+    });
+
+    return;
+  }
+
+  // troca turno
+  [estado.atacanteAtual, estado.defensorAtual] = [
+    estado.defensorAtual,
+    estado.atacanteAtual,
+  ];
+
+  estado.turno += 1;
+  estado.fase = 'aguardandoRolagemTempoAtaque';
+
+  estado.tempoLimite = null;
+  estado.tipoTempo = null;
+}
+
+function finalizarTempoAtaque(estado) {
+  estado.fase = 'aguardandoRolagemAtaque';
+
   estado.log.push({
     tipo: 'instrucao',
     texto: '🎲 Jogue o dado para iniciar o ataque.',
   });
+}
 
-  estado.rolagemIniciativaA = null;
-  estado.rolagemIniciativaB = null;
+function finalizarTempoDefesa(estado) {
+  estado.fase = 'aguardandoRolagemDefesa';
+
+  estado.log.push({
+    tipo: 'instrucao',
+    texto: '🎲 Jogue o dado para iniciar a defesa.',
+  });
 }
 
 /* =========================
@@ -223,11 +358,11 @@ function executarFaseAtaque(estado, payload) {
     valor: estado.rolagemAtaque,
   });
 
-  estado.fase = 'aguardandoRolagemDefesa';
+  estado.fase = 'aguardandoRolagemTempoDefesa';
 
   estado.log.push({
     tipo: 'instrucao',
-    texto: '🎲 Jogue o dado para iniciar a defesa.',
+    texto: '🎲 Jogue o dado para definir o tempo de defesa.',
   });
 }
 
@@ -502,7 +637,7 @@ function executarAvaliacaoIniciativaExtra(estado) {
       });
 
       estado.ataquePendente = null;
-      estado.fase = 'aguardandoRolagemAtaque';
+      estado.fase = 'aguardandoRolagemTempoAtaque';
       return;
     }
   }
@@ -510,7 +645,7 @@ function executarAvaliacaoIniciativaExtra(estado) {
   // ❌ não conseguiu iniciativa extra → troca turno
   estado.log.push({
     tipo: 'instrucao',
-    texto: '🎲 Jogue o dado para iniciar o ataque.',
+    texto: '🎲 Jogue o dado para definir o tempo de ataque.',
   });
 
   estado.ataquePendente = null;
@@ -521,7 +656,7 @@ function executarAvaliacaoIniciativaExtra(estado) {
   ];
 
   estado.turno += 1;
-  estado.fase = 'aguardandoRolagemAtaque';
+  estado.fase = 'aguardandoRolagemTempoAtaque';
 }
 
 /* =========================
@@ -541,6 +676,41 @@ function executarTurno(estado, payload = {}) {
       executarFaseIniciativa(estado);
       break;
 
+    case 'aguardandoRolagemTempoAtaque':
+      executarRolagemTempoAtaque(estado);
+      break;
+
+    case 'preContagemAtaque':
+      if (payload.iniciarTempoAtaque) iniciarTempoAtaque(estado);
+      break;
+
+    case 'tempoDeAtaque': {
+      if (payload.tempoEsgotado) {
+        tempoEsgotado(estado);
+        break;
+      }
+
+      // ✅ Se o jogador escolheu golpe/direção durante o tempo, EXECUTA O ATAQUE AGORA
+      if (payload.golpe && payload.direcao) {
+        // encerra o timer (limpa)
+        estado.tempoLimite = null;
+        estado.tipoTempo = null;
+
+        // executa o ataque (isso já rola o dado e muda fase para tempo da defesa)
+        executarFaseAtaque(estado, payload);
+        break;
+      }
+
+      // fallback: só finalizar tempo (sem golpe escolhido)
+      if (payload.finalizarTempoAtaque) {
+        finalizarTempoAtaque(estado);
+        estado.tempoLimite = null;
+        estado.tipoTempo = null;
+      }
+
+      break;
+    }
+
     case 'aguardandoRolagemAtaque':
       executarRolagemAtaque(estado);
       break;
@@ -548,6 +718,37 @@ function executarTurno(estado, payload = {}) {
     case 'aguardandoAtaque':
       executarFaseAtaque(estado, payload);
       break;
+    case 'aguardandoRolagemTempoDefesa':
+      executarRolagemTempoDefesa(estado);
+      break;
+
+    case 'preContagemDefesa':
+      if (payload.iniciarTempoDefesa) iniciarTempoDefesa(estado);
+      break;
+
+    case 'tempoDeDefesa': {
+      if (payload.tempoEsgotado) {
+        tempoDefesaEsgotado(estado);
+        break;
+      }
+
+      // ✅ Se o jogador escolheu golpe/direção durante o tempo, EXECUTA A DEFESA AGORA
+      if (payload.golpe && payload.direcao) {
+        estado.tempoLimite = null;
+        estado.tipoTempo = null;
+
+        executarFaseDefesa(estado, payload);
+        break;
+      }
+
+      if (payload.finalizarTempoDefesa) {
+        finalizarTempoDefesa(estado);
+        estado.tempoLimite = null;
+        estado.tipoTempo = null;
+      }
+
+      break;
+    }
 
     case 'aguardandoRolagemDefesa':
       executarRolagemDefesa(estado);

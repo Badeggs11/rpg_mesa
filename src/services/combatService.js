@@ -17,8 +17,12 @@ async function executarAcao(combateId, payload) {
     throw new Error('Combate ja finalizado');
   }
 
+  console.log('PAYLOAD CHEGANDO NO ENGINE:', payload);
+
   // 🔹 1) Executa ação recebida (humano ou vazio)
   executarTurno(combate, payload);
+
+  console.log('FASE DEPOIS DO TURNO:', combate.fase);
 
   function obterPersonagemDaVez(combate) {
     const fase = combate.fase;
@@ -100,6 +104,19 @@ async function iniciarCombate({
     const personagemAtual = combate.personagens[combate.atacanteAtual];
 
     if (!personagemAtual || personagemAtual.controlador !== 'cpu') break;
+
+    // 🛑 SE A FASE É VISUAL / TEMPORIZADA, PARA AQUI
+    if (
+      combate.fase === 'aguardandoRolagemIniciativa' ||
+      combate.fase === 'aguardandoRolagemAtaque' ||
+      combate.fase === 'aguardandoRolagemDefesa' ||
+      combate.fase === 'preContagemAtaque' ||
+      combate.fase === 'tempoDeAtaque' ||
+      combate.fase === 'preContagemDefesa' ||
+      combate.fase === 'tempoDeDefesa'
+    ) {
+      break;
+    }
 
     const acaoCpu = decidirAcaoCpu(combate);
     executarTurno(combate, acaoCpu);

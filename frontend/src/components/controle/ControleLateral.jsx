@@ -13,9 +13,13 @@ export default function ControleLateral({
   onToggleGolpes,
   onRolar,
   podeConfirmar,
+
+  altura,
+  lado,
 }) {
-  const emAtaque = fase === 'aguardandoAtaque';
-  const emDefesa = fase === 'aguardandoDefesa';
+  const emAtaque = fase === 'aguardandoAtaque' || fase === 'tempoDeAtaque';
+
+  const emDefesa = fase === 'aguardandoDefesa' || fase === 'tempoDeDefesa';
 
   return (
     <aside className="controle-lateral">
@@ -60,32 +64,40 @@ export default function ControleLateral({
 
       {/* 🧭 Direções */}
       <div className="controle-direcional">
-        <button className="btn-direcao up" onClick={() => setAltura('alto')}>
+        <button
+          className={`btn-direcao up ${altura === 'alto' ? 'ativo' : ''}`}
+          onClick={() => setAltura('alto')}
+        >
           ⬆️
         </button>
 
         <button
-          className="btn-direcao left"
+          className={`btn-direcao left ${lado === 'esquerda' ? 'ativo' : ''}`}
           onClick={() => setLado('esquerda')}
         >
           ⬅️
         </button>
 
         <button
-          className="btn-direcao center"
-          onClick={() => setLado('frontal')}
+          className={`btn-direcao center ${lado === 'frontal' ? 'ativo' : ''}`}
+          onClick={() => {
+            setLado('frontal');
+          }}
         >
           ⏺
         </button>
 
         <button
-          className="btn-direcao right"
+          className={`btn-direcao right ${lado === 'direita' ? 'ativo' : ''}`}
           onClick={() => setLado('direita')}
         >
           ➡️
         </button>
 
-        <button className="btn-direcao down" onClick={() => setAltura('baixo')}>
+        <button
+          className={`btn-direcao down ${altura === 'baixo' ? 'ativo' : ''}`}
+          onClick={() => setAltura('baixo')}
+        >
           ⬇️
         </button>
       </div>

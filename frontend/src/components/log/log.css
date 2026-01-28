@@ -115,3 +115,11 @@
   border-left: 4px solid #f5c542;
   font-style: italic;
 }
+
+.card-tempo {
+  border-left: 4px solid #00d4ff;
+}
+
+.card-alerta {
+  border-left: 4px solid #ff4d4d;
+}

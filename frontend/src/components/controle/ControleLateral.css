@@ -145,3 +145,9 @@
 .btn.yellow.piscar {
   animation: piscar 1s infinite;
 }
+
+.ativo {
+  outline: 2px solid #00ffe1;
+  box-shadow: 0 0 8px #00ffe1;
+  transform: scale(1.1);
+}

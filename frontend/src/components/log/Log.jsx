@@ -115,6 +115,93 @@ export default function Log({ eventos }) {
               </Delayed>
             );
 
+          case 'rolagemTempoAtaqueIniciada': {
+            const r = buscarResultado(
+              eventos,
+              i,
+              'rolagemTempoAtaqueResultado'
+            );
+
+            return (
+              <div key={i} className="card card-tempo">
+                ⏱️ Rolagem do Tempo de Ataque
+                <DadoD20Three
+                  key={`tempo-atk-${i}`}
+                  valor={r?.valor}
+                  delay={TEMPO_DADO_THREE}
+                  revelar={!!r}
+                />
+              </div>
+            );
+          }
+
+          case 'rolagemTempoAtaqueResultado':
+            return (
+              <Delayed
+                key={i}
+                delay={TEMPO_DADO_THREE + TEMPO_RESPIRO}
+                onShow={() => {
+                  window.dispatchEvent(new Event('iniciar-tempo-ataque'));
+                }}
+              >
+                <div className="card card-tempo texto-narrativo">
+                  ⏳ Você tem <strong>{e.valor}</strong> segundos para atacar!
+                </div>
+              </Delayed>
+            );
+
+            return (
+              <Delayed key={i} delay={TEMPO_DADO_THREE + TEMPO_RESPIRO}>
+                <div className="card card-tempo texto-narrativo">
+                  ⏳ Você tem <strong>{e.valor}</strong> segundos para atacar!
+                </div>
+              </Delayed>
+            );
+
+          case 'rolagemTempoDefesaIniciada': {
+            const r = buscarResultado(
+              eventos,
+              i,
+              'rolagemTempoDefesaResultado'
+            );
+
+            return (
+              <div key={i} className="card card-tempo">
+                ⏱️ Rolagem do Tempo de Defesa
+                <DadoD20Three
+                  key={`tempo-def-${i}`}
+                  valor={r?.valor}
+                  delay={TEMPO_DADO_THREE}
+                  revelar={!!r}
+                />
+              </div>
+            );
+          }
+
+          case 'rolagemTempoDefesaResultado':
+            return (
+              <Delayed key={i} delay={TEMPO_DADO_THREE + TEMPO_RESPIRO}>
+                <div className="card card-tempo texto-narrativo">
+                  🛡️ Você tem <strong>{e.valor}</strong> segundos para se
+                  defender!
+                </div>
+              </Delayed>
+            );
+
+          case 'tempoEsgotado':
+            return (
+              <div key={i} className="card card-alerta">
+                ⌛ Tempo de ataque esgotado! A vez passa.
+              </div>
+            );
+
+          case 'tempoDefesaEsgotado':
+            return (
+              <div key={i} className="card card-alerta">
+                💥 Tempo de defesa esgotado! O golpe acerta em cheio.
+              </div>
+            );
+
           /* ===== ATAQUE ===== */
 
           case 'rolagemAtaqueIniciada': {
