@@ -1,5 +1,5 @@
 export async function listarPersonagens() {
-  const res = await fetch('/personagens', {
+  const res = await fetch('/api/personagens', {
     headers: {
       Accept: 'application/json',
     },
@@ -12,7 +12,7 @@ export async function listarPersonagens() {
   return res.json();
 }
 export async function criarPersonagem(dados) {
-  const res = await fetch('/personagens', {
+  const res = await fetch('/api/personagens', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

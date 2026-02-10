@@ -593,3 +593,193 @@ Você basicamente construiu:
 Um sistema de combate com juiz automático, tempo real, teclado, narrativa e física de RPG.
 
 Isso já é arquitetura de jogo de verdade.
+
+🧩 ARQUITETURA — RPG de Mesa (Atualizada)
+🧠 CÉREBRO → 📡 MENSAGEIRO → 🖥️ PALCO
+
+Engine → API → Frontend
+
+Agora o sistema ganhou janelas de tempo e agente CPU, transformando o combate em um duelo de reflexo + estratégia.
+
+📌 1. Visão Geral do Sistema
+
+O projeto mantém seus pilares e evolui para um modelo híbrido:
+
+Aspecto Modelo Atual
+Ordem de turnos Baseada em iniciativa
+Execução de ações Janela com tempo real controlado pelo engine
+Entrada do jogador Teclado + controle lateral
+Adversário Humano ou CPU
+
+Separações continuam rígidas:
+
+aleatoriedade · regras · estado · IA · API · visualização
+
+🧠 2. Princípios Arquiteturais (Mantidos)
+
+✔ Engine pura (sem UI, HTTP ou DB)
+✔ Regras isoladas
+✔ Estado do combate em memória
+✔ Frontend nunca calcula regras
+✔ Toda rolagem vem de dice.js
+✔ IA gera intenções, não altera estado
+✔ Logs são a verdade narrativa
+
+🏗 3. Camadas do Sistema
+Frontend (React)
+↓ HTTP
+API (Express)
+↓
+Controllers
+↓
+Services
+↓
+Engine (rules · combateTurnos · dice · IA)
+↓
+Estado em memória
+↓
+SQLite (persistência)
+
+⚔️ 4. Engine de Combate — combateTurnos.js
+
+Agora é uma máquina de estados com tempo.
+
+Responsável por:
+
+fluxo das fases
+
+regras de ataque/defesa/dano
+
+stamina e ataques consecutivos
+
+janelas de tempo (sem usar timers reais)
+
+logs semânticos
+
+integração com IA (via service)
+
+👉 Toda verdade mecânica vive aqui.
+
+⏳ 5. Sistema de Tempo (NOVO)
+
+O engine define quando a ação pode acontecer, mas não espera tempo real.
+
+🔁 Fluxo do Tempo de Ataque
+aguardandoRolagemTempoAtaque
+↓ 🎲
+preContagemAtaque
+↓ (UI espera)
+tempoDeAtaque ⏳
+↓
+aguardandoRolagemAtaque
+
+🔁 Fluxo do Tempo de Defesa
+aguardandoRolagemTempoDefesa
+↓ 🎲
+preContagemDefesa
+↓ (UI espera)
+tempoDeDefesa ⏳
+↓
+aguardandoRolagemDefesa
+
+Responsabilidade
+Quem O que faz
+Engine Define fases, aplica regra se tempo esgota
+Frontend Faz contagem visual (useEffect + setTimeout)
+🤖 6. Sistema de CPU (NOVO)
+
+Arquivo: decidirAcaoCpu.js
+
+A CPU é um agente que gera o mesmo payload que o jogador.
+
+Ela decide com base na fase:
+
+Fase Ação da CPU
+aguardandoRolagem\* {} (rolar dado)
+preContagemAtaque { iniciarTempoAtaque: true }
+preContagemDefesa { iniciarTempoDefesa: true }
+tempoDeAtaque escolhe golpe + direção
+tempoDeDefesa escolhe defesa + direção
+
+📌 A CPU não muda estado direto.
+Ela apenas envia intenções → engine valida.
+
+🎮 7. Interface — ArenaCombate.jsx
+
+Agora funciona como cockpit de ação em tempo.
+
+Funções principais:
+
+interpreta combate.fase
+
+habilita controles conforme fase
+
+envia intenções
+
+gerencia tempo visual
+
+mostra narrativa e dados 3D
+
+⌨️ Controle por Teclado
+Tecla Função
+ENTER rolar dado / confirmar ação
+Setas direção
+Espaço frontal
+A / S golpes
+🎲 8. Visualização de Dados
+
+O dado 3D:
+
+✔ roda só no frontend
+✔ não gera números
+✔ só anima resultados do engine
+
+📜 9. Logs de Combate
+
+Agora representam ação sob pressão.
+
+Engine gera eventos como:
+
+rolagens
+
+início de tempo
+
+tempo esgotado
+
+ataques
+
+defesa
+
+resolução
+
+stamina
+
+Frontend apenas interpreta visualmente.
+
+🧠 10. Garantias Arquiteturais (Mantidas)
+
+✔ Engine isolável
+✔ UI não decide regra
+✔ CPU não altera estado
+✔ Logs = fonte narrativa
+✔ Tempo visual não afeta regra
+
+📈 11. Estado Atual do Projeto
+
+✔ Combate por turnos
+✔ Sistema de tempo de ação
+✔ CPU jogando
+✔ D20 3D sincronizado
+✔ Stamina estratégica
+✔ Ataques consecutivos
+✔ Narrativa por logs
+✔ Controle por teclado
+✔ Arquitetura modular e testável
+
+🎯 Resumo Simplificado
+Papel Função
+🧠 Engine Juiz + física + regras
+📡 API Correio
+🖥 Frontend Tela + controles
+🤖 CPU Jogador artificial
+📜 Log Roteiro da luta

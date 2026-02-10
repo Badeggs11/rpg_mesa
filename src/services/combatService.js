@@ -27,11 +27,11 @@ async function executarAcao(combateId, payload) {
   function obterPersonagemDaVez(combate) {
     const fase = combate.fase;
 
-    if (fase === 'aguardandoAtaque' || fase === 'aguardandoRolagemAtaque') {
+    if (fase === 'aguardandoAtaque' || fase === 'tempoDeAtaque') {
       return combate.personagens[combate.atacanteAtual];
     }
 
-    if (fase === 'aguardandoDefesa' || fase === 'aguardandoRolagemDefesa') {
+    if (fase === 'aguardandoDefesa' || fase === 'tempoDeDefesa') {
       return combate.personagens[combate.defensorAtual];
     }
 
@@ -45,6 +45,9 @@ async function executarAcao(combateId, payload) {
   function faseExigeAnimacao(fase) {
     return (
       fase === 'aguardandoRolagemIniciativa' ||
+      fase === 'aguardandoRolagemTempoAtaque' ||
+      fase === 'aguardandoRolagemTempoPercepcao' || // ⭐ NOVA
+      fase === 'aguardandoRolagemTempoDefesa' ||
       fase === 'aguardandoRolagemAtaque' ||
       fase === 'aguardandoRolagemDefesa'
     );
@@ -65,7 +68,7 @@ async function executarAcao(combateId, payload) {
   // 🔹 3) Se acabou o combate
 
   if (combate.finalizado) {
-    removerCombate(combateId);
+    // NÃO remover automaticamente
   }
   return combate;
 }
@@ -74,7 +77,7 @@ async function iniciarCombate({
   atacanteId,
   defensorId,
   controladorA = 'humano',
-  controladorB = 'humano',
+  controladorB = 'cpu',
 }) {
   const atacante = await personagensService.buscarPorId(atacanteId);
   const defensor = await personagensService.buscarPorId(defensorId);
@@ -106,15 +109,7 @@ async function iniciarCombate({
     if (!personagemAtual || personagemAtual.controlador !== 'cpu') break;
 
     // 🛑 SE A FASE É VISUAL / TEMPORIZADA, PARA AQUI
-    if (
-      combate.fase === 'aguardandoRolagemIniciativa' ||
-      combate.fase === 'aguardandoRolagemAtaque' ||
-      combate.fase === 'aguardandoRolagemDefesa' ||
-      combate.fase === 'preContagemAtaque' ||
-      combate.fase === 'tempoDeAtaque' ||
-      combate.fase === 'preContagemDefesa' ||
-      combate.fase === 'tempoDeDefesa'
-    ) {
+    if (faseExigeAnimacao(combate.fase)) {
       break;
     }
 

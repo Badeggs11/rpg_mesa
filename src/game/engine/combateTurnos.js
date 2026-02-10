@@ -5,6 +5,7 @@ const rules = require('../rules');
 const golpesAtaque = require('../world/golpesAtaque');
 const golpesDefesa = require('../world/golpesDefesa');
 const { jogarDado } = require('../dice');
+const decidirAcaoCpu = require('./ia/decidirAcaoCpu');
 
 /* =========================
    UTILIDADES
@@ -84,6 +85,14 @@ function criarEstadoInicial(p1, p2) {
     rolagemDefesa: null,
 
     ataquePendente: null,
+
+    percepcaoDefensor: {
+      valorRolado: 0,
+      bonusAtributo: 0,
+      total: 0,
+      segundosInformacao: 0,
+      direcaoRevelada: null,
+    },
 
     log: [
       {
@@ -195,6 +204,32 @@ function executarRolagemTempoAtaque(estado) {
   estado.fase = 'preContagemAtaque';
 }
 
+function executarRolagemTempoPercepcao(estado) {
+  const defensor = estado.personagens[estado.defensorAtual];
+
+  const d6 = jogarDado(6);
+  const bonus = defensor.percepcao * 0.1;
+  const total = d6 + bonus;
+
+  estado.percepcaoDefensor = {
+    valorRolado: d6,
+    bonusAtributo: bonus,
+    total,
+    segundosInformacao: Math.floor(total),
+    direcaoRevelada: estado.ataquePendente?.direcao || null,
+  };
+
+  estado.log.push({
+    tipo: 'percepcaoRolada',
+    defensor: estado.defensorAtual,
+    d6,
+    bonus,
+    total,
+  });
+
+  estado.fase = 'preContagemPercepcao';
+}
+
 function iniciarTempoAtaque(estado) {
   estado.fase = 'tempoDeAtaque';
 }
@@ -220,6 +255,10 @@ function executarRolagemTempoDefesa(estado) {
 
   estado.tempoLimite = jogarDado(20);
   estado.tipoTempo = 'defesa';
+
+  estado.percepcaoDefensor.ativa = true;
+  estado.percepcaoDefensor.segundosRestantes =
+    estado.percepcaoDefensor.segundosInformacao;
 
   estado.log.push({
     tipo: 'rolagemTempoDefesaResultado',
@@ -348,7 +387,7 @@ function executarFaseAtaque(estado, payload) {
     tipo: 'ataque',
     atacante: atacante.nome,
     golpe: golpeAtaque.nome,
-    direcao,
+    direcaoOculta: true,
     intensidade: regraAtaque.intensidade,
     velocidade: regraAtaque.velocidade,
   });
@@ -358,11 +397,11 @@ function executarFaseAtaque(estado, payload) {
     valor: estado.rolagemAtaque,
   });
 
-  estado.fase = 'aguardandoRolagemTempoDefesa';
+  estado.fase = 'aguardandoRolagemTempoPercepcao';
 
   estado.log.push({
     tipo: 'instrucao',
-    texto: '🎲 Jogue o dado para definir o tempo de defesa.',
+    texto: '🎲 O defensor rola percepção para tentar antecipar o ataque.',
   });
 }
 
@@ -422,7 +461,6 @@ function executarFaseDefesa(estado, payload) {
   /* 2) resolver ataque final */
   const resultadoAtaqueFinal = resolverAtaque(
     estado.ataquePendente,
-    resultadoDefesa,
     estado.rolagemAtaque
   );
 
@@ -718,6 +756,27 @@ function executarTurno(estado, payload = {}) {
     case 'aguardandoAtaque':
       executarFaseAtaque(estado, payload);
       break;
+    case 'aguardandoRolagemTempoPercepcao':
+      executarRolagemTempoPercepcao(estado);
+      break;
+
+    case 'preContagemPercepcao':
+      if (payload.iniciarTempoPercepcao) {
+        estado.fase = 'tempoDePercepcaoInformacao';
+      }
+      break;
+
+    case 'tempoDePercepcaoInformacao':
+      if (payload.finalizarPercepcao) {
+        estado.fase = 'aguardandoRolagemTempoDefesa';
+
+        estado.log.push({
+          tipo: 'instrucao',
+          texto: '🎲 Jogue o dado para definir o tempo de defesa.',
+        });
+      }
+      break;
+
     case 'aguardandoRolagemTempoDefesa':
       executarRolagemTempoDefesa(estado);
       break;
@@ -765,6 +824,9 @@ function executarTurno(estado, payload = {}) {
     default:
       throw new Error(`Fase inválida: ${estado.fase}`);
   }
+  // 🔥 AQUI É O LUGAR DA CPU 🔥
+
+  return null;
 }
 
 module.exports = {

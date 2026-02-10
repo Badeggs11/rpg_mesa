@@ -1,6 +1,6 @@
 const { jogarDado } = require('../dice');
 
-function resolverAtaque(regraAtaque, resultadoDefesa, rolagemAtaque) {
+function resolverAtaque(regraAtaque, rolagemAtaque) {
   // 1️⃣ rolagem do ataque
 
   // 2️⃣ valor base do ataque

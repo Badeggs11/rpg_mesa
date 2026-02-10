@@ -123,3 +123,8 @@
 .card-alerta {
   border-left: 4px solid #ff4d4d;
 }
+
+.card-percepcao {
+  border-left: 4px solid #9b59b6;
+  background: linear-gradient(90deg, #1b1b2f, #2e1a47);
+}

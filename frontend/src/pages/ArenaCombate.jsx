@@ -1,7 +1,22 @@
+/* =========================================================
+   🏟️ ARENACOMBATE
+   ---------------------------------------------------------
+   Esse componente é o COCKPIT do combate.
+
+   Ele NÃO contém regras de jogo.
+   Ele é responsável por:
+   🎮 Input do jogador
+   🖥️ Estado visual da luta
+   📡 Comunicação com a API/Engine
+   ⏳ Temporização visual
+   🎭 Renderização da cena e do log
+========================================================= */
+
 import { useState, useEffect, useRef, useCallback } from 'react';
 import './ArenaCombate.css';
 import Log from '../components/log/Log';
 import ControleLateral from '../components/controle/ControleLateral';
+import { iniciarCombate, executarAcaoCombate } from '../api/combates';
 
 import cenaInicio from '../assets/cenas/inicio.png';
 import jakeAtaca from '../assets/cenas/jake_ataca.png';
@@ -10,6 +25,11 @@ import jakeDefende from '../assets/cenas/jake_defende.png';
 import goblinDefende from '../assets/cenas/goblin_defende.png';
 
 import ControleFlutuante from '../components/controle/ControleFlutuante';
+
+/* =========================================================
+     🧠 1. ESTADO VISUAL (useState)
+     Tudo aqui afeta o que é desenhado na tela
+  ========================================================= */
 
 export default function ArenaCombate() {
   const [combate, setCombate] = useState(null);
@@ -23,7 +43,22 @@ export default function ArenaCombate() {
   const [mostrarGolpes, setMostrarGolpes] = useState(false);
   const [mostrarControle, setMostrarControle] = useState(true);
 
-  // ✅ Refs para o teclado sempre enxergar o estado mais recente
+  const [tempoRestante, setTempoRestante] = useState(null);
+
+  const [tempoPreContagem, setTempoPreContagem] = useState(null);
+
+  const [direcaoVisivel, setDirecaoVisivel] = useState(null);
+
+  console.log(combate);
+
+  //console.log('RENDER combate:', combate);
+
+  /* =========================================================
+     🧠 2. REFS (memória invisível)
+     Permitem que o teclado sempre enxergue o estado atual
+     sem recriar listeners
+  ========================================================= */
+
   const combateRef = useRef(null);
   const golpeRef = useRef(null);
   const alturaRef = useRef(null);
@@ -33,11 +68,55 @@ export default function ArenaCombate() {
   useEffect(() => {
     if (!combate) return;
 
+    if (combate.fase === 'tempoDePercepcaoInformacao') {
+      const info = combate.percepcaoDefensor;
+
+      setDirecaoVisivel(info.direcaoRevelada);
+
+      const timer = setTimeout(() => {
+        setDirecaoVisivel(null);
+        enviarAcao({ finalizarPercepcao: true });
+      }, info.segundosInformacao * 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [combate?.fase]);
+
+  useEffect(() => {
+    if (!combate) return;
+
+    const fase = combate.fase;
+
+    const faseMostraPercepcao = fase === 'tempoDeDefesa';
+
+    if (!faseMostraPercepcao) {
+      setDirecaoVisivel(null); // 🔥 LIMPA AUTOMATICAMENTE
+    }
+  }, [combate?.fase]);
+
+  useEffect(() => {
+    console.log('TEMPO PRE:', tempoPreContagem);
+  }, [tempoPreContagem]);
+
+  useEffect(() => {
+    console.log('FASE:', combate?.fase);
+  }, [combate?.fase]);
+
+  /* =========================================================
+     ⏳ 4. TIMER VISUAL (quando a fase é tempoDeAtaque/Defesa)
+     O ENGINE define o tempo.
+     O FRONTEND apenas mostra e dispara tempoEsgotado.
+  ========================================================= */
+  useEffect(() => {
+    if (!combate) return;
+
     if (combate.fase === 'tempoDeAtaque' && combate.tempoLimite) {
       let tempo = combate.tempoLimite;
+      setTempoRestante(tempo);
 
       const timer = setInterval(() => {
         tempo--;
+        setTempoRestante(tempo);
 
         if (tempo <= 0) {
           clearInterval(timer);
@@ -46,13 +125,33 @@ export default function ArenaCombate() {
       }, 1000);
 
       return () => clearInterval(timer);
+    } else {
+      if (combate.fase !== 'preContagemAtaque') {
+        setTempoRestante(null);
+      }
     }
 
     if (combate.fase === 'tempoDeDefesa' && combate.tempoLimite) {
       let tempo = combate.tempoLimite;
+      setTempoRestante(tempo);
+
+      const perc = combate.percepcaoDefensor;
 
       const timer = setInterval(() => {
         tempo--;
+        setTempoRestante(tempo);
+
+        const perc = combate.percepcaoDefensor;
+
+        if (
+          perc?.segundosInformacao > 0 &&
+          tempo <= perc.segundosInformacao &&
+          tempo > 0
+        ) {
+          setDirecaoVisivel(perc.direcaoRevelada);
+        } else {
+          setDirecaoVisivel(null);
+        }
 
         if (tempo <= 0) {
           clearInterval(timer);
@@ -61,30 +160,54 @@ export default function ArenaCombate() {
       }, 1000);
 
       return () => clearInterval(timer);
+    } else {
+      if (combate.fase !== 'preContagemDefesa') {
+        setTempoRestante(null);
+      }
     }
   }, [combate?.fase, combate?.tempoLimite]);
+
+  /* =========================================================
+     ⏳ 5. PRÉ-CONTAGEM VISUAL
+     O engine entra em preContagem.
+     A UI espera e depois manda iniciarTempo.
+  ========================================================= */
 
   useEffect(() => {
     if (!combate) return;
 
-    // ⏳ Quando o engine entra na pré-contagem, esperamos 3s e iniciamos o tempo
-    if (combate.fase === 'preContagemAtaque') {
-      const t = setTimeout(() => {
-        enviarAcao({ iniciarTempoAtaque: true });
-      }, 3000); // seus 3 segundos
+    if (
+      combate.fase === 'preContagemAtaque' ||
+      combate.fase === 'preContagemDefesa' ||
+      combate.fase === 'preContagemPercepcao'
+    ) {
+      let tempo = 10; // duração da pré-contagem visual
+      setTempoPreContagem(tempo);
 
-      return () => clearTimeout(t);
+      const timer = setInterval(() => {
+        tempo--;
+        setTempoPreContagem(tempo);
+
+        if (tempo <= 0) {
+          clearInterval(timer);
+
+          if (combate.fase === 'preContagemAtaque') {
+            enviarAcao({ iniciarTempoAtaque: true });
+          }
+
+          if (combate.fase === 'preContagemPercepcao') {
+            enviarAcao({ iniciarTempoPercepcao: true });
+          } else {
+            enviarAcao({ iniciarTempoDefesa: true });
+          }
+        }
+      }, 1000);
+
+      return () => clearInterval(timer);
     }
 
-    if (combate.fase === 'preContagemDefesa') {
-      const t = setTimeout(() => {
-        enviarAcao({ iniciarTempoDefesa: true });
-      }, 3000);
-
-      return () => clearTimeout(t);
-    }
+    setTempoPreContagem(null);
   }, [combate?.fase]);
-
   useEffect(() => {
     combateRef.current = combate;
   }, [combate]);
@@ -108,6 +231,10 @@ export default function ArenaCombate() {
   const atacanteId = 1;
   const defensorId = 2;
 
+  /* =========================================================
+     🧰 6. FUNÇÕES AUXILIARES
+  ========================================================= */
+
   function direcaoCompletaAtual() {
     const a = alturaRef.current;
     const l = ladoRef.current;
@@ -122,24 +249,17 @@ export default function ArenaCombate() {
     setMostrarGolpes(false);
   }
 
-  async function iniciarCombate() {
+  async function iniciarCombateHandler() {
     setErro(null);
     setCarregando(true);
 
     try {
-      const res = await fetch('/api/combate/iniciar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          atacanteId,
-          defensorId,
-          controladorA: 'humano',
-          controladorB: 'humano',
-        }),
+      const data = await iniciarCombate({
+        atacanteId,
+        defensorId,
+        controladorA: 'humano',
+        controladorB: 'cpu',
       });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.erro);
 
       setCombate(data);
     } catch (e) {
@@ -148,6 +268,11 @@ export default function ArenaCombate() {
       setCarregando(false);
     }
   }
+
+  /* =========================================================
+     🚀 7. COMUNICAÇÃO COM O BACKEND
+     Porta oficial para falar com o engine
+  ========================================================= */
 
   async function enviarAcao(payload) {
     const c = combateRef.current;
@@ -157,17 +282,10 @@ export default function ArenaCombate() {
     setCarregando(true);
 
     try {
-      const res = await fetch('/api/combate/acao', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          combateId: c.id,
-          ...payload,
-        }),
+      const data = await executarAcaoCombate({
+        combateId: c.id,
+        ...payload,
       });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.erro);
 
       setCombate(data);
     } catch (e) {
@@ -177,7 +295,9 @@ export default function ArenaCombate() {
     }
   }
 
-  // ✅ Função estável: sempre lê refs (estado mais recente)
+  /* =========================================================
+     🎲 8. BOTÃO PRINCIPAL (interpreta a fase atual)
+  ========================================================= */
   const acaoDoBotaoDado = useCallback(() => {
     const c = combateRef.current;
     if (!c) return;
@@ -196,7 +316,17 @@ export default function ArenaCombate() {
       return;
     }
 
+    if (fase === 'tempoDePercepcaoInformacao') {
+      enviarAcao({ finalizarPercepcao: true });
+      return;
+    }
+
     if (fase === 'aguardandoRolagemTempoAtaque') {
+      enviarAcao({});
+      return;
+    }
+
+    if (fase === 'aguardandoRolagemTempoPercepcao') {
       enviarAcao({});
       return;
     }
@@ -215,7 +345,6 @@ export default function ArenaCombate() {
       enviarAcao({});
       return;
     }
-
     /* ===============================
    ⏳ PRÉ-CONTAGEM → COMEÇA O TEMPO
   =============================== */
@@ -277,8 +406,9 @@ export default function ArenaCombate() {
 
     enviarAcao({});
   }, []);
-
-  // ✅ Listener do teclado montado UMA vez, lendo refs
+  /* =========================================================
+     ⌨️ 9. LISTENER DE TECLADO (input de jogo)
+  ========================================================= */
   useEffect(() => {
     function handleKey(e) {
       const c = combateRef.current;
@@ -294,7 +424,8 @@ export default function ArenaCombate() {
         fase === 'tempoDeAtaque' ||
         fase === 'tempoDeDefesa' ||
         fase === 'aguardandoRolagemTempoAtaque' ||
-        fase === 'aguardandoRolagemTempoDefesa';
+        fase === 'aguardandoRolagemTempoDefesa' ||
+        fase === 'tempoDePercepcaoInformacao';
 
       const teclasControladas = [
         'Space',
@@ -333,7 +464,7 @@ export default function ArenaCombate() {
 
       if (podeEscolherGolpe) {
         const golpesDisponiveis =
-          fase === 'aguardandoDefesa'
+          fase === 'aguardandoDefesa' || fase === 'tempoDeDefesa'
             ? ['bloqueioSimples', 'esquivaSimples']
             : ['socoSimples', 'chuteSimples'];
 
@@ -423,7 +554,7 @@ export default function ArenaCombate() {
       <h1 className="titulo-pre">⚔️ Arena de Combate</h1>
 
       {!combate && (
-        <button onClick={iniciarCombate} disabled={carregando}>
+        <button onClick={iniciarCombateHandler} disabled={carregando}>
           ⚡ Iniciar Combate
         </button>
       )}
@@ -434,6 +565,7 @@ export default function ArenaCombate() {
         <div className="arena-main">
           <section className="arena-log">
             <h3>📜 Log do Combate</h3>
+
             <Log eventos={combate.log} />
           </section>
 
@@ -443,6 +575,44 @@ export default function ArenaCombate() {
               src={resolverCenaNarrativa(combate)}
               alt="Cena do combate"
             />
+
+            {/* ⏳ PRÉ-CONTAGEM */}
+            {tempoPreContagem !== null &&
+              combate.fase === 'preContagemAtaque' && (
+                <div className="timer-pre">
+                  ⚠️ Seu ataque começa em: {tempoPreContagem}
+                </div>
+              )}
+
+            {tempoPreContagem !== null &&
+              combate.fase === 'preContagemDefesa' && (
+                <div className="timer-pre">
+                  🛡 Sua defesa começa em: {tempoPreContagem}
+                </div>
+              )}
+
+            {tempoPreContagem !== null &&
+              combate.fase === 'preContagemPercepcao' && (
+                <div className="timer-pre percepcao">
+                  👁 Analisando o movimento do inimigo...
+                </div>
+              )}
+
+            {/* ⏱ TEMPO REAL DE AÇÃO */}
+            {tempoRestante !== null && (
+              <div
+                className={`timer-ataque ${tempoRestante <= 3 ? 'perigo' : ''}`}
+              >
+                ⏳ {tempoRestante}s
+              </div>
+            )}
+
+            {direcaoVisivel && (
+              <div className="direcao-revelada">
+                👁 Ataque vindo de: <strong>{direcaoVisivel}</strong>
+              </div>
+            )}
+
             <div className="cena-legenda">
               {combate.atacanteAtual} encara {combate.defensorAtual}
             </div>

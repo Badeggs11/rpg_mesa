@@ -7,9 +7,14 @@ function escolherAleatorio(lista) {
 function decidirAcaoCpu(estado) {
   const fase = estado.fase;
 
-  // Fases que só precisam rolar dado
+  // 1) Fases que só precisam "clicar no dado"
   if (fase.startsWith('aguardandoRolagem')) {
-    return {}; // equivalente ao botão 🎲
+    return {};
+  }
+
+  // 2) Durante pré-contagem, não faz nada (espera o front mandar iniciarTempo)
+  if (fase === 'preContagemAtaque' || fase === 'preContagemDefesa') {
+    return {};
   }
 
   const golpesAtaqueWorld = require('../../world/golpesAtaque');
@@ -20,17 +25,28 @@ function decidirAcaoCpu(estado) {
 
   const alturas = ['alto', 'baixo'];
   const lados = ['esquerda', 'direita', 'frontal'];
-
   const direcao = `${escolherAleatorio(alturas)}-${escolherAleatorio(lados)}`;
 
-  if (fase === 'aguardandoAtaque') {
+  // 3) ATAQUE: tanto aguardando quanto tempo ativo
+  // CPU deve iniciar o tempo de ataque
+  if (fase === 'preContagemAtaque') {
+    return { iniciarTempoAtaque: true };
+  }
+
+  // CPU deve iniciar o tempo de defesa
+  if (fase === 'preContagemDefesa') {
+    return { iniciarTempoDefesa: true };
+  }
+
+  if (fase === 'aguardandoAtaque' || fase === 'tempoDeAtaque') {
     return {
       golpe: escolherAleatorio(golpesAtaque),
       direcao,
     };
   }
 
-  if (fase === 'aguardandoDefesa') {
+  // 4) DEFESA: tanto aguardando quanto tempo ativo
+  if (fase === 'aguardandoDefesa' || fase === 'tempoDeDefesa') {
     return {
       golpe: escolherAleatorio(golpesDefesa),
       direcao,

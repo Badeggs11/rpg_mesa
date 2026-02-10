@@ -1,6 +1,9 @@
 import './log.css';
 import DadoD20SVG from '../DadoD20SVG';
 import DadoD20Three from '../DadoD20Three';
+
+import DadoD6Three from '../dados/DadoD6Three';
+
 import { useLayoutEffect, useRef, useState } from 'react';
 
 /* ⏱️ Ajuste aqui os tempos */
@@ -149,11 +152,26 @@ export default function Log({ eventos }) {
                 </div>
               </Delayed>
             );
-
+          case 'percepcaoRolada': {
             return (
-              <Delayed key={i} delay={TEMPO_DADO_THREE + TEMPO_RESPIRO}>
-                <div className="card card-tempo texto-narrativo">
-                  ⏳ Você tem <strong>{e.valor}</strong> segundos para atacar!
+              <div key={i} className="card card-percepcao">
+                👁️ Tentativa de Percepção de <strong>{e.defensor}</strong>
+                <DadoD6Three
+                  key={`perc-${i}`}
+                  valor={e.d6}
+                  delay={TEMPO_DADO_THREE}
+                  revelar={true}
+                />
+              </div>
+            );
+          }
+
+          case 'informacaoDirecaoLiberada':
+            return (
+              <Delayed key={i} delay={TEMPO_DADO_SVG + TEMPO_RESPIRO}>
+                <div className="card card-percepcao texto-narrativo">
+                  👁 <strong>{e.defensor}</strong> antecipa o golpe vindo de{' '}
+                  <strong>{e.direcao}</strong> por <strong>{e.duracao}s</strong>
                 </div>
               </Delayed>
             );
@@ -236,8 +254,7 @@ export default function Log({ eventos }) {
           case 'ataque':
             return (
               <div key={i} className="card card-ataque texto-narrativo">
-                <strong>{e.atacante}</strong> ataca com <em>{e.golpe}</em> (
-                {e.direcao})
+                <strong>{e.atacante}</strong> ataca com <em>{e.golpe}</em>
               </div>
             );
 
@@ -316,6 +333,17 @@ export default function Log({ eventos }) {
                   <div className="card">
                     <div className="card-title">⚔️ Resolução do Turno</div>
 
+                    {/* 🆕 NARRAÇÃO DO GOLPE */}
+                    <p className="texto-narrativo">
+                      <strong>{e.atacante}</strong> atacou na direção{' '}
+                      <strong>{e.direcaoAtaque}</strong>.
+                    </p>
+
+                    <p className="texto-narrativo">
+                      <strong>{e.defensor}</strong> defendeu na direção{' '}
+                      <strong>{e.direcaoDefesa}</strong>.
+                    </p>
+
                     <p>
                       Ataque: 🎲 {e.rolagemAtaque} →{' '}
                       <strong>{e.valorAtaque}</strong>
@@ -334,6 +362,15 @@ export default function Log({ eventos }) {
                     {explicacao && (
                       <p className="texto-narrativo destaque">{explicacao}</p>
                     )}
+                    <p className="texto-narrativo">
+                      <strong>{e.atacante}</strong> atacou na direção{' '}
+                      <strong>{e.direcaoAtaque}</strong>.
+                    </p>
+
+                    <p className="texto-narrativo">
+                      <strong>{e.defensor}</strong> defendeu na direção{' '}
+                      <strong>{e.direcaoDefesa}</strong>.
+                    </p>
 
                     <p>
                       ❤️ Vida restante: <strong>{e.vidaRestante}</strong>
