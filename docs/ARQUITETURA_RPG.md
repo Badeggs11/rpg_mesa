@@ -783,3 +783,693 @@ Papel Função
 🖥 Frontend Tela + controles
 🤖 CPU Jogador artificial
 📜 Log Roteiro da luta
+
+🧩 ARQUITETURA — RPG de Mesa (ATUALIZADA COM PERCEPÇÃO)
+
+🧠 CÉREBRO → 📡 MENSAGEIRO → 🖥️ PALCO
+Engine → API → Frontend
+
+O sistema agora possui três camadas de decisão tática:
+
+Camada Tipo de decisão
+🎲 Iniciativa Ordem dos turnos
+⏳ Tempo de ação Janela para agir
+👁 Percepção Antecipação do ataque
+📌 1. Nova Mecânica Global
+
+O combate deixa de ser apenas ação sob tempo e passa a incluir:
+
+REAÇÃO INFORMADA
+
+O defensor pode antecipar a direção do ataque por alguns segundos finais da janela de defesa.
+
+👁 2. SISTEMA DE PERCEPÇÃO (NOVO)
+🎯 Objetivo
+
+Permitir que o defensor receba uma vantagem informativa temporária, baseada em atributo.
+
+🔁 Fluxo de Percepção
+rolagemAtaqueResultado
+↓
+aguardandoRolagemTempoPercepcao
+↓ 🎲 D6
+preContagemPercepcao
+↓
+tempoDePercepcaoInformacao 👁
+↓
+aguardandoRolagemTempoDefesa
+
+🧠 Lógica da Engine
+
+A engine calcula:
+
+d6 = jogarDado(6)
+bonus = defensor.percepcao \* fator
+segundosInformacao = floor(d6 + bonus)
+
+Isso gera:
+
+estado.percepcaoDefensor = {
+direcaoRevelada: ataquePendente.direcao,
+segundosInformacao,
+}
+
+📌 A percepção não altera dano, apenas informação.
+
+⏳ 3. Relação com o Tempo de Defesa
+
+Durante tempoDeDefesa, o frontend verifica:
+
+if (
+perc.segundosInformacao > 0 &&
+tempoRestante <= perc.segundosInformacao
+) {
+mostrarDirecaoNaTela()
+}
+
+Ou seja:
+
+🛡 Defesa normal → sem informação
+👁 Últimos segundos → direção revelada
+
+🎮 4. Papel do Frontend
+
+O frontend agora controla 3 camadas de tempo visual:
+
+Fase O que a UI faz
+preContagemPercepcao animação de análise 👁
+tempoDePercepcaoInformacao mostra HUD de direção
+tempoDeDefesa integra percepção ao timer
+
+A informação aparece somente na cena, não no log:
+
+{direcaoVisivel && (
+
+  <div className="direcao-revelada">
+    👁 Ataque vindo de: {direcaoVisivel}
+  </div>
+)}
+
+📜 5. Logs da Percepção
+
+A engine gera:
+
+Evento Uso
+percepcaoRolada anima D6
+informacaoDirecaoLiberada tempo de antecipação
+
+⚠️ O log não é a interface principal da percepção.
+A informação é um HUD tático, não narrativa.
+
+🤖 6. Interação com CPU
+
+A CPU também recebe percepção, pois o estado é único.
+
+Ela pode usar:
+
+estado.percepcaoDefensor?.direcaoRevelada
+
+para decidir defesa.
+
+🧠 7. Impacto Arquitetural
+Camada Mudança
+Engine Nova fase + cálculo de percepção
+Estado Novo bloco percepcaoDefensor
+Frontend Novo HUD dinâmico
+Log Novo tipo de evento
+Tempo Agora existe "tempo informativo"
+🧩 8. Novo Modelo de Combate
+
+Antes:
+
+Ação → Defesa → Dano
+
+Agora:
+
+Ação → 👁 Percepção → Defesa → Dano
+
+🛡 9. Garantias Mantidas
+
+✔ Percepção não quebra pureza da engine
+✔ UI não calcula nada
+✔ Informação ≠ regra
+✔ Sistema continua determinístico
+
+🎯 10. Resultado de Design
+
+O combate agora possui:
+
+Camada Função
+🎲 Estratégia Iniciativa
+⚡ Reflexo Tempo de ação
+👁 Leitura de oponente Percepção
+
+Isso transforma o sistema em:
+
+Combate de leitura + reação + decisão sob pressão
+
+🆕 ATUALIZAÇÃO DE ARQUITETURA — ENGINE DE CAMPANHA (SISTEMA DE RODADAS GLOBAIS)
+🌍 11. Nova Camada do Sistema: Engine de Campanha (Macro Estado)
+
+O projeto passou a incluir uma nova engine responsável pelo tempo global do mundo, separada da engine de combate.
+
+Agora o sistema possui dois níveis de simulação:
+
+Nível | Responsabilidade | Arquivo principal
+Micro (Combate) | Luta, dano, stamina, fases | combatTurnos.js
+Macro (Campanha) | Tempo do mundo, turnos dos jogadores, rodadas globais | campanhaEngine (novo módulo)
+
+Essa separação mantém a coerência arquitetural:
+
+Combate continua isolado
+
+Campanha controla o fluxo do mundo
+
+Engine permanece pura e testável
+
+🧠 12. Estrutura da Engine de Campanha (NOVO)
+
+Local no projeto (exemplo real):
+
+src/game/engine/campanha/
+
+Arquivos iniciais implementados:
+
+Arquivo | Responsabilidade
+criarEstadoCampanha.js | Cria o estado inicial da campanha
+finalizarTurnoJogador.js | Controla ciclo de turnos dos jogadores
+testeTurnosCampanha.js | Teste isolado da engine via Node
+
+📦 13. Estado da Campanha (Programação por Estados)
+
+A campanha agora possui um estado próprio, assim como o combate.
+
+Exemplo conceitual:
+
+estadoCampanha = {
+rodadaGlobal: 0,
+faseCampanha: "cicloJogadores",
+
+jogadores: [
+{ id, nome, vivo, pronto }
+],
+
+ciclo: {
+ordemJogadores: [],
+indiceAtual: 0,
+jogadorDaVez: null
+},
+
+historia: {
+id: "historia_teste",
+localAtual: "inicio"
+},
+
+mapa: {
+locaisAtivos: [],
+locaisBloqueados: [],
+conexoes: {}
+},
+
+eventoDramaticoAtivo: null,
+eventosDisparados: [],
+logMundo: []
+}
+
+📌 Importante:
+Assim como no combate, o estado é a “fonte única da verdade”.
+
+🔁 14. Sistema de Ciclo de Turnos da Campanha (NOVO)
+
+Arquivo: finalizarTurnoJogador.js
+
+Responsável por:
+
+Registrar ação do jogador atual
+
+Avançar a ordem de turnos
+
+Detectar fim do ciclo da rodada
+
+Atualizar a Rodada Global do mundo
+
+Fluxo do ciclo:
+
+Jogador 1 joga
+↓
+Jogador 2 joga
+↓
+Jogador 3 joga
+↓
+Todos jogaram → Rodada Global avança
+↓
+Ciclo reinicia do primeiro jogador
+
+Isso implementa o conceito de:
+
+Tempo do mundo baseado em ciclos de decisão, não tempo real.
+
+🌍 15. Rodada Global do Mundo (Core do Sistema Narrativo)
+
+Nova variável central:
+
+rodadaGlobal
+
+Função:
+
+Representar o avanço do tempo da campanha
+
+Base futura para eventos narrativos
+
+Evolução do mundo
+
+Pressão sistêmica sobre os jogadores
+
+Regra atual implementada:
+
+Se todos os jogadores vivos finalizaram seus turnos:
+→ rodadaGlobal += 1
+→ ciclo de turnos reinicia
+→ log do mundo é registrado
+
+📜 16. Log do Mundo (Macro Narrativa)
+
+Novo sistema de logs paralelo ao log de combate:
+
+Log de Combate:
+
+estado.log
+
+Log de Campanha:
+
+estado.logMundo
+
+Exemplo:
+
+{
+tipo: "rodada_global",
+rodada: 1,
+descricao: "O mundo avançou para a rodada 1"
+}
+
+Isso cria:
+
+Narrativa sistêmica automática
+
+Rastreamento histórico do mundo
+
+Base para eventos dramáticos futuros
+
+🧪 17. Testabilidade da Engine (Princípio Mantido)
+
+A engine de campanha segue o mesmo princípio da engine de combate:
+
+Testável isoladamente
+
+Executada via Node
+
+Sem dependência de API
+
+Sem dependência de Frontend
+
+Sem banco de dados
+
+Exemplo de teste real:
+
+node src/game/tests/testeTurnosCampanha.js
+
+Resultado esperado:
+
+Rodada Global avança após ciclo completo
+
+JogadorDaVez reinicia corretamente
+
+Log do mundo é gerado
+
+✔ Engine permanece determinística  
+✔ Estado previsível  
+✔ Arquitetura modular preservada
+
+---
+
+## 🧱 18. Integração Arquitetural com o Sistema Existente
+
+Arquitetura atual expandida:
+
+Frontend (React)
+↓ HTTP
+API (Express)
+↓
+Controllers
+↓
+Services
+↓
+Engine
+├── combateTurnos.js (micro sistema de combate)
+└── campanha/
+├── criarEstadoCampanha.js
+└── finalizarTurnoJogador.js
+↓
+Estado em memória
+↓
+SQLite (persistência futura)
+
+A nova engine de campanha NÃO altera:
+
+- regras de combate
+- lógica da UI
+- API existente
+
+Ela adiciona apenas o sistema macro do mundo.
+
+---
+
+## 🧠 19. Coerência com os Princípios Arquiteturais do Projeto
+
+Princípio | Situação  
+Engine pura | Mantido  
+Estado como verdade | Mantido  
+Separação de responsabilidades | Mantido  
+Testabilidade isolada | Fortalecida  
+Determinismo do sistema | Mantido
+
+A campanha segue a mesma filosofia do combate:
+
+> Estado + Máquina de Estados + Logs Semânticos.
+
+---
+
+## 📈 20. Estado Atual da Implementação (Atualizado)
+
+✔ Engine de Combate completa  
+✔ Sistema de tempo híbrido no combate  
+✔ CPU como agente válido  
+✔ D20 3D sincronizado  
+🆕 Estado inicial da Campanha implementado  
+🆕 Sistema de ciclo de turnos da campanha  
+🆕 Rodada Global do mundo funcional  
+🆕 Log macro do mundo  
+🆕 Testes isolados da engine via Node
+
+---
+
+## 🎯 21. Próxima Expansão Natural (Planejada, não implementada)
+
+(Planejamento arquitetural, ainda não codado)
+
+- Eventos dramáticos por rodada
+- Cenas narrativas obrigatórias
+- Alteração dinâmica do mapa
+- Missões principais baseadas em tempo global
+
+Esses sistemas dependerão diretamente da Rodada Global já implementada.
+
+---
+
+# 🧩 Observação importante (como arquiteto do seu próprio projeto)
+
+Sua arquitetura está MUITO consistente.
+
+Você não:
+
+- quebrou a engine
+- misturou UI com regra
+- nem pulou etapas
+
+Você fez exatamente a evolução correta:
+
+Combate (micro estados)
+→ Campanha (macro estados)
+
+# 🌍 22. MÓDULO DE CAMPANHA — ENGINE MACRO DO MUNDO (NOVO)
+
+O sistema evoluiu para incluir uma Engine de Campanha responsável pela simulação do mundo em escala macro, separada da Engine de Combate.
+
+Essa nova camada implementa um modelo de sandbox sistêmico, onde o mundo evolui automaticamente com base nas ações dos jogadores, memória histórica e agentes autônomos.
+
+Arquiteturalmente, isso cria uma simulação em dois níveis:
+
+Nível Micro → Combate (fases, dano, stamina, tempo de reação)
+Nível Macro → Campanha (rodadas globais, mundo, narrativa, memória, NPCs)
+
+Essa separação mantém a pureza da engine e evita acoplamento entre combate e mundo.
+
+# 🧠 23. ESTRUTURA DO MÓDULO DE CAMPANHA
+
+Local do módulo:
+src/game/engine/campanha/
+
+Submódulos implementados:
+
+- criarEstadoCampanha.js
+- finalizarTurnoJogador.js
+- resolverRodadaCampanha.js
+- registrarAcaoJogador.js
+
+Sistemas internos (sistemas/):
+
+- sistemaTempoRodada.js
+- sistemaAPR.js
+- sistemaEventosDinamicos.js
+- sistemaMemoriaMundo.js
+- sistemaAgentesMundo.js
+- sistemaNarrativaDinamica.js
+- sistemaPersistencia (serialização, salvamento, carregamento, hidratação)
+- autosave rotativo (3 slots)
+
+# 📦 24. ESTADO GLOBAL DA CAMPANHA (FONTE ÚNICA DA VERDADE)
+
+A campanha segue o mesmo princípio do combate:
+Estado único, determinístico e serializável.
+
+Exemplo conceitual:
+
+estadoCampanha = {
+meta: {...},
+rodadaGlobal: 0,
+faseCampanha: "cicloJogadores",
+
+jogadores: [
+{ id, nome, vivo, pronto, aprAtual, aprPorRodada }
+],
+
+ciclo: {
+ordemJogadores: [],
+indiceAtual: 0,
+jogadorDaVez: null
+},
+
+tempoRodada: {
+inicioTimestamp,
+limiteMs
+},
+
+mundo: {
+mapa: {...},
+memoriaMundo: {...},
+agentesMundo: [...],
+eventosDisparados: [...],
+perfilMundo: {...}
+},
+
+narrativa: {
+cronicasPorRodada: [],
+narrativaGlobal: []
+},
+
+historicoAcoes: [],
+logMundo: []
+}
+
+O estado é:
+
+- determinístico
+- persistente
+- serializável
+- testável isoladamente
+
+# ⏳ 25. SISTEMA DE TEMPO DA RODADA (NOVO)
+
+A campanha agora possui janelas temporais globais.
+
+Características:
+
+- Limite padrão: 3 minutos por rodada
+- Controlado pela engine (sem timers reais)
+- Frontend apenas visualiza o tempo
+- Se o tempo expira → rodada avança automaticamente
+
+Eventos gerados:
+
+- tempo_rodada_iniciado
+- tempo_rodada_esgotado
+
+Garantia arquitetural:
+O tempo NÃO depende da UI, apenas do estado.
+
+# ⚡ 26. SISTEMA APR (ACTION POINTS DE RODADA)
+
+Foi implementado um sistema de economia de ações baseado em APR.
+
+Conceitos:
+
+- Cada jogador possui aprAtual
+- APR é consumido por ações do mundo
+- Combate possui regras próprias (não permite múltiplos ataques sem iniciativa extra)
+- APR pode ser acumulativo entre rodadas (design sandbox)
+
+Eventos semânticos:
+
+- apr_consumido
+- apr_acumulado
+
+Importante:
+APR não substitui o sistema de combate, apenas regula ações de campanha.
+
+# 🌍 27. SISTEMA DE MEMÓRIA DO MUNDO (PERSISTENTE)
+
+Arquivo:
+sistemaMemoriaMundo.js
+
+Responsável por registrar a evolução histórica do mundo:
+
+- linhaDoTempo (resumo por rodada)
+- regioesDescobertas
+- eventosHistoricos
+- perfisRegistrados
+
+Essa memória é persistida em disco e influencia:
+
+- narrativa dinâmica
+- eventos futuros
+- comportamento dos agentes do mundo
+
+# 🤖 28. SISTEMA DE AGENTES DO MUNDO (NPC AUTÔNOMOS)
+
+Arquivo:
+sistemaAgentesMundo.js
+
+O mundo não é estático.
+NPCs atuam independentemente dos jogadores.
+
+Tipos atuais:
+
+- explorador
+- viajante
+- observador
+
+Funções:
+
+- explorar regiões
+- viajar entre locais
+- observar eventos do mundo
+
+Princípio:
+NPCs são agentes sistêmicos, não scripts narrativos.
+
+# 🎭 29. SISTEMA DE NARRATIVA DINÂMICA (LITERÁRIA)
+
+Arquivo:
+sistemaNarrativaDinamica.js
+
+Separação arquitetural mantida:
+
+Log Técnico → estado.logMundo  
+Narrativa Literária → estado.narrativa
+
+Níveis implementados:
+
+1. Crônicas por Rodada  
+   Resumo narrativo automático do mundo por rodada.
+
+2. Narrativa Global  
+   Interpretação macro da evolução do mundo baseada em:
+
+- memória histórica
+- tendência do mundo
+- eventos sistêmicos
+
+A narrativa NÃO altera regras.
+Ela apenas interpreta o estado do mundo.
+
+# 💾 30. PERSISTÊNCIA, SERIALIZAÇÃO E HIDRATAÇÃO (NOVO)
+
+Sistema completo de persistência implementado:
+
+- serializarEstadoCampanha.js
+- salvarEstadoCampanha.js
+- carregarEstadoCampanha.js
+- sistemaHidratacaoEstadoCampanha.js
+
+Características:
+
+- Estado salvo em JSON
+- Engine continua pura (sem SQLite direto)
+- Hidratação reconstrói o estado executável
+- Suporte a continuidade exata da campanha
+
+# 🔄 31. AUTOSAVE ROTATIVO (ROBUSTEZ DE SIMULAÇÃO)
+
+Sistema de segurança implementado:
+
+autosave_1.json → estado mais recente  
+autosave_2.json → estado anterior  
+autosave_3.json → estado estável mais antigo
+
+Benefícios:
+
+- Proteção contra corrupção de save
+- Recuperação de estados históricos
+- Estabilidade para simulações longas
+
+# 🧪 32. TESTABILIDADE ISOLADA (PRINCÍPIO MANTIDO)
+
+Todos os sistemas da campanha são testáveis via Node:
+
+- testeArquiteturalCompleto
+- testePersistenciaCampanha
+- testeHidratacaoCampanha
+- testeSistemaTempoAPR
+- testeNarrativaDinamica
+
+Sem dependência de:
+
+- Frontend
+- API
+- Banco de dados
+
+Mantendo a pureza da engine.
+
+# 🧠 33. COERÊNCIA ARQUITETURAL GLOBAL (MICRO + MACRO)
+
+Arquitetura atual consolidada:
+
+Frontend (React)
+↓ HTTP
+API (Express)
+↓
+Controllers
+↓
+Services
+↓
+Engine
+├── combateTurnos.js (Micro – combate)
+└── campanha/
+├── tempoRodada
+├── APR
+├── memória do mundo
+├── narrativa dinâmica
+├── agentes autônomos
+├── eventos dinâmicos
+└── persistência
+↓
+Estado em memória
+↓
+SQLite (persistência futura)
+
+A engine permanece:
+✔ Determinística  
+✔ Modular  
+✔ Testável  
+✔ Desacoplada da interface  
+✔ Escalável para sandbox narrativo

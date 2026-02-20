@@ -1,0 +1,180 @@
+{
+  "meta": {
+    "rodadaGlobal": 1,
+    "faseCampanha": "cicloJogadores"
+  },
+  "jogadores": [
+    {
+      "id": "j1",
+      "nome": "Jake",
+      "vivo": true,
+      "pronto": false
+    },
+    {
+      "id": "j2",
+      "nome": "Luna",
+      "vivo": true,
+      "pronto": false
+    }
+  ],
+  "ciclo": {
+    "ordemJogadores": [
+      "j1",
+      "j2"
+    ],
+    "indiceAtual": 0,
+    "jogadorDaVez": "j1"
+  },
+  "mundo": {
+    "mapa": {
+      "locaisAtivos": [
+        "inicio",
+        "regiao_descoberta_1",
+        "exploracao_npc_1"
+      ],
+      "locaisBloqueados": [],
+      "conexoes": {}
+    },
+    "memoriaMundo": {
+      "linhaDoTempo": [
+        {
+          "rodada": 1,
+          "resumo": "Rodada 1: o mundo evoluiu com base nas ações dos jogadores."
+        }
+      ],
+      "regioesDescobertas": [
+        "regiao_descoberta_1"
+      ],
+      "eventosHistoricos": [
+        {
+          "eventoId": "evento_exploracao_1",
+          "rodada": 1,
+          "descricao": "Uma descoberta emergiu devido ao comportamento explorador do grupo."
+        }
+      ],
+      "perfisRegistrados": [
+        {
+          "rodada": 1,
+          "tendencia": "explorador"
+        }
+      ]
+    },
+    "agentesMundo": [
+      {
+        "id": "npc_explorador_1",
+        "tipo": "explorador",
+        "localAtual": "inicio",
+        "ativo": true
+      },
+      {
+        "id": "npc_viajante_1",
+        "tipo": "viajante",
+        "localAtual": "regiao_descoberta_1",
+        "ativo": true
+      },
+      {
+        "id": "npc_observador_1",
+        "tipo": "observador",
+        "localAtual": "inicio",
+        "ativo": true
+      }
+    ],
+    "eventosDisparados": [
+      {
+        "id": "evento_exploracao_1",
+        "tipo": "descoberta",
+        "rodada": 1,
+        "descricao": "Durante a exploração, algo antigo foi encontrado no mundo."
+      }
+    ],
+    "perfilMundo": {
+      "tendencia": "explorador",
+      "resumoComportamento": {
+        "exploracoes": 2,
+        "descansos": 0,
+        "investigacoes": 0,
+        "combates": 0
+      }
+    }
+  },
+  "historicoAcoes": [
+    {
+      "tipo": "acao_jogador",
+      "jogadorId": "j1",
+      "acao": "explorar_local",
+      "rodada": 0,
+      "timestamp": 1771519917208
+    },
+    {
+      "tipo": "acao_jogador",
+      "jogadorId": "j2",
+      "acao": "explorar_local",
+      "rodada": 0,
+      "timestamp": 1771519917209
+    }
+  ],
+  "logMundo": [
+    {
+      "tipo": "acao_registrada",
+      "descricao": "Jogador j1 realizou a ação: explorar_local",
+      "rodada": 0
+    },
+    {
+      "tipo": "acao_registrada",
+      "descricao": "Jogador j2 realizou a ação: explorar_local",
+      "rodada": 0
+    },
+    {
+      "tipo": "mundo_processado",
+      "rodada": 1,
+      "descricao": "O mundo reagiu às ações dos jogadores na rodada 1"
+    },
+    {
+      "tipo": "perfil_jogador_atualizado",
+      "rodada": 1,
+      "descricao": "O mundo percebe que o jogador possui uma tendência explorador."
+    },
+    {
+      "tipo": "novo_local_descoberto",
+      "rodada": 1,
+      "descricao": "Novas áreas foram descobertas devido ao espírito explorador do grupo.",
+      "local": "regiao_descoberta_1"
+    },
+    {
+      "tipo": "evento_dinamico",
+      "rodada": 1,
+      "descricao": "Uma descoberta emergiu devido ao comportamento explorador do grupo.",
+      "eventoId": "evento_exploracao_1"
+    },
+    {
+      "tipo": "npc_explorou_regiao",
+      "rodada": 1,
+      "descricao": "Um explorador do mundo descobriu uma nova região.",
+      "agenteId": "npc_explorador_1",
+      "local": "exploracao_npc_1"
+    },
+    {
+      "tipo": "npc_viajou",
+      "rodada": 1,
+      "descricao": "Um viajante percorreu o mundo e chegou a regiao_descoberta_1.",
+      "agenteId": "npc_viajante_1",
+      "destino": "regiao_descoberta_1"
+    },
+    {
+      "tipo": "npc_observou_evento",
+      "rodada": 1,
+      "descricao": "Habitantes do mundo comentam sobre: descoberta.",
+      "agenteId": "npc_observador_1",
+      "eventoObservado": "evento_exploracao_1"
+    },
+    {
+      "tipo": "rodada_global",
+      "rodada": 1,
+      "descricao": "O mundo avançou para a rodada 1"
+    }
+  ],
+  "historia": {
+    "id": "historia_teste",
+    "localAtual": "inicio"
+  }
+}

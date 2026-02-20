@@ -1,13 +1,13 @@
 // game/engine/executarAcao.js
-const { resolverDesafio } = require("./resolverDesafio");
-const { resolverAtaque } = require("./resolverAtaque");
+const { resolverDesafio } = require('../desafios/resolverDesafio');
+const { resolverAtaque } = require('./resolverAtaque');
 
 function executarAcao(acao, contexto = {}) {
   switch (acao.tipo) {
-    case "desafio":
+    case 'desafio':
       return resolverDesafio(acao);
 
-    case "ataque":
+    case 'ataque':
       return resolverAtaque(acao, contexto);
 
     default:

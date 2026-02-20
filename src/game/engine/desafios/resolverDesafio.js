@@ -1,4 +1,4 @@
-const { jogarDado } = require("../dice");
+const { jogarDado } = require('../../dice');
 
 function resolverDesafio(desafio) {
   let sucessos = 0;
@@ -12,7 +12,7 @@ function resolverDesafio(desafio) {
     }
   }
   return {
-    tipo: "resultadoDesafio",
+    tipo: 'resultadoDesafio',
     nome: desafio.nome,
     sucesso: sucessos > 0,
     sucessos,

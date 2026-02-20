@@ -1,11 +1,11 @@
 const { rolarIniciativa } = require('./iniciativa');
 const { resolverAtaque } = require('./resolverAtaque');
 const { resolverDefesa } = require('./resolverDefesa');
-const rules = require('../rules');
-const golpesAtaque = require('../world/golpesAtaque');
-const golpesDefesa = require('../world/golpesDefesa');
-const { jogarDado } = require('../dice');
-const decidirAcaoCpu = require('./ia/decidirAcaoCpu');
+const rules = require('../../rules');
+const golpesAtaque = require('../../world/golpesAtaque');
+const golpesDefesa = require('../../world/golpesDefesa');
+const { jogarDado } = require('../../dice');
+const decidirAcaoCpu = require('../ia/decidirAcaoCpu');
 
 /* =========================
    UTILIDADES
@@ -618,7 +618,7 @@ function executarFaseDefesa(estado, payload) {
   estado.rolagemDefesa = null;
 
   // avança corretamente o fluxo
-  estado.fase = 'avaliandoIniciativaExtra';
+  estado.fase = 'pausaResolucaoTurno';
 }
 
 function executarAvaliacaoIniciativaExtra(estado) {
@@ -815,6 +815,12 @@ function executarTurno(estado, payload = {}) {
 
     case 'aguardandoDefesa':
       executarFaseDefesa(estado, payload);
+      break;
+
+    case 'pausaResolucaoTurno':
+      if (payload.continuar) {
+        estado.fase = 'avaliandoIniciativaExtra';
+      }
       break;
 
     case 'avaliandoIniciativaExtra':

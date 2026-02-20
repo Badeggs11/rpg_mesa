@@ -1,4 +1,4 @@
-const { jogarDado } = require('../dice');
+const { jogarDado } = require('../../dice');
 
 function resolverDefesa(regraDefesa, regraAtaque, rolagemDefesa) {
   // 1️⃣ rolagem principal da defesa

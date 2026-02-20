@@ -1,0 +1,238 @@
+{
+  "meta": {
+    "rodadaGlobal": 2,
+    "faseCampanha": "cicloJogadores"
+  },
+  "jogadores": [
+    {
+      "id": "j1",
+      "nome": "Jake",
+      "vivo": true,
+      "pronto": true
+    },
+    {
+      "id": "j2",
+      "nome": "Luna",
+      "vivo": true,
+      "pronto": true
+    }
+  ],
+  "ciclo": {
+    "ordemJogadores": [
+      "j1",
+      "j2"
+    ],
+    "indiceAtual": 2,
+    "jogadorDaVez": "j2"
+  },
+  "mundo": {
+    "mapa": {
+      "locaisAtivos": [
+        "inicio",
+        "exploracao_npc_1",
+        "regiao_descoberta_2",
+        "exploracao_npc_2"
+      ],
+      "locaisBloqueados": [],
+      "conexoes": {}
+    },
+    "memoriaMundo": {
+      "linhaDoTempo": [
+        {
+          "rodada": 1,
+          "resumo": "Rodada 1: o mundo evoluiu com base nas ações dos jogadores."
+        },
+        {
+          "rodada": 2,
+          "resumo": "Rodada 2: o mundo evoluiu com base nas ações dos jogadores."
+        }
+      ],
+      "regioesDescobertas": [
+        "regiao_descoberta_2"
+      ],
+      "eventosHistoricos": [
+        {
+          "eventoId": "evento_exploracao_2",
+          "rodada": 2,
+          "descricao": "Uma descoberta emergiu devido ao comportamento explorador do grupo."
+        }
+      ],
+      "perfisRegistrados": [
+        {
+          "rodada": 2,
+          "tendencia": "explorador"
+        }
+      ]
+    },
+    "agentesMundo": [
+      {
+        "id": "npc_explorador_1",
+        "tipo": "explorador",
+        "localAtual": "inicio",
+        "ativo": true
+      },
+      {
+        "id": "npc_viajante_1",
+        "tipo": "viajante",
+        "localAtual": "regiao_descoberta_2",
+        "ativo": true
+      },
+      {
+        "id": "npc_observador_1",
+        "tipo": "observador",
+        "localAtual": "inicio",
+        "ativo": true
+      }
+    ],
+    "eventosDisparados": [
+      {
+        "id": "evento_exploracao_2",
+        "tipo": "descoberta",
+        "rodada": 2,
+        "descricao": "Durante a exploração, algo antigo foi encontrado no mundo."
+      }
+    ],
+    "perfilMundo": {
+      "tendencia": "explorador",
+      "resumoComportamento": {
+        "exploracoes": 3,
+        "descansos": 0,
+        "investigacoes": 1,
+        "combates": 0
+      }
+    }
+  },
+  "historicoAcoes": [
+    {
+      "tipo": "acao_jogador",
+      "jogadorId": "j1",
+      "acao": "explorar_local",
+      "rodada": 0,
+      "timestamp": 1771533591152
+    },
+    {
+      "tipo": "acao_jogador",
+      "jogadorId": "j2",
+      "acao": "investigar",
+      "rodada": 0,
+      "timestamp": 1771533591152
+    },
+    {
+      "tipo": "acao_jogador",
+      "jogadorId": "j1",
+      "acao": "explorar_local",
+      "rodada": 1,
+      "timestamp": 1771533591213
+    },
+    {
+      "tipo": "acao_jogador",
+      "jogadorId": "j2",
+      "acao": "explorar_local",
+      "rodada": 1,
+      "timestamp": 1771533591213
+    }
+  ],
+  "logMundo": [
+    {
+      "tipo": "acao_registrada",
+      "descricao": "Jogador j1 realizou a ação: explorar_local",
+      "rodada": 0
+    },
+    {
+      "tipo": "acao_registrada",
+      "descricao": "Jogador j2 realizou a ação: investigar",
+      "rodada": 0
+    },
+    {
+      "tipo": "mundo_processado",
+      "rodada": 1,
+      "descricao": "O mundo reagiu às ações dos jogadores na rodada 1"
+    },
+    {
+      "tipo": "mundo_silencioso",
+      "rodada": 1,
+      "descricao": "O mundo observa em silêncio, sem grandes acontecimentos nesta rodada."
+    },
+    {
+      "tipo": "npc_explorou_regiao",
+      "rodada": 1,
+      "descricao": "Um explorador do mundo descobriu uma nova região.",
+      "agenteId": "npc_explorador_1",
+      "local": "exploracao_npc_1"
+    },
+    {
+      "tipo": "npc_viajou",
+      "rodada": 1,
+      "descricao": "Um viajante percorreu o mundo e chegou a exploracao_npc_1.",
+      "agenteId": "npc_viajante_1",
+      "destino": "exploracao_npc_1"
+    },
+    {
+      "tipo": "autosave_realizado",
+      "rodada": 1,
+      "descricao": "Autosave do mundo realizado na rodada 1."
+    },
+    {
+      "tipo": "rodada_global",
+      "rodada": 1,
+      "descricao": "O mundo avançou para a rodada 1"
+    },
+    {
+      "tipo": "acao_registrada",
+      "descricao": "Jogador j1 realizou a ação: explorar_local",
+      "rodada": 1
+    },
+    {
+      "tipo": "acao_registrada",
+      "descricao": "Jogador j2 realizou a ação: explorar_local",
+      "rodada": 1
+    },
+    {
+      "tipo": "mundo_processado",
+      "rodada": 2,
+      "descricao": "O mundo reagiu às ações dos jogadores na rodada 2"
+    },
+    {
+      "tipo": "perfil_jogador_atualizado",
+      "rodada": 2,
+      "descricao": "O mundo percebe que o jogador possui uma tendência explorador."
+    },
+    {
+      "tipo": "novo_local_descoberto",
+      "rodada": 2,
+      "descricao": "Novas áreas foram descobertas devido ao espírito explorador do grupo.",
+      "local": "regiao_descoberta_2"
+    },
+    {
+      "tipo": "evento_dinamico",
+      "rodada": 2,
+      "descricao": "Uma descoberta emergiu devido ao comportamento explorador do grupo.",
+      "eventoId": "evento_exploracao_2"
+    },
+    {
+      "tipo": "npc_explorou_regiao",
+      "rodada": 2,
+      "descricao": "Um explorador do mundo descobriu uma nova região.",
+      "agenteId": "npc_explorador_1",
+      "local": "exploracao_npc_2"
+    },
+    {
+      "tipo": "npc_viajou",
+      "rodada": 2,
+      "descricao": "Um viajante percorreu o mundo e chegou a regiao_descoberta_2.",
+      "agenteId": "npc_viajante_1",
+      "destino": "regiao_descoberta_2"
+    },
+    {
+      "tipo": "npc_observou_evento",
+      "rodada": 2,
+      "descricao": "Habitantes do mundo comentam sobre: descoberta.",
+      "agenteId": "npc_observador_1",
+      "eventoObservado": "evento_exploracao_2"
+    }
+  ],
+  "historia": {
+    "id": "historia_teste",
+    "localAtual": "inicio"
+  }
+}

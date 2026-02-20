@@ -404,6 +404,11 @@ export default function ArenaCombate() {
    🔁 QUALQUER OUTRA FASE
   =============================== */
 
+    if (fase === 'pausaResolucaoTurno') {
+      enviarAcao({ continuar: true });
+      return;
+    }
+
     enviarAcao({});
   }, []);
   /* =========================================================
@@ -610,6 +615,13 @@ export default function ArenaCombate() {
             {direcaoVisivel && (
               <div className="direcao-revelada">
                 👁 Ataque vindo de: <strong>{direcaoVisivel}</strong>
+              </div>
+            )}
+
+            {/* 🧊 PAUSA NA RESOLUÇÃO */}
+            {combate?.fase === 'pausaResolucaoTurno' && (
+              <div className="msg-continuar">
+                ⌨️ Aperte ENTER para continuar a batalha
               </div>
             )}
 

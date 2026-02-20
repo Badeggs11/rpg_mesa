@@ -237,18 +237,25 @@ export default function Log({ eventos }) {
               </div>
             );
           }
-
           case 'rolagemAtaqueResultado':
             return (
-              <Delayed
-                key={i}
-                delay={TEMPO_DADO_THREE + TEMPO_RESPIRO}
-                onShow={scrollParaAgora}
-              >
-                <div className="card card-ataque texto-narrativo">
-                  🎯 Ataque alcança <strong>{e.valor}</strong> no dado
-                </div>
-              </Delayed>
+              <div key={i} className="card card-ataque">
+                🎲 Rolagem de Ataque
+                <DadoD20Three
+                  key={`atk-${i}`}
+                  valor={e.valor}
+                  delay={TEMPO_DADO_THREE}
+                  revelar={true}
+                />
+                <Delayed
+                  delay={TEMPO_DADO_THREE + TEMPO_RESPIRO}
+                  onShow={scrollParaAgora}
+                >
+                  <div className="texto-narrativo">
+                    🎯 Ataque alcança <strong>{e.valor}</strong> no dado
+                  </div>
+                </Delayed>
+              </div>
             );
 
           case 'ataque':
@@ -277,6 +284,23 @@ export default function Log({ eventos }) {
           }
 
           case 'rolagemDefesaResultado':
+            return (
+              <div key={i} className="card card-defesa">
+                🎲 Rolagem de Defesa
+                <DadoD20Three
+                  key={`def-${i}`}
+                  valor={e.valor}
+                  delay={TEMPO_DADO_THREE}
+                  revelar={true}
+                />
+                <Delayed delay={TEMPO_DADO_THREE + TEMPO_RESPIRO}>
+                  <div className="texto-narrativo">
+                    🛡 Defesa alcança <strong>{e.valor}</strong> no dado
+                  </div>
+                </Delayed>
+              </div>
+            );
+
             return (
               <Delayed key={i} delay={TEMPO_DADO_THREE + TEMPO_RESPIRO}>
                 <div className="card card-defesa texto-narrativo">

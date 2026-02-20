@@ -1,4 +1,4 @@
-const { jogarDado } = require('../dice');
+const { jogarDado } = require('../../dice');
 
 function resolverAtaque(regraAtaque, rolagemAtaque) {
   // 1️⃣ rolagem do ataque

@@ -1,10 +1,10 @@
 const personagensService = require('./personagensService');
 const { obterCombate, removerCombate } = require('./combatStore');
-const { executarTurno } = require('../game/engine/combateTurnos');
+const { executarTurno } = require('../game/engine/combate/combateTurnos');
 
 const { v4: uuid } = require('uuid');
 const { criarCombate } = require('./combatStore');
-const { criarEstadoInicial } = require('../game/engine/combateTurnos');
+const { criarEstadoInicial } = require('../game/engine/combate/combateTurnos');
 
 const decidirAcaoCpu = require('../game/engine/ia/decidirAcaoCpu');
 
