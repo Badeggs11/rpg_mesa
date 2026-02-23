@@ -7,6 +7,13 @@ const autosaveCampanha = require('./persistencia/autosaveCampanha');
 const { aplicarAPRNaNovaRodada } = require('./sistemas/sistemaAPR');
 const { iniciarTempoRodada } = require('./sistemas/sistemaTempoRodada');
 const sistemaNarrativaDinamica = require('./sistemas/sistemaNarrativaDinamica');
+const sistemaReputacaoJogador = require('./sistemas/sistemaReputacaoJogador');
+const sistemaReacaoDoMundo = require('./sistemas/sistemaReacaoDoMundo');
+const sistemaDesafiosDinamicos = require('./sistemas/sistemaDesafiosDinamicos');
+const sistemaResolucaoDesafios = require('./sistemas/sistemaResolucaoDesafios');
+const sistemaRecompensasContextuais = require('./sistemas/sistemaRecompensasContextuais');
+const sistemaEncontrosPerigosos = require('./sistemas/sistemaEncontrosPerigosos');
+const sistemaResolverDecisaoEncontro = require('./sistemas/sistemaResolverDecisaoEncontro');
 
 function resolverRodadaCampanha(estado) {
   // Garantia de segurança
@@ -41,10 +48,36 @@ function resolverRodadaCampanha(estado) {
   // 🎭 3. Gera acontecimentos narrativos emergentes (NOVO)
   sistemaEventosDinamicos(estado);
 
+  // ⚔️ 4. Resolver decisão de encontros perigosos (NOVO - CRÍTICO)
+  if (estado.decisaoEncontroPendente) {
+    sistemaResolverDecisaoEncontro(estado, estado.decisaoEncontroPendente);
+
+    // limpa a decisão após processar (evento consumido)
+    estado.decisaoEncontroPendente = null;
+  }
+
   // 4️⃣ Memória histórica do universo (CRÔNICA DO MUNDO) ⭐
   sistemaMemoriaMundo(estado);
 
-  // 🎭 NARRATIVA (SEMPRE DEPOIS DA MEMÓRIA)
+  // 🏛 Reputação social do grupo (o mundo observa)
+  sistemaReputacaoJogador(estado);
+
+  // 🌦 REAÇÃO SISTÊMICA DO MUNDO (tensão, clima, pressão gradual)
+  sistemaReacaoDoMundo(estado);
+
+  // 🎯 NOVO — Oportunidades emergentes baseadas na tensão
+  sistemaDesafiosDinamicos(estado);
+
+  // ⚠️ NOVO — Resolução híbrida por contexto
+  sistemaResolucaoDesafios(estado);
+
+  // Registra um encontro perigoso no estado quando a pressão ambiental está ativa.
+  sistemaEncontrosPerigosos(estado);
+
+  // Gera recompensas baseadas em desafios/pressões enfrentadas.
+  sistemaRecompensasContextuais(estado);
+
+  // 🎭 NARRATIVA (DEPOIS DA MEMÓRIA + REAÇÃO)
   sistemaNarrativaDinamica(estado);
 
   // 5. 🌍 Agentes autônomos do mundo (NPCs vivos) ⭐

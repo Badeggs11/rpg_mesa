@@ -1,20 +1,37 @@
 function sistemaMemoriaMundo(estado) {
   if (!estado) return estado;
 
-  // Inicializa memória do mundo se não existir
+  // 🧠 Inicialização DEFENSIVA (engine sandbox robusta)
   if (!estado.memoriaMundo) {
-    estado.memoriaMundo = {
-      linhaDoTempo: [],
-      regioesDescobertas: [],
-      eventosHistoricos: [],
-      perfisRegistrados: [],
-    };
+    estado.memoriaMundo = {};
+  }
+
+  const memoria = estado.memoriaMundo;
+
+  if (!Array.isArray(memoria.linhaDoTempo)) {
+    memoria.linhaDoTempo = [];
+  }
+
+  if (!Array.isArray(memoria.regioesDescobertas)) {
+    memoria.regioesDescobertas = [];
+  }
+
+  if (!Array.isArray(memoria.eventosHistoricos)) {
+    memoria.eventosHistoricos = [];
+  }
+
+  if (!Array.isArray(memoria.perfisRegistrados)) {
+    memoria.perfisRegistrados = [];
+  }
+
+  // 🔥 LINHA NOVA (CRÍTICA para seu sistema híbrido)
+  if (!Array.isArray(memoria.regioesHostis)) {
+    memoria.regioesHostis = [];
   }
 
   if (!estado.logMundo) return estado;
 
   const rodada = estado.rodadaGlobal;
-  const memoria = estado.memoriaMundo;
 
   // 🔍 Varre o log do mundo e transforma em memória persistente
   estado.logMundo.forEach(evento => {
@@ -35,14 +52,14 @@ function sistemaMemoriaMundo(estado) {
       }
     }
 
-    // 🗺 Registrar regiões descobertas (memória geográfica do mundo)
+    // 🗺 Registrar regiões descobertas
     if (evento.tipo === 'novo_local_descoberto' && evento.local) {
       if (!memoria.regioesDescobertas.includes(evento.local)) {
         memoria.regioesDescobertas.push(evento.local);
       }
     }
 
-    // 🧠 Registrar evolução do perfil do jogador (memória comportamental)
+    // 🧠 Registrar perfil comportamental
     if (evento.tipo === 'perfil_jogador_atualizado') {
       memoria.perfisRegistrados.push({
         rodada,
@@ -51,7 +68,7 @@ function sistemaMemoriaMundo(estado) {
     }
   });
 
-  // 🕰 Registrar linha do tempo do mundo (uma entrada por rodada)
+  // 🕰 Linha do tempo do mundo
   const jaRegistrouRodada = memoria.linhaDoTempo.some(r => r.rodada === rodada);
 
   if (!jaRegistrouRodada) {

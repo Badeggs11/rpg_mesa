@@ -1,3 +1,5 @@
+const { v4: uuid } = require('uuid');
+
 function criarEstadoCampanha(jogadores, historiaId) {
   // normaliza jogadores (igual você fez no combate)
   const jogadoresNormalizados = jogadores.map(j => ({
@@ -8,6 +10,8 @@ function criarEstadoCampanha(jogadores, historiaId) {
   }));
 
   return {
+    // 🆔 IDENTIDADE DA CAMPANHA (ESSENCIAL)
+    id: uuid(),
     // 🌍 TEMPO GLOBAL DO MUNDO
     rodadaGlobal: 0,
 
@@ -52,6 +56,21 @@ function criarEstadoCampanha(jogadores, historiaId) {
     // 🎬 eventos dramáticos
     eventoDramaticoAtivo: null,
     eventosDisparados: [],
+
+    // 🌦 estado sistêmico da reação do mundo (tensão global, clima, histórico)
+    reacaoMundo: {
+      nivelTensaoGlobal: 0,
+      ultimoClima: 'estavel',
+      historicoTensoes: [],
+    },
+
+    encontroPendente: null,
+    decisaoEncontroPendente: null,
+    gatilhoCombate: null,
+    historicoEncontros: [],
+
+    // 🎁 recompensas sistêmicas do mundo (NÃO aplicadas ainda no banco)
+    recompensasPendentes: [],
 
     // 📜 log do mundo (igual log do combate)
     logMundo: [],
