@@ -2,8 +2,13 @@ const express = require('express');
 const router = express.Router();
 const campaignController = require('../controllers/campaignController');
 
-// 🌍 Processar avanço do mundo (rodada da campanha)
-router.post('/rodada', campaignController.processarRodada);
+// 🌍 Iniciar campanha
 router.post('/iniciar', campaignController.iniciarCampanha);
+
+// 🎮 Jogador envia ação (CRÍTICO para o frontend!)
+router.post('/acao', campaignController.executarAcaoCampanha);
+
+// ⏳ Processar rodada manual (debug / sandbox)
+router.post('/rodada', campaignController.processarRodada);
 
 module.exports = router;

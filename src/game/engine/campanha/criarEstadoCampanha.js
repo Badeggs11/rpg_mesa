@@ -40,6 +40,13 @@ function criarEstadoCampanha(jogadores, historiaId) {
       localAtual: 'inicio', // depois virá do story.json
     },
 
+    // 🎯 OBJETIVO E MOTIVAÇÃO DA CAMPANHA (NÚCLEO NARRATIVO)
+    objetivoCampanha: {
+      motivacaoCentral: null, // será preenchida pela história
+      objetivosAtivos: [],
+      objetivosConcluidos: [],
+    },
+
     // 🎭 narrativa dinâmica do mundo (separada do log técnico)
     narrativa: {
       cronicasPorRodada: [],
@@ -51,6 +58,13 @@ function criarEstadoCampanha(jogadores, historiaId) {
       locaisAtivos: ['inicio'],
       locaisBloqueados: [],
       conexoes: {},
+    },
+
+    // 🧭 sistema de exploração do mundo
+    exploracao: {
+      locaisDescobertos: ['inicio'],
+      locaisVisitados: [],
+      nevoaDeGuerraAtiva: true,
     },
 
     // 🎬 eventos dramáticos

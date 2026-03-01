@@ -1,28 +1,50 @@
 {
   "meta": {
-    "rodadaGlobal": 0,
+    "rodadaGlobal": 9,
     "faseCampanha": "cicloJogadores"
   },
   "jogadores": [
     {
-      "id": 1,
-      "nome": "Jake",
+      "id": "j1",
+      "nome": "Explorador",
       "vivo": true,
-      "pronto": false
+      "pronto": false,
+      "aprPorRodada": 2,
+      "aprAtual": 4
+    },
+    {
+      "id": "j2",
+      "nome": "Guardião",
+      "vivo": true,
+      "pronto": false,
+      "aprPorRodada": 2,
+      "aprAtual": 4
+    },
+    {
+      "id": "j3",
+      "nome": "Observador",
+      "vivo": true,
+      "pronto": false,
+      "aprPorRodada": 2,
+      "aprAtual": 4
     }
   ],
   "ciclo": {
     "ordemJogadores": [
-      1
+      "j1",
+      "j2",
+      "j3"
     ],
     "indiceAtual": 0,
-    "jogadorDaVez": 1
+    "jogadorDaVez": "j1"
   },
   "mundo": {
     "mapa": {
       "locaisAtivos": [
         "inicio",
-        "exploracao_npc_0"
+        "exploracao_npc_3",
+        "exploracao_npc_6",
+        "exploracao_npc_9"
       ],
       "locaisBloqueados": [],
       "conexoes": {}
@@ -30,8 +52,16 @@
     "memoriaMundo": {
       "linhaDoTempo": [
         {
-          "rodada": 0,
-          "resumo": "Rodada 0: o mundo evoluiu com base nas ações dos jogadores."
+          "rodada": 3,
+          "resumo": "Rodada 3: o mundo evoluiu com base nas ações dos jogadores."
+        },
+        {
+          "rodada": 6,
+          "resumo": "Rodada 6: o mundo evoluiu com base nas ações dos jogadores."
+        },
+        {
+          "rodada": 9,
+          "resumo": "Rodada 9: o mundo evoluiu com base nas ações dos jogadores."
         }
       ],
       "regioesDescobertas": [],
@@ -43,54 +73,308 @@
       {
         "id": "npc_explorador_1",
         "tipo": "explorador",
-        "localAtual": "inicio",
+        "localAtual": "vila_abandonada",
         "ativo": true
       },
       {
         "id": "npc_viajante_1",
         "tipo": "viajante",
-        "localAtual": "inicio",
+        "localAtual": "exploracao_npc_3",
         "ativo": true
       },
       {
         "id": "npc_observador_1",
         "tipo": "observador",
-        "localAtual": "inicio",
+        "localAtual": "vila_abandonada",
         "ativo": true
       }
     ],
-    "eventosDisparados": [],
-    "perfilMundo": null
+    "eventosDisparados": [
+      {
+        "id": "pista_vila_3",
+        "tipo": "pistas_goblins",
+        "local": "desconhecido"
+      },
+      {
+        "id": "investigacao_3",
+        "tipo": "investigacao_goblins",
+        "local": "vila_abandonada"
+      },
+      {
+        "id": "movimento_goblins_6",
+        "tipo": "movimento_inimigo",
+        "origem": "floresta_proxima"
+      },
+      {
+        "id": "desafio_prova_6",
+        "tipo": "evento_dinamico",
+        "categoria": "desafio",
+        "rodada": 6,
+        "desafio": "desafio_prova",
+        "subtipo": "charada_antiga",
+        "descricao": "Sussurros sobre um antigo desafio intelectual começaram a circular.",
+        "opcional": true,
+        "origem": "mundo_sistemico",
+        "estado": "latente"
+      }
+    ],
+    "perfilMundo": {
+      "tendencia": "neutra",
+      "resumoComportamento": {
+        "exploracoes": 0,
+        "descansos": 0,
+        "investigacoes": 0,
+        "combates": 0
+      }
+    }
   },
-  "historicoAcoes": [],
+  "historicoAcoes": [
+    {
+      "tipo": "acao_registrada",
+      "rodada": 0,
+      "descricao": "Os jogadores exploraram áreas abandonadas da vila silenciosa.",
+      "processadaPeloMestre": true
+    },
+    {
+      "tipo": "acao_registrada",
+      "rodada": 3,
+      "descricao": "Os jogadores investigaram rumores sobre goblins nas redondezas.",
+      "processadaPeloMestre": true
+    },
+    {
+      "tipo": "acao_registrada",
+      "rodada": 6,
+      "descricao": "O grupo observou atentamente o ambiente silencioso da vila.",
+      "processadaPeloMestre": true
+    }
+  ],
   "logMundo": [
     {
-      "tipo": "mundo_processado",
+      "tipo": "acao_jogadores",
       "rodada": 0,
-      "descricao": "O mundo reagiu às ações dos jogadores na rodada 0"
+      "descricao": "Os jogadores exploraram áreas abandonadas da vila silenciosa."
+    },
+    {
+      "tipo": "tempo_avancou",
+      "rodada": 2,
+      "descricao": "O tempo do mundo avançou para a rodada 2."
+    },
+    {
+      "tipo": "rodada_avancada",
+      "rodada": 3,
+      "descricao": "O mundo avançou para a rodada 3."
+    },
+    {
+      "tipo": "mundo_processado",
+      "rodada": 3,
+      "descricao": "O mundo reagiu às ações dos jogadores na rodada 3"
+    },
+    {
+      "tipo": "pistas_encontradas",
+      "rodada": 3,
+      "descricao": "Pegadas pequenas e marcas estranhas foram encontradas entre as casas abandonadas."
+    },
+    {
+      "tipo": "mundo_silencioso",
+      "rodada": 3,
+      "descricao": "O mundo observa em silêncio, sem grandes acontecimentos nesta rodada."
     },
     {
       "tipo": "narrativa_atualizada",
-      "rodada": 0,
+      "rodada": 3,
+      "descricao": "A crônica do mundo foi atualizada com base nos acontecimentos da rodada."
+    },
+    {
+      "tipo": "agentes_inicializados",
+      "rodada": 3,
+      "descricao": "Agentes autônomos do mundo foram inicializados."
+    },
+    {
+      "tipo": "npc_explorou_regiao",
+      "rodada": 3,
+      "descricao": "Um explorador descobriu uma nova região: exploracao_npc_3.",
+      "agenteId": "npc_explorador_1",
+      "local": "exploracao_npc_3"
+    },
+    {
+      "tipo": "npc_viajou",
+      "rodada": 3,
+      "descricao": "Um viajante partiu de vila_abandonada e chegou a exploracao_npc_3.",
+      "agenteId": "npc_viajante_1",
+      "origem": "vila_abandonada",
+      "destino": "exploracao_npc_3"
+    },
+    {
+      "tipo": "npc_observou_evento",
+      "rodada": 3,
+      "descricao": "Habitantes comentam sobre o evento: pistas_goblins.",
+      "agenteId": "npc_observador_1",
+      "eventoObservado": "pista_vila_3"
+    },
+    {
+      "tipo": "autosave_rotativo",
+      "rodada": 3,
+      "descricao": "Autosave rotativo realizado (slot 1 atualizado na rodada 3)."
+    },
+    {
+      "tipo": "apr_acumulado",
+      "rodada": 3,
+      "descricao": "Os pontos de ação (APR) foram acumulados para a nova rodada."
+    },
+    {
+      "tipo": "tempo_rodada_iniciado",
+      "rodada": 3,
+      "descricao": "O relógio da rodada foi iniciado (limite de 3 minutos)."
+    },
+    {
+      "tipo": "acao_jogadores",
+      "rodada": 3,
+      "descricao": "Os jogadores investigaram rumores sobre goblins nas redondezas."
+    },
+    {
+      "tipo": "tempo_avancou",
+      "rodada": 5,
+      "descricao": "O tempo do mundo avançou para a rodada 5."
+    },
+    {
+      "tipo": "rodada_avancada",
+      "rodada": 6,
+      "descricao": "O mundo avançou para a rodada 6."
+    },
+    {
+      "tipo": "mundo_processado",
+      "rodada": 6,
+      "descricao": "O mundo reagiu às ações dos jogadores na rodada 6"
+    },
+    {
+      "tipo": "movimento_inimigo",
+      "rodada": 6,
+      "descricao": "Batedores relatam movimentação de goblins nas redondezas da vila."
+    },
+    {
+      "tipo": "mundo_silencioso",
+      "rodada": 6,
+      "descricao": "O mundo observa em silêncio, sem grandes acontecimentos nesta rodada."
+    },
+    {
+      "tipo": "mudanca_clima_mundo",
+      "rodada": 6,
+      "clima": "inquieto",
+      "descricao": "Sinais sutis indicam que o mundo está se tornando mais inquieto."
+    },
+    {
+      "tipo": "tensao_regional",
+      "rodada": 6,
+      "descricao": "Rumores silenciosos começam a surgir. O mundo parece mais desafiador."
+    },
+    {
+      "tipo": "oportunidade_mundo",
+      "rodada": 6,
+      "eventoId": "desafio_prova_6",
+      "descricao": "Uma nova oportunidade surgiu no mundo. Cabe aos aventureiros decidir se irão se envolver."
+    },
+    {
+      "tipo": "narrativa_atualizada",
+      "rodada": 6,
       "descricao": "A crônica do mundo foi atualizada com base nos acontecimentos da rodada."
     },
     {
       "tipo": "npc_explorou_regiao",
-      "rodada": 0,
-      "descricao": "Um explorador do mundo descobriu uma nova região.",
+      "rodada": 6,
+      "descricao": "Um explorador descobriu uma nova região: exploracao_npc_6.",
       "agenteId": "npc_explorador_1",
-      "local": "exploracao_npc_0"
+      "local": "exploracao_npc_6"
     },
     {
       "tipo": "npc_viajou",
-      "rodada": 0,
-      "descricao": "Um viajante percorreu o mundo e chegou a inicio.",
+      "rodada": 6,
+      "descricao": "Um viajante partiu de exploracao_npc_3 e chegou a inicio.",
       "agenteId": "npc_viajante_1",
+      "origem": "exploracao_npc_3",
       "destino": "inicio"
+    },
+    {
+      "tipo": "npc_observou_evento",
+      "rodada": 6,
+      "descricao": "Habitantes comentam sobre o evento: evento_dinamico.",
+      "agenteId": "npc_observador_1",
+      "eventoObservado": "desafio_prova_6"
+    },
+    {
+      "tipo": "autosave_rotativo",
+      "rodada": 6,
+      "descricao": "Autosave rotativo realizado (slot 1 atualizado na rodada 6)."
+    },
+    {
+      "tipo": "apr_acumulado",
+      "rodada": 6,
+      "descricao": "Os pontos de ação (APR) foram acumulados para a nova rodada."
+    },
+    {
+      "tipo": "tempo_rodada_iniciado",
+      "rodada": 6,
+      "descricao": "O relógio da rodada foi iniciado (limite de 3 minutos)."
+    },
+    {
+      "tipo": "acao_jogadores",
+      "rodada": 6,
+      "descricao": "O grupo observou atentamente o ambiente silencioso da vila."
+    },
+    {
+      "tipo": "tempo_avancou",
+      "rodada": 8,
+      "descricao": "O tempo do mundo avançou para a rodada 8."
+    },
+    {
+      "tipo": "rodada_avancada",
+      "rodada": 9,
+      "descricao": "O mundo avançou para a rodada 9."
+    },
+    {
+      "tipo": "mundo_processado",
+      "rodada": 9,
+      "descricao": "O mundo reagiu às ações dos jogadores na rodada 9"
+    },
+    {
+      "tipo": "mundo_silencioso",
+      "rodada": 9,
+      "descricao": "O mundo observa em silêncio, sem grandes acontecimentos nesta rodada."
+    },
+    {
+      "tipo": "tensao_regional",
+      "rodada": 9,
+      "descricao": "Rumores silenciosos começam a surgir. O mundo parece mais desafiador."
+    },
+    {
+      "tipo": "narrativa_atualizada",
+      "rodada": 9,
+      "descricao": "A crônica do mundo foi atualizada com base nos acontecimentos da rodada."
+    },
+    {
+      "tipo": "npc_explorou_regiao",
+      "rodada": 9,
+      "descricao": "Um explorador descobriu uma nova região: exploracao_npc_9.",
+      "agenteId": "npc_explorador_1",
+      "local": "exploracao_npc_9"
+    },
+    {
+      "tipo": "npc_viajou",
+      "rodada": 9,
+      "descricao": "Um viajante partiu de inicio e chegou a exploracao_npc_3.",
+      "agenteId": "npc_viajante_1",
+      "origem": "inicio",
+      "destino": "exploracao_npc_3"
+    },
+    {
+      "tipo": "npc_observou_evento",
+      "rodada": 9,
+      "descricao": "Habitantes comentam sobre o evento: evento_dinamico.",
+      "agenteId": "npc_observador_1",
+      "eventoObservado": "desafio_prova_6"
     }
   ],
   "historia": {
-    "id": "historia_api_teste",
+    "id": "vila_abandonada",
     "localAtual": "inicio"
   }
 }

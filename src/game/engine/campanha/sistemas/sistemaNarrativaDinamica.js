@@ -1,3 +1,5 @@
+const { gerarNarrativa } = require('../narrativa/mestreIA');
+
 function sistemaNarrativaDinamica(estado) {
   if (!estado) return estado;
 
@@ -52,10 +54,17 @@ function sistemaNarrativaDinamica(estado) {
       'O mundo seguiu seu curso silencioso, observando e evoluindo sem grandes rupturas.';
   }
 
+  // 🎭 Camada literária (Mestre IA - interpretação do mundo)
+  const narrativaIA = gerarNarrativa(estado, {
+    descoberta: houveDescoberta ? 'alta' : 'nenhuma',
+  });
+
   const cronicaRodada = {
     rodada,
     titulo: `Crônica da Rodada ${rodada}`,
-    resumo: resumoEventos,
+    resumoFactual: resumoEventos, // mantém sua lógica atual intacta
+    narracaoLiteraria: narrativaIA.narracao, // CAMADA EXTRA
+    metadadosNarrativos: narrativaIA.metadados, // ouro para debug futuro
     tendenciaMundo: perfil,
     timestamp: Date.now(),
   };

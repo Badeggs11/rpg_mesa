@@ -9,7 +9,26 @@ async function processarRodada(estadoCampanha) {
     throw new Error('Estado de campanha inválido');
   }
 
-  // 🧠 1. Processa o mundo (engine pura)
+  // 🧱 Blindagem estrutural (sandbox seguro)
+  if (typeof estadoCampanha.rodadaGlobal !== 'number') {
+    estadoCampanha.rodadaGlobal = 0;
+  }
+
+  if (!estadoCampanha.logMundo) {
+    estadoCampanha.logMundo = [];
+  }
+
+  // ⏳ 0. AVANÇA O TEMPO DO MUNDO (CRÍTICO PARA SUA ARQUITETURA)
+  // O mundo reage à nova rodada, não à antiga
+  estadoCampanha.rodadaGlobal += 1;
+
+  estadoCampanha.logMundo.push({
+    tipo: 'tempo_avancou',
+    rodada: estadoCampanha.rodadaGlobal,
+    descricao: `O tempo do mundo avançou para a rodada ${estadoCampanha.rodadaGlobal}.`,
+  });
+
+  // 🧠 1. Processa o mundo (engine macro + mestre + narrativa)
   resolverRodadaCampanha(estadoCampanha);
 
   // ⚔️ 2. Verifica gatilho sistêmico de combate
@@ -23,7 +42,6 @@ async function processarRodada(estadoCampanha) {
       throw new Error('Jogador da vez não definido na campanha');
     }
 
-    // 🎮 Inicia combate usando personagem do banco (simples e testável)
     // 🎯 Seleção híbrida do inimigo baseada no encontro do mundo
     const tipoEncontro = estadoCampanha.gatilhoCombate.tipoEncontro;
     const perigo = estadoCampanha.gatilhoCombate.perigo;
@@ -31,7 +49,7 @@ async function processarRodada(estadoCampanha) {
     // 🧬 Mundo decide qual inimigo representa esse perigo
     const defensorId = obterInimigoFallback(tipoEncontro, perigo);
 
-    // 🎮 Inicia combate sistêmico (não mais fixo)
+    // 🎮 Inicia combate sistêmico
     const combate = await combatService.iniciarCombate({
       atacanteId: jogadorId,
       defensorId,
@@ -39,13 +57,9 @@ async function processarRodada(estadoCampanha) {
       controladorB: 'cpu',
     });
 
-    // 🏷️ Atualiza gatilho como consumido (histórico sistêmico)
+    // 🏷️ Atualiza gatilho como consumido
     estadoCampanha.gatilhoCombate.status = 'consumido';
     estadoCampanha.gatilhoCombate.combateId = combate.id;
-
-    if (!estadoCampanha.logMundo) {
-      estadoCampanha.logMundo = [];
-    }
 
     estadoCampanha.logMundo.push({
       tipo: 'combate_iniciado_pela_campanha',

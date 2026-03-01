@@ -14,6 +14,7 @@ const sistemaResolucaoDesafios = require('./sistemas/sistemaResolucaoDesafios');
 const sistemaRecompensasContextuais = require('./sistemas/sistemaRecompensasContextuais');
 const sistemaEncontrosPerigosos = require('./sistemas/sistemaEncontrosPerigosos');
 const sistemaResolverDecisaoEncontro = require('./sistemas/sistemaResolverDecisaoEncontro');
+const sistemaMestreCampanha = require('./sistemas/sistemaMestreCampanha');
 
 function resolverRodadaCampanha(estado) {
   // Garantia de segurança
@@ -31,6 +32,14 @@ function resolverRodadaCampanha(estado) {
   if (!estado.logMundo) {
     estado.logMundo = [];
   }
+  // ⏳ AVANÇA O TEMPO DO MUNDO (CORE DO SISTEMA)
+  estado.rodadaGlobal = (estado.rodadaGlobal ?? 0) + 1;
+
+  estado.logMundo.push({
+    tipo: 'rodada_avancada',
+    rodada: estado.rodadaGlobal,
+    descricao: `O mundo avançou para a rodada ${estado.rodadaGlobal}.`,
+  });
 
   // 🌍 REGRA 1 — O mundo reage ao tempo
   estado.logMundo.push({
@@ -41,6 +50,9 @@ function resolverRodadaCampanha(estado) {
 
   // 🧠 NOVO: cérebro sandbox (INTERPRETA O JOGADOR)
   interpretarHistoricoAcoes(estado);
+
+  // 🎩 MESTRE DE CAMPANHA (AVALIA AS AÇÕES DOS JOGADORES)
+  sistemaMestreCampanha(estado);
 
   // 🌍 2. Aplicar consequências reais (reação)
   sistemaConsequencias(estado);

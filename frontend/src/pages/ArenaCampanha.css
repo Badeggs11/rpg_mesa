@@ -1,0 +1,84 @@
+.arena-campanha-container {
+  padding: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+  font-family: system-ui, sans-serif;
+}
+
+.titulo-campanha {
+  margin-bottom: 20px;
+}
+
+.card {
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  border: 2px solid #444;
+}
+
+.card-mundo {
+  background: #111;
+  color: #eee;
+  border-color: #666;
+}
+
+.card-acoes {
+  background: #1a1a1a;
+  color: #fff;
+}
+
+.card-encontro {
+  background: #2a0000;
+  color: #fff;
+  border: 3px solid #ff3b3b;
+}
+
+.card-logs {
+  background: #0a0a0a;
+  color: #00ff9c;
+  border: 2px solid #555;
+}
+
+.botoes-acoes {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.botoes-acoes button,
+.botoes-encontro button {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.botoes-acoes button {
+  background: #2d2d2d;
+  color: white;
+}
+
+.botoes-acoes button:hover {
+  background: #3a3a3a;
+}
+
+.botoes-encontro {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.estado-carregando {
+  padding: 20px;
+}
+
+.estado-erro {
+  padding: 20px;
+  color: red;
+}
+
+.log-item {
+  margin-bottom: 8px;
+}

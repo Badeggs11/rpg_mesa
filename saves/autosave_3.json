@@ -1,28 +1,42 @@
 {
   "meta": {
-    "rodadaGlobal": 0,
+    "rodadaGlobal": 3,
     "faseCampanha": "cicloJogadores"
   },
   "jogadores": [
     {
-      "id": 1,
-      "nome": "Jake",
+      "id": "j1",
+      "nome": "Explorador",
+      "vivo": true,
+      "pronto": false
+    },
+    {
+      "id": "j2",
+      "nome": "Guardião",
+      "vivo": true,
+      "pronto": false
+    },
+    {
+      "id": "j3",
+      "nome": "Observador",
       "vivo": true,
       "pronto": false
     }
   ],
   "ciclo": {
     "ordemJogadores": [
-      1
+      "j1",
+      "j2",
+      "j3"
     ],
     "indiceAtual": 0,
-    "jogadorDaVez": 1
+    "jogadorDaVez": "j1"
   },
   "mundo": {
     "mapa": {
       "locaisAtivos": [
         "inicio",
-        "exploracao_npc_0"
+        "exploracao_npc_3"
       ],
       "locaisBloqueados": [],
       "conexoes": {}
@@ -30,8 +44,8 @@
     "memoriaMundo": {
       "linhaDoTempo": [
         {
-          "rodada": 0,
-          "resumo": "Rodada 0: o mundo evoluiu com base nas ações dos jogadores."
+          "rodada": 3,
+          "resumo": "Rodada 3: o mundo evoluiu com base nas ações dos jogadores."
         }
       ],
       "regioesDescobertas": [],
@@ -43,54 +57,113 @@
       {
         "id": "npc_explorador_1",
         "tipo": "explorador",
-        "localAtual": "inicio",
+        "localAtual": "vila_abandonada",
         "ativo": true
       },
       {
         "id": "npc_viajante_1",
         "tipo": "viajante",
-        "localAtual": "inicio",
+        "localAtual": "exploracao_npc_3",
         "ativo": true
       },
       {
         "id": "npc_observador_1",
         "tipo": "observador",
-        "localAtual": "inicio",
+        "localAtual": "vila_abandonada",
         "ativo": true
       }
     ],
-    "eventosDisparados": [],
-    "perfilMundo": null
+    "eventosDisparados": [
+      {
+        "id": "pista_vila_3",
+        "tipo": "pistas_goblins",
+        "local": "desconhecido"
+      }
+    ],
+    "perfilMundo": {
+      "tendencia": "neutra",
+      "resumoComportamento": {
+        "exploracoes": 0,
+        "descansos": 0,
+        "investigacoes": 0,
+        "combates": 0
+      }
+    }
   },
-  "historicoAcoes": [],
+  "historicoAcoes": [
+    {
+      "tipo": "acao_registrada",
+      "rodada": 0,
+      "descricao": "Os jogadores exploraram áreas abandonadas da vila silenciosa.",
+      "processadaPeloMestre": true
+    }
+  ],
   "logMundo": [
     {
-      "tipo": "mundo_processado",
+      "tipo": "acao_jogadores",
       "rodada": 0,
-      "descricao": "O mundo reagiu às ações dos jogadores na rodada 0"
+      "descricao": "Os jogadores exploraram áreas abandonadas da vila silenciosa."
+    },
+    {
+      "tipo": "tempo_avancou",
+      "rodada": 2,
+      "descricao": "O tempo do mundo avançou para a rodada 2."
+    },
+    {
+      "tipo": "rodada_avancada",
+      "rodada": 3,
+      "descricao": "O mundo avançou para a rodada 3."
+    },
+    {
+      "tipo": "mundo_processado",
+      "rodada": 3,
+      "descricao": "O mundo reagiu às ações dos jogadores na rodada 3"
+    },
+    {
+      "tipo": "pistas_encontradas",
+      "rodada": 3,
+      "descricao": "Pegadas pequenas e marcas estranhas foram encontradas entre as casas abandonadas."
+    },
+    {
+      "tipo": "mundo_silencioso",
+      "rodada": 3,
+      "descricao": "O mundo observa em silêncio, sem grandes acontecimentos nesta rodada."
     },
     {
       "tipo": "narrativa_atualizada",
-      "rodada": 0,
+      "rodada": 3,
       "descricao": "A crônica do mundo foi atualizada com base nos acontecimentos da rodada."
     },
     {
+      "tipo": "agentes_inicializados",
+      "rodada": 3,
+      "descricao": "Agentes autônomos do mundo foram inicializados."
+    },
+    {
       "tipo": "npc_explorou_regiao",
-      "rodada": 0,
-      "descricao": "Um explorador do mundo descobriu uma nova região.",
+      "rodada": 3,
+      "descricao": "Um explorador descobriu uma nova região: exploracao_npc_3.",
       "agenteId": "npc_explorador_1",
-      "local": "exploracao_npc_0"
+      "local": "exploracao_npc_3"
     },
     {
       "tipo": "npc_viajou",
-      "rodada": 0,
-      "descricao": "Um viajante percorreu o mundo e chegou a inicio.",
+      "rodada": 3,
+      "descricao": "Um viajante partiu de vila_abandonada e chegou a exploracao_npc_3.",
       "agenteId": "npc_viajante_1",
-      "destino": "inicio"
+      "origem": "vila_abandonada",
+      "destino": "exploracao_npc_3"
+    },
+    {
+      "tipo": "npc_observou_evento",
+      "rodada": 3,
+      "descricao": "Habitantes comentam sobre o evento: pistas_goblins.",
+      "agenteId": "npc_observador_1",
+      "eventoObservado": "pista_vila_3"
     }
   ],
   "historia": {
-    "id": "historia_teste",
+    "id": "vila_abandonada",
     "localAtual": "inicio"
   }
 }
