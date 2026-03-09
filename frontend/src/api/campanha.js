@@ -37,3 +37,19 @@ export async function avancarRodadaCampanha(payload) {
 
   return data;
 }
+
+export async function moverJogadorCampanha(payload) {
+  const res = await fetch('/api/campanha/mover', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.erro || 'Erro ao mover jogador');
+  }
+
+  return data;
+}

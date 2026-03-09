@@ -7,6 +7,9 @@ function criarEstadoCampanha(jogadores, historiaId) {
     nome: j.nome,
     vivo: true,
     pronto: false, // importante para sistema de rodadas
+    // ⚡ Sistema de ações por rodada
+    aprPorRodada: 2,
+    aprAtual: 2,
   }));
 
   return {
@@ -53,19 +56,25 @@ function criarEstadoCampanha(jogadores, historiaId) {
       narrativaGlobal: [],
     },
 
-    // 🗺️ mapa do mundo (simples por enquanto)
+    // 🗺️ mapa do mundo
     mapa: {
-      locaisAtivos: ['inicio'],
-      locaisBloqueados: [],
-      conexoes: {},
+      localAtual: 'vila_abandonada',
+
+      posicaoJogadores: jogadoresNormalizados.reduce((acc, jogador) => {
+        acc[jogador.id] = 'vila_abandonada';
+        return acc;
+      }, {}),
     },
 
-    // 🧭 sistema de exploração do mundo
-    exploracao: {
-      locaisDescobertos: ['inicio'],
-      locaisVisitados: [],
-      nevoaDeGuerraAtiva: true,
-    },
+    // 🧭 exploração individual por jogador
+    exploracao: jogadoresNormalizados.reduce((acc, jogador) => {
+      acc[jogador.id] = {
+        locaisDescobertos: ['vila_abandonada'],
+        locaisVisitados: [],
+        nevoaDeGuerraAtiva: true,
+      };
+      return acc;
+    }, {}),
 
     // 🎬 eventos dramáticos
     eventoDramaticoAtivo: null,

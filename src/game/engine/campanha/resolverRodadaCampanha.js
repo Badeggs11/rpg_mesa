@@ -15,6 +15,8 @@ const sistemaRecompensasContextuais = require('./sistemas/sistemaRecompensasCont
 const sistemaEncontrosPerigosos = require('./sistemas/sistemaEncontrosPerigosos');
 const sistemaResolverDecisaoEncontro = require('./sistemas/sistemaResolverDecisaoEncontro');
 const sistemaMestreCampanha = require('./sistemas/sistemaMestreCampanha');
+const { gerarNarrativa } = require('../campanha/narrativa/mestreIA');
+const { explorarLocal } = require('./sistemas/sistemaExploracaoMapa');
 
 function resolverRodadaCampanha(estado) {
   // Garantia de segurança
@@ -32,14 +34,6 @@ function resolverRodadaCampanha(estado) {
   if (!estado.logMundo) {
     estado.logMundo = [];
   }
-  // ⏳ AVANÇA O TEMPO DO MUNDO (CORE DO SISTEMA)
-  estado.rodadaGlobal = (estado.rodadaGlobal ?? 0) + 1;
-
-  estado.logMundo.push({
-    tipo: 'rodada_avancada',
-    rodada: estado.rodadaGlobal,
-    descricao: `O mundo avançou para a rodada ${estado.rodadaGlobal}.`,
-  });
 
   // 🌍 REGRA 1 — O mundo reage ao tempo
   estado.logMundo.push({
@@ -91,6 +85,24 @@ function resolverRodadaCampanha(estado) {
 
   // 🎭 NARRATIVA (DEPOIS DA MEMÓRIA + REAÇÃO)
   sistemaNarrativaDinamica(estado);
+
+  // 🎩 Mestre da campanha narra o que aconteceu
+  const narracaoMestre = gerarNarrativa(estado);
+
+  console.log('MESTRE NARRANDO:', narracaoMestre);
+
+  if (!estado.narrativa) {
+    estado.narrativa = {};
+  }
+
+  if (!estado.narrativa.cronicasPorRodada) {
+    estado.narrativa.cronicasPorRodada = [];
+  }
+
+  estado.narrativa.cronicasPorRodada.push({
+    rodada: estado.rodadaGlobal,
+    resumo: narracaoMestre.narracao,
+  });
 
   // 5. 🌍 Agentes autônomos do mundo (NPCs vivos) ⭐
   sistemaAgentesMundo(estado);

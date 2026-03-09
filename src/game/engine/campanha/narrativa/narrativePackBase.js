@@ -14,6 +14,30 @@ const narrativePackBase = {
     ],
   },
 
+  exploracao: [
+    'observa atentamente os arredores da vila.',
+    'caminha lentamente entre as casas silenciosas.',
+    'examina as ruas vazias da vila abandonada.',
+  ],
+
+  investigacao: [
+    'examina cuidadosamente o chão entre as casas.',
+    'analisa sinais estranhos nas paredes e no chão.',
+    'procura pistas deixadas recentemente.',
+  ],
+
+  observacao: [
+    'permanece em silêncio observando o ambiente.',
+    'escuta atentamente os sons da vila.',
+    'analisa cuidadosamente cada movimento ao redor.',
+  ],
+
+  descanso: [
+    'decide descansar por alguns minutos.',
+    'senta-se por um instante para recuperar o fôlego.',
+    'faz uma pausa breve para reorganizar os pensamentos.',
+  ],
+
   descoberta: {
     nenhuma: ['Você observa ao redor, mas nada relevante se revela.'],
     parcial: ['Pequenos detalhes sugerem algo fora do lugar.'],

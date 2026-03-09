@@ -1,4 +1,14 @@
 const campaignService = require('../services/campaignService');
+const { consumirAPR } = require('../game/engine/campanha/sistemas/sistemaAPR');
+const finalizarTurnoJogador = require('../game/engine/campanha/finalizarTurnoJogador');
+const {
+  explorarLocal,
+} = require('../game/engine/campanha/sistemas/sistemaExploracaoMapa');
+
+const {
+  gerarNarrativa,
+} = require('../game/engine/campanha/narrativa/mestreIA');
+
 const {
   obterCampanha,
   criarCampanha,
@@ -50,7 +60,7 @@ async function iniciarCampanha(req, res) {
 // 🎮 NOVO — EXECUTAR AÇÃO DO JOGADOR (ESSENCIAL PARA O FRONTEND)
 async function executarAcaoCampanha(req, res) {
   try {
-    const { campaignId, tipoAcao } = req.body || {};
+    const { campaignId, jogadorId, tipoAcao } = req.body || {};
 
     // 🧭 Validação básica
     if (!campaignId) {
@@ -63,10 +73,50 @@ async function executarAcaoCampanha(req, res) {
     // 🌍 Buscar mundo vivo no store (FONTE ÚNICA DA VERDADE)
     const estadoCampanha = obterCampanha(campaignId);
 
+    const jogador = estadoCampanha.jogadores.find(j => j.id === jogadorId);
+
+    if (!jogador) {
+      return res.status(400).json({
+        sucesso: false,
+        erro: 'Jogador não encontrado na campanha',
+      });
+    }
+
+    if (jogador.aprAtual <= 0) {
+      return res.status(400).json({
+        sucesso: false,
+        erro: 'Jogador sem APR disponível',
+      });
+    }
+
     if (!estadoCampanha) {
       return res.status(404).json({
         sucesso: false,
         erro: 'Campanha não encontrada no campaignStore',
+      });
+    }
+
+    // 🎯 valida jogadorId
+    if (!jogadorId) {
+      return res.status(400).json({
+        sucesso: false,
+        erro: 'jogadorId não fornecido',
+      });
+    }
+
+    // 🧭 garante que existe ciclo (caso algum estado antigo esteja incompleto)
+    if (!estadoCampanha.ciclo) {
+      estadoCampanha.ciclo = {
+        ordemJogadores: (estadoCampanha.jogadores || []).map(j => j.id),
+        indiceAtual: 0,
+        jogadorDaVez: estadoCampanha.jogadores?.[0]?.id || null,
+      };
+    }
+
+    if (estadoCampanha.ciclo.jogadorDaVez !== jogadorId) {
+      return res.status(400).json({
+        sucesso: false,
+        erro: `Não é a vez do jogador ${jogadorId}. Vez atual: ${estadoCampanha.ciclo.jogadorDaVez}`,
       });
     }
 
@@ -88,15 +138,32 @@ async function executarAcaoCampanha(req, res) {
     }
 
     const rodadaAtual = estadoCampanha.rodadaGlobal ?? 0;
-    const localAtual = estadoCampanha?.mundo?.localAtual || 'vila_abandonada';
+    const localAtual = estadoCampanha?.mapa?.localAtual || 'vila_abandonada';
 
     let descricao = '';
 
     // 🎭 Tradução da UI → Linguagem do Mestre da Campanha
     switch (tipoAcao) {
+      case 'encerrar_turno':
+        descricao = 'O jogador decidiu encerrar seu turno.';
+        jogador.pronto = true;
+        break;
+
       case 'explorar':
-        descricao =
-          'Os jogadores exploraram áreas abandonadas da vila silenciosa.';
+        explorarLocal(estadoCampanha, jogadorId);
+
+        descricao = `${jogador.nome} explorou os arredores da vila.`;
+
+        consumirAPR(estadoCampanha, jogadorId, 1);
+
+        if (jogador.aprAtual <= 0) {
+          jogador.pronto = true;
+        }
+
+        if (jogador.pronto) {
+          finalizarTurnoJogador(estadoCampanha);
+        }
+
         break;
 
       case 'investigar':
@@ -112,11 +179,33 @@ async function executarAcaoCampanha(req, res) {
 
         // aumenta tensão de forma orgânica
         estadoCampanha.reacaoMundo.nivelTensaoGlobal += 1;
+
+        consumirAPR(estadoCampanha, jogadorId, 1);
+
+        if (jogador.aprAtual <= 0) {
+          jogador.pronto = true;
+        }
+
+        if (jogador.pronto) {
+          finalizarTurnoJogador(estadoCampanha);
+        }
+
         break;
 
       case 'observar':
         descricao =
           'O grupo observou atentamente o ambiente silencioso da vila.';
+
+        consumirAPR(estadoCampanha, jogadorId, 1);
+
+        if (jogador.aprAtual <= 0) {
+          jogador.pronto = true;
+        }
+
+        if (jogador.pronto) {
+          finalizarTurnoJogador(estadoCampanha);
+        }
+
         break;
 
       case 'descansar':
@@ -124,6 +213,17 @@ async function executarAcaoCampanha(req, res) {
         if (estadoCampanha.reacaoMundo.nivelTensaoGlobal > 0) {
           estadoCampanha.reacaoMundo.nivelTensaoGlobal -= 1;
         }
+
+        consumirAPR(estadoCampanha, jogadorId, 1);
+
+        if (jogador.aprAtual <= 0) {
+          jogador.pronto = true;
+        }
+
+        if (jogador.pronto) {
+          finalizarTurnoJogador(estadoCampanha);
+        }
+
         break;
 
       // Ações de encontro perigoso (vindas do frontend)
@@ -148,21 +248,43 @@ async function executarAcaoCampanha(req, res) {
     estadoCampanha.historicoAcoes.push({
       tipo: 'acao_registrada',
       rodada: rodadaAtual,
+      jogadorId,
+      jogadorNome: jogador.nome,
+      acao: tipoAcao,
       descricao,
+    });
+
+    const narracao = gerarNarrativa(estadoCampanha);
+
+    if (!estadoCampanha.narrativa) {
+      estadoCampanha.narrativa = { cronicasPorRodada: [] };
+    }
+
+    estadoCampanha.narrativa.cronicasPorRodada.push({
+      rodada: estadoCampanha.rodadaGlobal,
+      resumo: narracao.narracao,
     });
 
     estadoCampanha.logMundo.push({
       tipo: 'acao_jogadores',
       rodada: rodadaAtual,
+      jogadorId,
       descricao,
     });
 
-    // ⏳ Avança a rodada ANTES do processamento do mundo (coerente com sua engine)
-    estadoCampanha.rodadaGlobal = rodadaAtual + 1;
-
     // 🧠 Processar mundo (engine macro + mestre + narrativa + encontros)
-    const resultado = await campaignService.processarRodada(estadoCampanha);
+    let resultado = {
+      estadoCampanha,
+      combate: null,
+      combateIniciado: false,
+    };
 
+    // só processa o mundo quando TODOS os jogadores terminaram
+    const todosProntos = estadoCampanha.jogadores.every(j => j.pronto);
+
+    if (todosProntos) {
+      resultado = await campaignService.processarRodada(estadoCampanha);
+    }
     return res.json({
       sucesso: true,
       estadoCampanha: resultado.estadoCampanha,
@@ -241,9 +363,34 @@ function listarCampanhasAtivas(req, res) {
   }
 }
 
+async function moverJogador(req, res) {
+  try {
+    const { estadoCampanha, jogadorId, destino } = req.body;
+
+    const estadoAtualizado = campaignService.moverJogadorMapa(
+      estadoCampanha,
+      jogadorId,
+      destino
+    );
+
+    res.json({
+      sucesso: true,
+      estado: estadoAtualizado,
+    });
+  } catch (erro) {
+    console.error('Erro ao mover jogador:', erro);
+
+    res.status(500).json({
+      sucesso: false,
+      erro: erro.message,
+    });
+  }
+}
+
 module.exports = {
   iniciarCampanha,
   executarAcaoCampanha, // ⭐ ESSENCIAL PARA O FRONTEND FUNCIONAR
   processarRodada,
   listarCampanhasAtivas,
+  moverJogador,
 };
