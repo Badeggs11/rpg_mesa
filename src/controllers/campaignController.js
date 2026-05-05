@@ -1,3 +1,7 @@
+const {
+  conversarComNPC,
+} = require('../game/engine/campanha/interacoes/sistemaDialogoNPC');
+const { npcs } = require('../game/world/npcs');
 const campaignService = require('../services/campaignService');
 const { consumirAPR } = require('../game/engine/campanha/sistemas/sistemaAPR');
 const finalizarTurnoJogador = require('../game/engine/campanha/finalizarTurnoJogador');
@@ -59,6 +63,8 @@ async function iniciarCampanha(req, res) {
 
 // 🎮 NOVO — EXECUTAR AÇÃO DO JOGADOR (ESSENCIAL PARA O FRONTEND)
 async function executarAcaoCampanha(req, res) {
+  console.log('BODY:', req.body);
+
   try {
     const { campaignId, jogadorId, tipoAcao } = req.body || {};
 
@@ -73,6 +79,15 @@ async function executarAcaoCampanha(req, res) {
     // 🌍 Buscar mundo vivo no store (FONTE ÚNICA DA VERDADE)
     const estadoCampanha = obterCampanha(campaignId);
 
+    // ✅ PRIMEIRO valida se existe
+    if (!estadoCampanha) {
+      return res.status(404).json({
+        sucesso: false,
+        erro: 'Campanha não encontrada no campaignStore',
+      });
+    }
+
+    // ✅ SÓ DEPOIS usa
     const jogador = estadoCampanha.jogadores.find(j => j.id === jogadorId);
 
     if (!jogador) {
@@ -81,8 +96,10 @@ async function executarAcaoCampanha(req, res) {
         erro: 'Jogador não encontrado na campanha',
       });
     }
+    const conversaEmAndamento =
+      tipoAcao === 'conversar' && req.body?.falaJogador;
 
-    if (jogador.aprAtual <= 0) {
+    if (jogador.aprAtual <= 0 && !conversaEmAndamento) {
       return res.status(400).json({
         sucesso: false,
         erro: 'Jogador sem APR disponível',
@@ -144,9 +161,139 @@ async function executarAcaoCampanha(req, res) {
 
     // 🎭 Tradução da UI → Linguagem do Mestre da Campanha
     switch (tipoAcao) {
+      case 'conversar_barman': {
+        const npc = npcs['jose_barman'];
+
+        const relacao = jogador.memoria.relacoes['jose_barman'] || {
+          confianca: 0,
+        };
+
+        let fala = '';
+
+        if (relacao.confianca <= 0) {
+          fala = 'José olha desconfiado: "Não te conheço. O que você quer?"';
+        } else if (relacao.confianca <= 3) {
+          fala = 'José responde com cautela: "Se for rápido, posso ouvir."';
+        } else {
+          fala =
+            'José relaxa um pouco: "Se precisar de trabalho ou comida, talvez eu tenha algo pra você."';
+        }
+
+        // 🧠 registra relação
+        if (!jogador.memoria.relacoes['jose_barman']) {
+          jogador.memoria.relacoes['jose_barman'] = { confianca: 0 };
+        }
+
+        jogador.memoria.relacoes['jose_barman'].confianca += 1;
+
+        descricao = fala;
+
+        break;
+      }
+      case 'mover': {
+        const destinoEscolhido = req.body.destino;
+        const resultadoDado = req.body.resultadoDado;
+
+        const {
+          calcularCustoMovimento,
+        } = require('../game/engine/campanha/movimento/calcularCustoMovimento');
+        const moverJogadorNoMapa = require('../game/engine/campanha/movimento/sistemaMovimentoMapa');
+        const { mapaBase } = require('../game/world/mapas/mapaBase');
+
+        const posicaoAtual =
+          estadoCampanha.mapa.posicaoJogadores[jogadorId]?.pos;
+
+        if (!posicaoAtual) {
+          return res.status(400).json({
+            sucesso: false,
+            erro: 'Posição do jogador não encontrada',
+          });
+        }
+
+        const destinoInfo = mapaBase[destinoEscolhido];
+
+        if (!destinoInfo) {
+          return res.status(400).json({
+            sucesso: false,
+            erro: 'Destino inválido',
+          });
+        }
+
+        console.log('DEBUG mover -> posicaoAtual:', posicaoAtual);
+        console.log('DEBUG mover -> destinoInfo:', destinoInfo);
+
+        const resultadoMovimento = calcularCustoMovimento({
+          origem: posicaoAtual,
+          destino: destinoInfo.pos || destinoInfo,
+          resultadoDado,
+          progressoAnterior: jogador.progressoMovimento || 0,
+        });
+        // acumula progresso
+        jogador.progressoMovimento = resultadoMovimento.progressoAcumulado;
+
+        descricao = `${jogador.nome} tentou ir para ${destinoEscolhido} (rolou ${resultadoDado})`;
+
+        // se conseguiu mover
+        if (resultadoMovimento.conseguiuMover) {
+          moverJogadorNoMapa(estadoCampanha, jogadorId, destinoEscolhido);
+
+          jogador.progressoMovimento = 0;
+
+          descricao = `${jogador.nome} chegou em ${destinoEscolhido}`;
+        }
+
+        consumirAPR(estadoCampanha, jogadorId, 1);
+
+        if (jogador.aprAtual <= 0) {
+          jogador.pronto = true;
+        }
+
+        if (jogador.pronto) {
+          finalizarTurnoJogador(estadoCampanha);
+        }
+
+        break;
+      }
+
+      case 'conversar': {
+        const { npcId, falaJogador } = req.body;
+
+        if (!npcId) {
+          return res.status(400).json({
+            sucesso: false,
+            erro: 'npcId não fornecido',
+          });
+        }
+
+        const resultadoDialogo = conversarComNPC(
+          estadoCampanha,
+          jogadorId,
+          npcId,
+          falaJogador
+        );
+
+        descricao = resultadoDialogo.descricao;
+
+        if (!falaJogador) {
+          consumirAPR(estadoCampanha, jogadorId, 1);
+
+          if (jogador.aprAtual <= 0) {
+            jogador.pronto = true;
+          }
+
+          if (jogador.pronto) {
+            finalizarTurnoJogador(estadoCampanha);
+          }
+        }
+
+        break;
+      }
+
       case 'encerrar_turno':
-        descricao = 'O jogador decidiu encerrar seu turno.';
+        descricao = `${jogador.nome} decidiu encerrar seu turno preservando ${jogador.aprAtual} APR.`;
         jogador.pronto = true;
+
+        finalizarTurnoJogador(estadoCampanha);
         break;
 
       case 'explorar':
@@ -252,6 +399,22 @@ async function executarAcaoCampanha(req, res) {
       jogadorNome: jogador.nome,
       acao: tipoAcao,
       descricao,
+    });
+
+    // 🧠 REGISTRAR NA MEMÓRIA DO JOGADOR
+    if (!jogador.memoria) {
+      jogador.memoria = {
+        background: '',
+        eventos: [],
+        conhecimentos: [],
+        relacoes: {},
+      };
+    }
+
+    jogador.memoria.eventos.push({
+      tipo: tipoAcao,
+      descricao,
+      rodada: rodadaAtual,
     });
 
     const narracao = gerarNarrativa(estadoCampanha);

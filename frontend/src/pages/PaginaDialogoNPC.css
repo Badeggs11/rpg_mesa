@@ -1,0 +1,94 @@
+.pagina-dialogo {
+  min-height: 100vh;
+  background: #1f1b16;
+  color: #f5ead7;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+}
+
+.dialogo-card {
+  width: 100%;
+  max-width: 800px;
+  background: #2b241c;
+  border: 1px solid #6b4f2a;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.45);
+}
+
+.dialogo-card h1 {
+  margin-top: 0;
+  color: #ffd27d;
+}
+
+.dialogo-info {
+  background: #3a3025;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.dialogo-info p {
+  margin: 4px 0;
+}
+
+.janela-chat {
+  height: 420px;
+  overflow-y: auto;
+  background: #181510;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #4d3a24;
+  margin-bottom: 16px;
+}
+
+.mensagem {
+  max-width: 75%;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+}
+
+.mensagem p {
+  margin: 6px 0 0;
+}
+
+.mensagem.npc {
+  background: #3a3025;
+  margin-right: auto;
+}
+
+.mensagem.jogador {
+  background: #4a3f63;
+  margin-left: auto;
+}
+
+.area-digitacao {
+  display: flex;
+  gap: 8px;
+}
+
+.area-digitacao input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #6b4f2a;
+  background: #181510;
+  color: #f5ead7;
+}
+
+.area-digitacao button {
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  background: #d69a32;
+  color: #1f1b16;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.area-digitacao button:hover {
+  background: #f0b84f;
+}

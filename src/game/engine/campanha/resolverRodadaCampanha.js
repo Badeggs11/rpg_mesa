@@ -17,8 +17,12 @@ const sistemaResolverDecisaoEncontro = require('./sistemas/sistemaResolverDecisa
 const sistemaMestreCampanha = require('./sistemas/sistemaMestreCampanha');
 const { gerarNarrativa } = require('../campanha/narrativa/mestreIA');
 const { explorarLocal } = require('./sistemas/sistemaExploracaoMapa');
+const sistemaPercepcaoEspacial = require('./sistemas/sistemaPercepcaoEspacial');
+const { mapaBase } = require('../../world/mapas/mapaBase');
+const { calcularCampoVisao } = require('./percepcao/calcularCampoVisao');
 
 function resolverRodadaCampanha(estado) {
+  console.log('🌍 RESOLVER RODADA CAMPANHA FOI EXECUTADO');
   // Garantia de segurança
   if (!estado) return estado;
 
@@ -35,6 +39,23 @@ function resolverRodadaCampanha(estado) {
     estado.logMundo = [];
   }
 
+  // 🍖 Sistema de fome — decai a cada rodada processada
+  if (estado?.jogadores?.length) {
+    estado.jogadores.forEach(jogador => {
+      if (typeof jogador.fome !== 'number') {
+        jogador.fome = 12;
+      }
+
+      jogador.fome = Math.max(0, jogador.fome - 2);
+    });
+
+    estado.logMundo.push({
+      tipo: 'fome_atualizada',
+      rodada: estado.rodadaGlobal,
+      descricao: 'A fome dos jogadores aumentou com o passar do tempo.',
+    });
+  }
+
   // 🌍 REGRA 1 — O mundo reage ao tempo
   estado.logMundo.push({
     tipo: 'mundo_processado',
@@ -44,6 +65,62 @@ function resolverRodadaCampanha(estado) {
 
   // 🧠 NOVO: cérebro sandbox (INTERPRETA O JOGADOR)
   interpretarHistoricoAcoes(estado);
+
+  // 🗺️ Sistema de percepção espacial (exploração física do mundo)
+  if (estado.ultimaAcaoJogador === 'explorar') {
+    const jogadorId = estado?.ciclo?.jogadorDaVez;
+
+    if (jogadorId) {
+      sistemaPercepcaoEspacial(estado, jogadorId, mapaBase);
+    }
+  }
+
+  // 🔎 TESTE — cálculo de campo de visão do jogador
+  console.log('DEBUG PERCEPCAO - inicio');
+
+  const jogadorIdTeste = estado?.ciclo?.jogadorDaVez;
+
+  console.log('DEBUG jogadorDaVez:', jogadorIdTeste);
+
+  const posicaoJogador = estado?.mapa?.posicaoJogadores;
+
+  console.log('DEBUG posicaoJogadores:', posicaoJogador);
+
+  if (jogadorIdTeste && posicaoJogador) {
+    const campoVisao = calcularCampoVisao(
+      posicaoJogador[jogadorIdTeste].pos,
+      3
+    );
+
+    console.log('CAMPO DE VISAO DO JOGADOR:', campoVisao);
+
+    // 🔎 Detectar locais do mapa dentro do campo de visão
+
+    Object.values(mapaBase).forEach(local => {
+      const visivel = campoVisao.some(
+        tile => tile.x === local.pos.x && tile.y === local.pos.y
+      );
+
+      if (visivel) {
+        console.log('🏠 LOCAL VISÍVEL:', local.nome);
+
+        const exploracaoJogador = estado.exploracao[jogadorIdTeste];
+
+        console.log('DEBUG EXPLORACAO ANTES:', exploracaoJogador);
+
+        if (!exploracaoJogador.locaisDescobertos.includes(local.id)) {
+          exploracaoJogador.locaisDescobertos.push(local.id);
+
+          estado.logMundo.push({
+            rodada: estado.rodadaGlobal,
+            tipo: 'local_descoberto',
+            descricao: `Um novo local foi descoberto: ${local.nome}`,
+          });
+          console.log('DEBUG EXPLORACAO DEPOIS:', exploracaoJogador);
+        }
+      }
+    });
+  }
 
   // 🎩 MESTRE DE CAMPANHA (AVALIA AS AÇÕES DOS JOGADORES)
   sistemaMestreCampanha(estado);

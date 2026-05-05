@@ -334,3 +334,20 @@ button.rolar {
   padding: 6px 10px;
   border-radius: 6px;
 }
+.info-jogador-box {
+  margin-top: 15px;
+  padding: 12px;
+  border: 2px solid #555;
+  border-radius: 8px;
+  background-color: #1a1a1a;
+}
+
+.botoes-info-jogador {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+.card-info {
+  margin-top: 12px;
+}

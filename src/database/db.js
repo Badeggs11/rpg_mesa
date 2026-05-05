@@ -20,6 +20,7 @@ db.serialize(() => {
             pontosDeVida INTEGER,
             stamina INTEGER DEFAULT O,
             percepcao INTEGER DEFAULT 0,
+            percepcaoVisual INTEGER DEFAULT 0, 
             forca INTEGER,
             resistencia INTEGER,
             agilidade INTEGER,
@@ -71,5 +72,18 @@ db.serialize(() => {
             )
     `);
 });
+
+db.run(
+  `
+  ALTER TABLE personagens ADD COLUMN percepcaoVisual INTEGER DEFAULT 0
+`,
+  err => {
+    if (err && !err.message.includes('duplicate column')) {
+      console.error('Erro ao adicionar coluna percepcaoVisual:', err.message);
+    } else {
+      console.log('✅ Coluna percepcaoVisual verificada/criada');
+    }
+  }
+);
 
 module.exports = db;

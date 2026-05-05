@@ -13,6 +13,7 @@ export default function EditarPersonagem() {
 
     stamina: 0,
     percepcao: 0,
+    percepcaoVisual: 0,
     forca: 0,
     resistencia: 0,
     agilidade: 0,
@@ -26,16 +27,6 @@ export default function EditarPersonagem() {
   useEffect(() => {
     carregar();
   }, []);
-
-  async function salvar() {
-    if (!form.id) {
-      alert('Nenhum personagem selecionado');
-      return;
-    }
-
-    await atualizarPersonagem(form.id, form);
-    navigate('/');
-  }
 
   async function carregar() {
     const lista = await listarPersonagens();
@@ -52,6 +43,7 @@ export default function EditarPersonagem() {
 
       stamina: p.stamina ?? 0,
       percepcao: p.percepcao ?? 0,
+      percepcaoVisual: p.percepcaoVisual ?? 0,
       forca: p.forca ?? 0,
       resistencia: p.resistencia ?? 0,
       agilidade: p.agilidade ?? 0,
@@ -64,11 +56,23 @@ export default function EditarPersonagem() {
   }
 
   async function salvar() {
-    setSalvando(true);
-    await atualizarPersonagem(form.id, form);
-    setSalvando(false);
-    setSelecionado(null);
-    await carregar();
+    try {
+      setSalvando(true);
+
+      console.log('📤 Enviando personagem para atualizar:', form);
+
+      const resposta = await atualizarPersonagem(form.id, form);
+
+      console.log('✅ Resposta da atualização:', resposta);
+
+      setSelecionado(null);
+      await carregar();
+    } catch (erro) {
+      console.error('❌ Erro ao salvar personagem:', erro);
+      alert(erro.message || 'Erro ao salvar personagem');
+    } finally {
+      setSalvando(false);
+    }
   }
 
   return (
@@ -101,6 +105,7 @@ export default function EditarPersonagem() {
 
             ['stamina', '⚡ Stamina'],
             ['percepcao', '👁 Percepção'],
+            ['percepcaoVisual', '🙈👀 Percepçāo Visual'],
             ['forca', '💪 Força'],
             ['agilidade', '⚡ Agilidade'],
             ['resistencia', '🛡 Resistência'],

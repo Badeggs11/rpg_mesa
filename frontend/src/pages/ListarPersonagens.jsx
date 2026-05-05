@@ -41,6 +41,7 @@ export default function ListarPersonagens({ onSelecionar }) {
           <div>❤️ Vida: {p.pontosDeVida}</div>
           <div>⚡️ Stamina: {p.stamina}</div>
           <div>👁 Percepção: {p.percepcao}</div>
+          <div>👁️‍🗨️ Percepção Visual: {p.percepcaoVisual ?? p.percepcao}</div>
 
           <div>💪🏼 Força: {p.forca}</div>
           <div>⚡️ Agilidade: {p.agilidade}</div>

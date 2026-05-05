@@ -17,6 +17,7 @@ module.exports = {
           pontosDeVida: Number(row.pontosDeVida ?? 0),
           stamina: Number(row.stamina ?? 0),
           percepcao: Number(row.percepcao ?? 0),
+          percepcaoVisual: Number(row.percepcaoVisual ?? row.percepcao ?? 0),
 
           forca: row.forca,
           resistencia: row.resistencia,
@@ -37,6 +38,7 @@ module.exports = {
           pontosDeVida: Number(row.pontosDeVida ?? 0),
           stamina: Number(row.stamina ?? 0),
           percepcao: Number(row.percepcao ?? 0),
+          percepcaoVisual: Number(row.percepcaoVisual ?? row.percepcao ?? 0),
 
           forca: row.forca,
           resistencia: row.resistencia,
@@ -54,6 +56,7 @@ module.exports = {
     pontosDeVida = 100,
     stamina = 100,
     percepcao = 10,
+    percepcaoVisual = percepcao, // 👈 NOVO
     forca = 10,
     resistencia = 10,
     agilidade = 10,
@@ -61,8 +64,8 @@ module.exports = {
   }) {
     return new Promise((resolve, reject) => {
       const query = `
-            INSERT INTO personagens (nome, pontosDeVida, stamina, percepcao, forca, resistencia, agilidade, inteligencia)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO personagens (nome, pontosDeVida, stamina, percepcao, percepcaoVisual, forca, resistencia, agilidade, inteligencia)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             `;
       db.run(
         query,
@@ -71,6 +74,7 @@ module.exports = {
           pontosDeVida,
           stamina,
           percepcao,
+          percepcaoVisual,
           forca,
           resistencia,
           agilidade,
@@ -85,6 +89,8 @@ module.exports = {
             pontosDeVida,
             stamina,
             percepcao,
+            percepcaoVisual,
+
             forca,
             resistencia,
             agilidade,
@@ -101,6 +107,7 @@ module.exports = {
       pontosDeVida,
       stamina,
       percepcao,
+      percepcaoVisual,
       forca,
       resistencia,
       agilidade,
@@ -113,7 +120,8 @@ module.exports = {
                 SET nome = ?, 
                 pontosDeVida = ?,
                 stamina = ?,
-                percepcao = ?, 
+                percepcao = ?,
+                percepcaoVisual = ?,
                 forca = ?,
                 resistencia = ?,
                 agilidade = ?,
@@ -127,6 +135,7 @@ module.exports = {
           pontosDeVida,
           stamina,
           percepcao,
+          percepcaoVisual,
           forca,
           resistencia,
           agilidade,
@@ -142,6 +151,7 @@ module.exports = {
             pontosDeVida,
             stamina,
             percepcao,
+            percepcaoVisual,
             forca,
             resistencia,
             agilidade,

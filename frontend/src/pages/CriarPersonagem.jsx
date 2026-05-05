@@ -8,6 +8,7 @@ export default function CriarPersonagem() {
     pontosDeVida: 100,
     stamina: 100,
     percepcao: 10,
+    percepcaoVisual: 10,
     forca: 10,
     resistencia: 10,
     agilidade: 8,
@@ -40,6 +41,7 @@ export default function CriarPersonagem() {
         pontosDeVida: 100,
         stamina: 100,
         percepcao: 10,
+        percepcaoVisual: 10,
         forca: 10,
         resistencia: 10,
         agilidade: 8,
@@ -92,6 +94,16 @@ export default function CriarPersonagem() {
             type="number"
             name="percepcao"
             value={form.percepcao}
+            onChange={handleChange}
+          />
+        </label>
+
+        <label>
+          Percepção Visual
+          <input
+            type="number"
+            name="percepcaoVisual"
+            value={form.percepcaoVisual}
             onChange={handleChange}
           />
         </label>

@@ -16,6 +16,9 @@ module.exports = {
       const {
         nome,
         pontosDeVida,
+        stamina,
+        percepcao,
+        percepcaoVisual,
         forca,
         resistencia,
         agilidade,
@@ -25,6 +28,9 @@ module.exports = {
       const novo = await personagensService.criar({
         nome,
         pontosDeVida,
+        stamina,
+        percepcao,
+        percepcaoVisual,
         forca,
         resistencia,
         agilidade,
@@ -46,6 +52,7 @@ module.exports = {
         pontosDeVida,
         stamina,
         percepcao,
+        percepcaoVisual,
         forca,
         resistencia,
         agilidade,
@@ -57,6 +64,7 @@ module.exports = {
         pontosDeVida,
         stamina,
         percepcao,
+        percepcaoVisual,
         forca,
         resistencia,
         agilidade,
@@ -65,8 +73,11 @@ module.exports = {
 
       return res.json(atualizado);
     } catch (erro) {
-      console.error('Erro ao atualizar personagem:', erro);
-      return res.status(500).json({ erro: 'Erro ao atualizar personagem' });
+      console.error('🔥 ERRO REAL AO ATUALIZAR:', erro);
+
+      return res.status(500).json({
+        erro: erro.message || erro.toString(),
+      });
     }
   },
 

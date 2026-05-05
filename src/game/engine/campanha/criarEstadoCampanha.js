@@ -1,4 +1,5 @@
 const { v4: uuid } = require('uuid');
+const { passadoPersonagens } = require('../../world/passadoPersonagens');
 
 function criarEstadoCampanha(jogadores, historiaId) {
   // normaliza jogadores (igual você fez no combate)
@@ -6,10 +7,58 @@ function criarEstadoCampanha(jogadores, historiaId) {
     id: j.id,
     nome: j.nome,
     vivo: true,
-    pronto: false, // importante para sistema de rodadas
-    // ⚡ Sistema de ações por rodada
+    pronto: false,
+
+    // ❤️ Atributos principais vindos do banco
+    pontosDeVida: j.pontosDeVida ?? 100,
+    stamina: j.stamina ?? 0,
+    percepcao: j.percepcao ?? 0,
+    percepcaoVisual: j.percepcaoVisual ?? 0,
+    forca: j.forca ?? 0,
+    agilidade: j.agilidade ?? 0,
+    resistencia: j.resistencia ?? 0,
+    inteligencia: j.inteligencia ?? 0,
+
+    // 🍖 Estados fisiológicos/sentimentos iniciais
+    fome: j.fome ?? 12,
+
+    // 🧠 Memória individual do personagem
+    memoria: {
+      background:
+        passadoPersonagens[j.nome]?.background ||
+        j.background ||
+        `${j.nome} ainda não tem um passado definido, mas sua história começa agora.`,
+
+      eventos: [],
+
+      conhecimentos: [],
+
+      relacoes: {},
+
+      motivacoes: passadoPersonagens[j.nome]?.motivacoesIniciais || [],
+
+      objetivoAtual: passadoPersonagens[j.nome]?.objetivoInicial || null,
+    },
+
+    estadoEmocional: {
+      ansiedade:
+        passadoPersonagens[j.nome]?.estadoEmocionalInicial?.ansiedade ?? 0,
+      preocupacao:
+        passadoPersonagens[j.nome]?.estadoEmocionalInicial?.preocupacao ?? 0,
+      medo: passadoPersonagens[j.nome]?.estadoEmocionalInicial?.medo ?? 0,
+      esperanca:
+        passadoPersonagens[j.nome]?.estadoEmocionalInicial?.esperanca ?? 0,
+    },
+
+    // ⚡ Sistema de ações
     aprPorRodada: 2,
     aprAtual: 2,
+
+    // 🧭 POSIÇÃO NO GRID
+    posicao: {
+      x: 0,
+      y: 0,
+    },
   }));
 
   return {
@@ -58,10 +107,16 @@ function criarEstadoCampanha(jogadores, historiaId) {
 
     // 🗺️ mapa do mundo
     mapa: {
-      localAtual: 'vila_abandonada',
+      localAtual: 'praca_central',
 
       posicaoJogadores: jogadoresNormalizados.reduce((acc, jogador) => {
-        acc[jogador.id] = 'vila_abandonada';
+        acc[jogador.id] = {
+          localAtual: 'praca_central',
+
+          // posição inicial no mapa (centro da vila)
+          pos: { x: 500, y: 300 },
+        };
+
         return acc;
       }, {}),
     },
@@ -69,7 +124,7 @@ function criarEstadoCampanha(jogadores, historiaId) {
     // 🧭 exploração individual por jogador
     exploracao: jogadoresNormalizados.reduce((acc, jogador) => {
       acc[jogador.id] = {
-        locaisDescobertos: ['vila_abandonada'],
+        locaisDescobertos: ['praca_central'],
         locaisVisitados: [],
         nevoaDeGuerraAtiva: true,
       };

@@ -1,6 +1,6 @@
 {
   "meta": {
-    "rodadaGlobal": 2,
+    "rodadaGlobal": 1,
     "faseCampanha": "cicloJogadores"
   },
   "jogadores": [
@@ -8,25 +8,64 @@
       "id": 1,
       "nome": "Jake",
       "vivo": true,
-      "pronto": false,
-      "aprAtual": null,
-      "aprPorRodada": 2
+      "pronto": true,
+      "pontosDeVida": 100,
+      "stamina": 100,
+      "percepcao": 15,
+      "percepcaoVisual": 4,
+      "forca": 11,
+      "agilidade": 8,
+      "resistencia": 10,
+      "inteligencia": 6,
+      "fome": 10,
+      "aprPorRodada": 2,
+      "aprAtual": 2,
+      "posicao": {
+        "x": 0,
+        "y": 0
+      }
     },
     {
       "id": 2,
       "nome": "Goblin",
       "vivo": true,
-      "pronto": false,
-      "aprAtual": null,
-      "aprPorRodada": 2
+      "pronto": true,
+      "pontosDeVida": 100,
+      "stamina": 100,
+      "percepcao": 5,
+      "percepcaoVisual": 0,
+      "forca": 6,
+      "agilidade": 7,
+      "resistencia": 10,
+      "inteligencia": 3,
+      "fome": 10,
+      "aprPorRodada": 2,
+      "aprAtual": 2,
+      "posicao": {
+        "x": 0,
+        "y": 0
+      }
     },
     {
       "id": 3,
       "nome": "Orc",
       "vivo": true,
-      "pronto": false,
-      "aprAtual": null,
-      "aprPorRodada": 2
+      "pronto": true,
+      "pontosDeVida": 100,
+      "stamina": 0,
+      "percepcao": 0,
+      "percepcaoVisual": 0,
+      "forca": 12,
+      "agilidade": 6,
+      "resistencia": 11,
+      "inteligencia": 4,
+      "fome": 10,
+      "aprPorRodada": 2,
+      "aprAtual": 2,
+      "posicao": {
+        "x": 0,
+        "y": 0
+      }
     }
   ],
   "ciclo": {
@@ -40,23 +79,40 @@
   },
   "mundo": {
     "mapa": {
+      "localAtual": "praca_central",
+      "posicaoJogadores": {
+        "1": {
+          "localAtual": "praca_central",
+          "pos": {
+            "x": 500,
+            "y": 300
+          }
+        },
+        "2": {
+          "localAtual": "praca_central",
+          "pos": {
+            "x": 500,
+            "y": 300
+          }
+        },
+        "3": {
+          "localAtual": "praca_central",
+          "pos": {
+            "x": 500,
+            "y": 300
+          }
+        }
+      },
       "locaisAtivos": [
-        "inicio",
-        "exploracao_npc_1",
-        "exploracao_npc_2"
-      ],
-      "locaisBloqueados": [],
-      "conexoes": {}
+        "vila_abandonada",
+        "exploracao_npc_1"
+      ]
     },
     "memoriaMundo": {
       "linhaDoTempo": [
         {
           "rodada": 1,
           "resumo": "Rodada 1: o mundo evoluiu com base nas ações dos jogadores."
-        },
-        {
-          "rodada": 2,
-          "resumo": "Rodada 2: o mundo evoluiu com base nas ações dos jogadores."
         }
       ],
       "regioesDescobertas": [],
@@ -74,7 +130,7 @@
       {
         "id": "npc_viajante_1",
         "tipo": "viajante",
-        "localAtual": "exploracao_npc_2",
+        "localAtual": "exploracao_npc_1",
         "ativo": true
       },
       {
@@ -84,33 +140,7 @@
         "ativo": true
       }
     ],
-    "eventosDisparados": [
-      {
-        "id": "investigacao_0",
-        "tipo": "investigacao_goblins",
-        "local": "vila_abandonada"
-      },
-      {
-        "id": "pista_vila_1",
-        "tipo": "pistas_goblins",
-        "local": "desconhecido"
-      },
-      {
-        "id": "investigacao_1",
-        "tipo": "investigacao_goblins",
-        "local": "vila_abandonada"
-      },
-      {
-        "id": "investigacao_1",
-        "tipo": "investigacao_goblins",
-        "local": "vila_abandonada"
-      },
-      {
-        "id": "movimento_goblins_2",
-        "tipo": "movimento_inimigo",
-        "origem": "floresta_proxima"
-      }
-    ],
+    "eventosDisparados": [],
     "perfilMundo": {
       "tendencia": "neutra",
       "resumoComportamento": {
@@ -126,38 +156,17 @@
       "tipo": "acao_registrada",
       "rodada": 0,
       "jogadorId": 1,
-      "descricao": "Os jogadores exploraram áreas abandonadas da vila silenciosa."
+      "jogadorNome": "Jake",
+      "acao": "encerrar_turno",
+      "descricao": "Jake decidiu encerrar seu turno preservando 2 APR."
     },
     {
       "tipo": "acao_registrada",
       "rodada": 0,
       "jogadorId": 2,
-      "descricao": "Os jogadores investigaram rumores sobre goblins nas redondezas."
-    },
-    {
-      "tipo": "acao_registrada",
-      "rodada": 0,
-      "jogadorId": 3,
-      "descricao": "Os jogadores exploraram áreas abandonadas da vila silenciosa.",
-      "processadaPeloMestre": true
-    },
-    {
-      "tipo": "acao_registrada",
-      "rodada": 1,
-      "jogadorId": 1,
-      "descricao": "Os jogadores investigaram rumores sobre goblins nas redondezas."
-    },
-    {
-      "tipo": "acao_registrada",
-      "rodada": 1,
-      "jogadorId": 2,
-      "descricao": "Os jogadores exploraram áreas abandonadas da vila silenciosa."
-    },
-    {
-      "tipo": "acao_registrada",
-      "rodada": 1,
-      "jogadorId": 3,
-      "descricao": "Os jogadores investigaram rumores sobre goblins nas redondezas.",
+      "jogadorNome": "Goblin",
+      "acao": "encerrar_turno",
+      "descricao": "Goblin decidiu encerrar seu turno preservando 2 APR.",
       "processadaPeloMestre": true
     }
   ],
@@ -166,44 +175,23 @@
       "tipo": "acao_jogadores",
       "rodada": 0,
       "jogadorId": 1,
-      "descricao": "Os jogadores exploraram áreas abandonadas da vila silenciosa."
-    },
-    {
-      "tipo": "tempo_avancou",
-      "rodada": 0,
-      "descricao": "O tempo do mundo avançou para a rodada 0."
+      "descricao": "Jake decidiu encerrar seu turno preservando 2 APR."
     },
     {
       "tipo": "acao_jogadores",
       "rodada": 0,
       "jogadorId": 2,
-      "descricao": "Os jogadores investigaram rumores sobre goblins nas redondezas."
+      "descricao": "Goblin decidiu encerrar seu turno preservando 2 APR."
     },
     {
-      "tipo": "tempo_avancou",
-      "rodada": 0,
-      "descricao": "O tempo do mundo avançou para a rodada 0."
-    },
-    {
-      "tipo": "acao_jogadores",
-      "rodada": 0,
-      "jogadorId": 3,
-      "descricao": "Os jogadores exploraram áreas abandonadas da vila silenciosa."
-    },
-    {
-      "tipo": "tempo_avancou",
-      "rodada": 0,
-      "descricao": "O tempo do mundo avançou para a rodada 0."
+      "tipo": "fome_atualizada",
+      "rodada": 1,
+      "descricao": "A fome dos jogadores aumentou com o passar do tempo."
     },
     {
       "tipo": "mundo_processado",
       "rodada": 1,
       "descricao": "O mundo reagiu às ações dos jogadores na rodada 1"
-    },
-    {
-      "tipo": "pistas_encontradas",
-      "rodada": 1,
-      "descricao": "Pegadas pequenas e marcas estranhas foram encontradas entre as casas abandonadas."
     },
     {
       "tipo": "mundo_silencioso",
@@ -236,106 +224,10 @@
       "destino": "exploracao_npc_1"
     },
     {
-      "tipo": "npc_observou_evento",
+      "tipo": "npc_observacao_passiva",
       "rodada": 1,
-      "descricao": "Habitantes comentam sobre o evento: pistas_goblins.",
-      "agenteId": "npc_observador_1",
-      "eventoObservado": "pista_vila_1"
-    },
-    {
-      "tipo": "autosave_rotativo",
-      "rodada": 1,
-      "descricao": "Autosave rotativo realizado (slot 1 atualizado na rodada 1)."
-    },
-    {
-      "tipo": "apr_acumulado",
-      "rodada": 1,
-      "descricao": "Os pontos de ação (APR) foram acumulados para a nova rodada."
-    },
-    {
-      "tipo": "tempo_rodada_iniciado",
-      "rodada": 1,
-      "descricao": "O relógio da rodada foi iniciado (limite de 3 minutos)."
-    },
-    {
-      "tipo": "rodada_global",
-      "rodada": 1,
-      "descricao": "O mundo avançou para a rodada 1"
-    },
-    {
-      "tipo": "acao_jogadores",
-      "rodada": 1,
-      "jogadorId": 1,
-      "descricao": "Os jogadores investigaram rumores sobre goblins nas redondezas."
-    },
-    {
-      "tipo": "tempo_avancou",
-      "rodada": 1,
-      "descricao": "O tempo do mundo avançou para a rodada 1."
-    },
-    {
-      "tipo": "acao_jogadores",
-      "rodada": 1,
-      "jogadorId": 2,
-      "descricao": "Os jogadores exploraram áreas abandonadas da vila silenciosa."
-    },
-    {
-      "tipo": "tempo_avancou",
-      "rodada": 1,
-      "descricao": "O tempo do mundo avançou para a rodada 1."
-    },
-    {
-      "tipo": "acao_jogadores",
-      "rodada": 1,
-      "jogadorId": 3,
-      "descricao": "Os jogadores investigaram rumores sobre goblins nas redondezas."
-    },
-    {
-      "tipo": "tempo_avancou",
-      "rodada": 1,
-      "descricao": "O tempo do mundo avançou para a rodada 1."
-    },
-    {
-      "tipo": "mundo_processado",
-      "rodada": 2,
-      "descricao": "O mundo reagiu às ações dos jogadores na rodada 2"
-    },
-    {
-      "tipo": "movimento_inimigo",
-      "rodada": 2,
-      "descricao": "Batedores relatam movimentação de goblins nas redondezas da vila."
-    },
-    {
-      "tipo": "mundo_silencioso",
-      "rodada": 2,
-      "descricao": "O mundo observa em silêncio, sem grandes acontecimentos nesta rodada."
-    },
-    {
-      "tipo": "narrativa_atualizada",
-      "rodada": 2,
-      "descricao": "A crônica do mundo foi atualizada com base nos acontecimentos da rodada."
-    },
-    {
-      "tipo": "npc_explorou_regiao",
-      "rodada": 2,
-      "descricao": "Um explorador descobriu uma nova região: exploracao_npc_2.",
-      "agenteId": "npc_explorador_1",
-      "local": "exploracao_npc_2"
-    },
-    {
-      "tipo": "npc_viajou",
-      "rodada": 2,
-      "descricao": "Um viajante partiu de exploracao_npc_1 e chegou a exploracao_npc_2.",
-      "agenteId": "npc_viajante_1",
-      "origem": "exploracao_npc_1",
-      "destino": "exploracao_npc_2"
-    },
-    {
-      "tipo": "npc_observou_evento",
-      "rodada": 2,
-      "descricao": "Habitantes comentam sobre o evento: movimento_inimigo.",
-      "agenteId": "npc_observador_1",
-      "eventoObservado": "movimento_goblins_2"
+      "descricao": "Os habitantes observam o mundo em silêncio, aguardando mudanças.",
+      "agenteId": "npc_observador_1"
     }
   ],
   "historia": {

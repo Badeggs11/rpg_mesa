@@ -8,22 +8,130 @@
       "id": 1,
       "nome": "Jake",
       "vivo": true,
-      "pronto": false,
-      "aprAtual": null
+      "pronto": true,
+      "pontosDeVida": 100,
+      "stamina": 100,
+      "percepcao": 15,
+      "percepcaoVisual": 4,
+      "forca": 11,
+      "agilidade": 8,
+      "resistencia": 10,
+      "inteligencia": 6,
+      "fome": 10,
+      "memoria": {
+        "background": "Jake é um garoto de 13 anos que vive com sua mãe em uma pequena casa da vila. Seu pai foi convocado pelo rei para a guerra e nunca mais retornou. Desde então, Jake se tornou responsável pela casa. Sua mãe está debilitada e doente, e a falta de alimento começou a se tornar um problema real.",
+        "eventos": [
+          {
+            "tipo": "mover",
+            "descricao": "Jake chegou em taverna",
+            "rodada": 0
+          },
+          {
+            "tipo": "conversa",
+            "com": "jose_barman",
+            "npcNome": "José",
+            "falaJogador": "",
+            "falaNPC": "José olha desconfiado: \"Não te conheço. O que você quer?\"",
+            "descricao": "Jake aborda José. José olha desconfiado: \"Não te conheço. O que você quer?\"",
+            "rodada": 0
+          }
+        ],
+        "conhecimentos": [],
+        "relacoes": {
+          "jose_barman": {
+            "confianca": 1
+          }
+        },
+        "motivacoes": [
+          "conseguir alimento para sua mãe",
+          "proteger sua casa",
+          "descobrir se ainda há notícias sobre seu pai"
+        ],
+        "objetivoAtual": "Encontrar uma forma de conseguir comida ou dinheiro para sustentar sua mãe doente."
+      },
+      "estadoEmocional": {
+        "ansiedade": 6,
+        "preocupacao": 8,
+        "medo": 3,
+        "esperanca": 4
+      },
+      "aprPorRodada": 2,
+      "aprAtual": 0,
+      "posicao": {
+        "x": 0,
+        "y": 0
+      },
+      "progressoMovimento": 0
     },
     {
       "id": 2,
       "nome": "Goblin",
       "vivo": true,
-      "pronto": false,
-      "aprAtual": null
+      "pronto": true,
+      "pontosDeVida": 100,
+      "stamina": 100,
+      "percepcao": 5,
+      "percepcaoVisual": 0,
+      "forca": 6,
+      "agilidade": 7,
+      "resistencia": 10,
+      "inteligencia": 3,
+      "fome": 10,
+      "memoria": {
+        "background": "Goblin ainda não tem um passado definido, mas sua história começa agora.",
+        "eventos": [],
+        "conhecimentos": [],
+        "relacoes": {},
+        "motivacoes": [],
+        "objetivoAtual": null
+      },
+      "estadoEmocional": {
+        "ansiedade": 0,
+        "preocupacao": 0,
+        "medo": 0,
+        "esperanca": 0
+      },
+      "aprPorRodada": 2,
+      "aprAtual": 2,
+      "posicao": {
+        "x": 0,
+        "y": 0
+      }
     },
     {
       "id": 3,
       "nome": "Orc",
       "vivo": true,
-      "pronto": false,
-      "aprAtual": null
+      "pronto": true,
+      "pontosDeVida": 100,
+      "stamina": 0,
+      "percepcao": 0,
+      "percepcaoVisual": 0,
+      "forca": 12,
+      "agilidade": 6,
+      "resistencia": 11,
+      "inteligencia": 4,
+      "fome": 10,
+      "memoria": {
+        "background": "Orc ainda não tem um passado definido, mas sua história começa agora.",
+        "eventos": [],
+        "conhecimentos": [],
+        "relacoes": {},
+        "motivacoes": [],
+        "objetivoAtual": null
+      },
+      "estadoEmocional": {
+        "ansiedade": 0,
+        "preocupacao": 0,
+        "medo": 0,
+        "esperanca": 0
+      },
+      "aprPorRodada": 2,
+      "aprAtual": 2,
+      "posicao": {
+        "x": 0,
+        "y": 0
+      }
     }
   ],
   "ciclo": {
@@ -32,17 +140,39 @@
       2,
       3
     ],
-    "indiceAtual": 3,
-    "jogadorDaVez": 3
+    "indiceAtual": 4,
+    "jogadorDaVez": 1
   },
   "mundo": {
     "mapa": {
+      "localAtual": "praca_central",
+      "posicaoJogadores": {
+        "1": {
+          "localAtual": "taverna",
+          "pos": {
+            "x": 500,
+            "y": 298
+          }
+        },
+        "2": {
+          "localAtual": "praca_central",
+          "pos": {
+            "x": 500,
+            "y": 300
+          }
+        },
+        "3": {
+          "localAtual": "praca_central",
+          "pos": {
+            "x": 500,
+            "y": 300
+          }
+        }
+      },
       "locaisAtivos": [
-        "inicio",
+        "vila_abandonada",
         "exploracao_npc_1"
-      ],
-      "locaisBloqueados": [],
-      "conexoes": {}
+      ]
     },
     "memoriaMundo": {
       "linhaDoTempo": [
@@ -76,13 +206,7 @@
         "ativo": true
       }
     ],
-    "eventosDisparados": [
-      {
-        "id": "investigacao_0",
-        "tipo": "investigacao_goblins",
-        "local": "vila_abandonada"
-      }
-    ],
+    "eventosDisparados": [],
     "perfilMundo": {
       "tendencia": "neutra",
       "resumoComportamento": {
@@ -98,55 +222,52 @@
       "tipo": "acao_registrada",
       "rodada": 0,
       "jogadorId": 1,
-      "descricao": "Os jogadores exploraram áreas abandonadas da vila silenciosa."
-    },
-    {
-      "tipo": "acao_registrada",
-      "rodada": 0,
-      "jogadorId": 2,
-      "descricao": "Os jogadores investigaram rumores sobre goblins nas redondezas."
-    },
-    {
-      "tipo": "acao_registrada",
-      "rodada": 0,
-      "jogadorId": 3,
-      "descricao": "O grupo observou atentamente o ambiente silencioso da vila.",
+      "jogadorNome": "Jake",
+      "acao": "mover",
+      "descricao": "Jake chegou em taverna",
       "processadaPeloMestre": true
     }
   ],
   "logMundo": [
     {
+      "tipo": "movimento_jogador",
+      "rodada": 0,
+      "jogadorId": 1,
+      "origem": "praca_central",
+      "destino": "taverna",
+      "descricao": "1 se moveu de praca_central para taverna"
+    },
+    {
+      "tipo": "apr_consumido",
+      "rodada": 0,
+      "jogadorId": 1,
+      "custo": 1,
+      "aprRestante": 1,
+      "descricao": "Jogador 1 utilizou 1 APR."
+    },
+    {
       "tipo": "acao_jogadores",
       "rodada": 0,
       "jogadorId": 1,
-      "descricao": "Os jogadores exploraram áreas abandonadas da vila silenciosa."
+      "descricao": "Jake chegou em taverna"
     },
     {
-      "tipo": "tempo_avancou",
+      "tipo": "apr_consumido",
       "rodada": 0,
-      "descricao": "O tempo do mundo avançou para a rodada 0."
+      "jogadorId": 1,
+      "custo": 1,
+      "aprRestante": 0,
+      "descricao": "Jogador 1 utilizou 1 APR."
     },
     {
-      "tipo": "acao_jogadores",
+      "tipo": "tempo_rodada_esgotado",
       "rodada": 0,
-      "jogadorId": 2,
-      "descricao": "Os jogadores investigaram rumores sobre goblins nas redondezas."
+      "descricao": "O tempo da rodada se esgotou. O mundo avança automaticamente."
     },
     {
-      "tipo": "tempo_avancou",
-      "rodada": 0,
-      "descricao": "O tempo do mundo avançou para a rodada 0."
-    },
-    {
-      "tipo": "acao_jogadores",
-      "rodada": 0,
-      "jogadorId": 3,
-      "descricao": "O grupo observou atentamente o ambiente silencioso da vila."
-    },
-    {
-      "tipo": "tempo_avancou",
-      "rodada": 0,
-      "descricao": "O tempo do mundo avançou para a rodada 0."
+      "tipo": "fome_atualizada",
+      "rodada": 1,
+      "descricao": "A fome dos jogadores aumentou com o passar do tempo."
     },
     {
       "tipo": "mundo_processado",
@@ -184,11 +305,10 @@
       "destino": "exploracao_npc_1"
     },
     {
-      "tipo": "npc_observou_evento",
+      "tipo": "npc_observacao_passiva",
       "rodada": 1,
-      "descricao": "Habitantes comentam sobre o evento: investigacao_goblins.",
-      "agenteId": "npc_observador_1",
-      "eventoObservado": "investigacao_0"
+      "descricao": "Os habitantes observam o mundo em silêncio, aguardando mudanças.",
+      "agenteId": "npc_observador_1"
     }
   ],
   "historia": {

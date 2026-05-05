@@ -36,6 +36,7 @@ function gerarNarrativa(estadoCampanha) {
   const descoberta = pick(narrativePackBase.descoberta.nenhuma);
 
   const narrativaFinal = `
+  
 ${ambiente}
 
 ${narrativaAcao}

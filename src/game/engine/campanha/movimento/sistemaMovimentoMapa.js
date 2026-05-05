@@ -1,6 +1,6 @@
 const { mapaBase } = require('../../../world/mapas/mapaBase');
 
-function moverJogadorNoMapa(estadoCampanha, jogadorId, destino) {
+function moverJogadorNoMapa(estadoCampanha, jogadorId, destinoOuDirecao) {
   if (!estadoCampanha) {
     throw new Error('Estado de campanha inválido');
   }
@@ -9,13 +9,9 @@ function moverJogadorNoMapa(estadoCampanha, jogadorId, destino) {
     throw new Error('jogadorId é obrigatório');
   }
 
-  if (!destino) {
-    throw new Error('Destino é obrigatório');
-  }
-
-  if (!mapaBase[destino]) {
-    throw new Error(`Destino inexistente no mapa: ${destino}`);
-  }
+  // if (!destino) {
+  // throw new Error('Destino é obrigatório');
+  //}
 
   if (!estadoCampanha.posicaoJogadores) {
     estadoCampanha.posicaoJogadores = {};
@@ -26,6 +22,50 @@ function moverJogadorNoMapa(estadoCampanha, jogadorId, destino) {
   }
 
   if (!estadoCampanha.exploracao[jogadorId]) {
+    // 🧭 NOVO SISTEMA: movimento por DIREÇÃO (grid)
+    const direcoes = ['cima', 'baixo', 'esquerda', 'direita'];
+
+    if (direcoes.includes(destinoOuDirecao)) {
+      const jogador = estadoCampanha.jogadores.find(j => j.id === jogadorId);
+
+      if (!jogador.posicao) {
+        jogador.posicao = { x: 0, y: 0 };
+      }
+
+      switch (destinoOuDirecao) {
+        case 'cima':
+          jogador.posicao.y -= 1;
+          break;
+        case 'baixo':
+          jogador.posicao.y += 1;
+          break;
+        case 'esquerda':
+          jogador.posicao.x -= 1;
+          break;
+        case 'direita':
+          jogador.posicao.x += 1;
+          break;
+      }
+
+      if (!estadoCampanha.logMundo) {
+        estadoCampanha.logMundo = [];
+      }
+
+      estadoCampanha.logMundo.push({
+        tipo: 'movimento_grid',
+        rodada: estadoCampanha.rodadaGlobal,
+        jogadorId,
+        posicao: jogador.posicao,
+        descricao: `${jogadorId} moveu para (${jogador.posicao.x}, ${jogador.posicao.y})`,
+      });
+
+      console.log(
+        `🧭 [GRID] ${jogador.nome} → (${jogador.posicao.x}, ${jogador.posicao.y})`
+      );
+
+      return estadoCampanha;
+    }
+
     estadoCampanha.exploracao[jogadorId] = {
       locaisDescobertos: [],
       locaisVisitados: [],
@@ -50,23 +90,26 @@ function moverJogadorNoMapa(estadoCampanha, jogadorId, destino) {
 
   const conexoes = mapaBase[localAtual].conexoes || [];
 
-  if (!conexoes.includes(destino)) {
+  if (!conexoes.includes(destinoOuDirecao)) {
     throw new Error(
-      `Movimento inválido: ${localAtual} não possui conexão com ${destino}`
+      `Movimento inválido: ${localAtual} não possui conexão com ${destinoOuDirecao}`
     );
   }
 
-  estadoCampanha.posicaoJogadores[jogadorId] = destino;
+  estadoCampanha.mapa.posicaoJogadores[jogadorId] = {
+    localAtual: destinoOuDirecao,
+    pos: mapaBase[destinoOuDirecao].pos,
+  };
 
-  if (!exploracaoJogador.locaisVisitados.includes(destino)) {
-    exploracaoJogador.locaisVisitados.push(destino);
+  if (!exploracaoJogador.locaisVisitados.includes(destinoOuDirecao)) {
+    exploracaoJogador.locaisVisitados.push(destinoOuDirecao);
   }
 
-  if (!exploracaoJogador.locaisDescobertos.includes(destino)) {
-    exploracaoJogador.locaisDescobertos.push(destino);
+  if (!exploracaoJogador.locaisDescobertos.includes(destinoOuDirecao)) {
+    exploracaoJogador.locaisDescobertos.push(destinoOuDirecao);
   }
 
-  const novasConexoes = mapaBase[destino].conexoes || [];
+  const novasConexoes = mapaBase[destinoOuDirecao].conexoes || [];
 
   novasConexoes.forEach(localConectado => {
     if (!exploracaoJogador.locaisDescobertos.includes(localConectado)) {
@@ -83,8 +126,8 @@ function moverJogadorNoMapa(estadoCampanha, jogadorId, destino) {
     rodada: estadoCampanha.rodadaGlobal,
     jogadorId,
     origem: localAtual,
-    destino,
-    descricao: `${jogadorId} se moveu de ${localAtual} para ${destino}`,
+    destino: destinoOuDirecao,
+    descricao: `${jogadorId} se moveu de ${localAtual} para ${destinoOuDirecao}`,
   });
 
   return estadoCampanha;

@@ -31,7 +31,7 @@ export async function criarPersonagem(dados) {
  * 🆕 Atualizar personagem
  */
 export async function atualizarPersonagem(id, dados) {
-  const res = await fetch(`/personagens/${id}`, {
+  const res = await fetch(`/api/personagens/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
